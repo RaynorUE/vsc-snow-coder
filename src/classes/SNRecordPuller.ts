@@ -267,8 +267,7 @@ export class SNFilePuller {
         packageRecQuery += `^ORsys_package.sys_class_name=NULL^sys_package.sys_class_name!=sys_app`;
         packageRecQuery += `^ORsys_package.sys_class_name=NULL^sys_package.name!=Global`;
         packageRecQuery += `^ORsys_package.name=NULL`;
-        
-        //let appRecords = await client.getRecords('sys_package', packageRecQuery, ['name', 'source']);
+        //packageRecQuery += '^NQsys_app'
         
         //its rough, but we need to use the /stats call to grab all the unique application files.. since sys_package is not accessible via web services /facepalm
 

@@ -335,7 +335,8 @@ export class WorkspaceManager {
         if (!activeEditor) {
             vscode.window.showWarningMessage('No actived text editor to compare against server file.');
             return new Promise((resolve, reject) => {
-                resolve();
+                this.logger.info(this.lib, func, `END`);
+                resolve(false);
             }).then(() => { });
         }
 
@@ -409,7 +410,8 @@ export class WorkspaceManager {
                     fs.copyFileSync(currentFSPath, dotOldPath);
                 }
                 this.logger.info(this.lib, func, "END");
-                resolve();
+                var editRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 0));
+                resolve([new vscode.TextEdit(editRange, '')]);
             }));
 
             this.logger.info(this.lib, func, 'END');

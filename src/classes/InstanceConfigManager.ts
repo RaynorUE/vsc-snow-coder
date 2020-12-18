@@ -22,13 +22,14 @@ export class InstancesList {
 
     addInstance(instance: InstanceMaster) {
         this.instances.push(instance);
+        this.setLastSelected(instance);
     }
 
     setLastSelected(instance: InstanceMaster) {
         this.lastSelected = instance;
     }
 
-    getLastSelected(instance: InstanceMaster) {
+    getLastSelected() {
         return this.lastSelected;
     }
 
@@ -795,14 +796,4 @@ export class InstanceSettings {
     getBSScriptSettings() {
         return this.settings.backgroundScripts;
     }
-}
-
-
-declare interface sys_user_preference {
-    sys_id?: string;
-    user: string;
-    name: string;
-    value: string;
-    type?: "integer" | "reference" | "string" | "boolean";
-    description?: string;
 }
