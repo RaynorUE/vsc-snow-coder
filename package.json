@@ -4,9 +4,9 @@
     "displayName": "S.N.I.C.H. Canary",
     "description": "ServiceNow Integrated Code Helper - Canary. Get the latest as I build stuff ready to be tested! Provide feedback to integratenate@gmail.com",
     "icon": "images/icon-canary.png",
-    "version": "1.40.3",
+    "version": "1.40.4",
     "liveVersion": "1.1.0",
-    "canaryVersion": "1.40.3",
+    "canaryVersion": "1.40.4",
     "betaVersion": "1.0.6",
     "keywords": [
         "SNICH",
@@ -208,8 +208,9 @@
         "@types/xml2js": "^0.4.5"
     },
     "dependencies": {
-        "http": "0.0.1-security",
-        "needle": "^2.5.0",
+        "axios": "^0.21.1",
+        "nedb": "^1.8.0",
+        "nedb-async": "^0.1.6",
         "request": "^2.88.2",
         "request-promise-native": "^1.0.8",
         "xml2js": "^0.4.23"

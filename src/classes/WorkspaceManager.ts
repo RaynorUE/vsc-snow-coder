@@ -19,7 +19,7 @@ import { SNPreferencesManager } from './preferences/SNPreferencesManager';
 */
 
 export class WorkspaceManager {
-
+    
     readonly configFileName: string = "snich_config.json";
     readonly tableConfigFileName: string = "snich_table_config.json";
     readonly syncedFilesName: string = "snich_synced_files.json";
@@ -33,6 +33,7 @@ export class WorkspaceManager {
         let func = 'constructor';
         this.logger = logger || new SystemLogHelper();
         this.logger.info(this.lib, func, 'START');
+
 
         this.logger.info(this.lib, func, 'END');
     }

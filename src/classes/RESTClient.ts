@@ -1,4 +1,3 @@
-//https://github.com/tomas/needle
 import * as vscode from 'vscode';
 import { SystemLogHelper } from './LogHelper';
 import { InstanceMaster, InstanceConfig } from './InstanceConfigManager';
