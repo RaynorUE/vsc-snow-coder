@@ -13,12 +13,14 @@ import { WebBrowser } from './classes/WebBrowser';
 import { ExtensionMgmt } from './classes/ExtensionMgmt';
  
 export const snichOutput = vscode.window.createOutputChannel('S.N.I.C.H.');
+export let extensionContext:vscode.ExtensionContext; //for imports into other classes. 
 
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+    extensionContext = context; 
     let lib = 'extension.ts';
 	let func = 'activate';
 	let logger:SystemLogHelper = new SystemLogHelper();
