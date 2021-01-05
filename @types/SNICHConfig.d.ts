@@ -1,8 +1,10 @@
+import * as vscode from 'vscode';
+
 declare namespace SNICHConfig {
     interface Instance {
 
         name: string;
-        rootPath: string;
+        rootPath: vscode.Uri;
         connection: Connection;
         _id: string;
 
