@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
+import { BackFileMan } from './BackFileMan';
 
 
 /**
@@ -24,16 +26,30 @@ export class WSFileMan {
         return rootUri;
     }
 
-
     /**
-     * Adjust the .vscode/settings.json file so that the files.excluded shows the .vscode folder..
+     * will check to see if the current workspace root is actually a SNICH root... This is to account for times when people open the "Instance named" folder instead of the "workspace" folder they used during setup..
      */
-    async showDotVSCodeFolder() {
+    async validWorkspace(): Promise<Boolean | undefined> {
+        const wsRoot = this.getWSRootUri();
+        let wsValidity = undefined;
 
-    }
+        if (wsRoot) {
+            wsValidity = false; //we are in a root folder for our workspace... 
 
-    async hideDotVSCodeFolder() {
+            let dotSnichFolder = undefined;
 
+            try {
+                dotSnichFolder = fs.readDirectory(vscode.Uri.joinPath(wsRoot, '.snich'));
+            } catch (e) {
+                dotSnichFolder = undefined;
+            }
+
+            if (dotSnichFolder) {
+                wsValidity = true;
+            }
+        }
+
+        return wsValidity;
     }
 
     /**
@@ -47,28 +63,101 @@ export class WSFileMan {
             throw new Error('Workspace is not loaded! Cannot proceed with setup. This was likely called in error!');
         }
 
-        //look for .vscode folder at WS Root.
+        await this.configureDotSnichFolder(wsRoot);
 
-        //configure the settings file, to hide the folders and files that do not need to be shown..
 
-        //copy over @types files
-
-        //create jsconfig.json
+        await Promise.all([
+            this.configureDotVScodeSettings(wsRoot),
+            this.configureTypeFiles(wsRoot),
+            this.configureJSConfigJSON(wsRoot)
+        ]);
 
     }
 
+    async configureDotSnichFolder(wsRoot: vscode.Uri) {
+        //always make sure our .snich folder is created in the WSRoot..
 
-    async configureDotVScodeSettings() {
-        const wsRoot = this.getWSRootUri();
+        return await fs.createDirectory(vscode.Uri.joinPath(wsRoot, '.snich'));
+    }
+
+    async configureTypeFiles(wsRoot: vscode.Uri) {
+        await Promise.all([
+            this.configureServerTypeFiles(wsRoot),
+            this.configureClientTypeFiles(wsRoot)
+        ]);
+    }
+
+    async configureClientTypeFiles(wsRoot: vscode.Uri) {
+
+        let sourceTypeFile = await new BackFileMan().getClientTSDef();
+        let existingTypeFilePath = vscode.Uri.joinPath(wsRoot, '.snich', '@types', 'GlideSoft', 'client.d.ts');
+        let existingTypeFile = undefined;
+        let writeFile = true;
 
         let fileResult = undefined;
 
-        if (!wsRoot) {
-            return fileResult;
+        try {
+            existingTypeFile = await fs.readFile(existingTypeFilePath);
+        } catch (e) {
+            existingTypeFile = undefined;
         }
 
+        if (existingTypeFile) {
+            //compare and set write file flag
+            let sourceContentHash = crypto.createHash('md5').update(sourceTypeFile).digest("hex");
+            let existingContentHash = crypto.createHash('md5').update(existingTypeFile).digest("hex");
+
+            if (sourceContentHash == existingContentHash) {
+                writeFile = false;
+            }
+        }
+
+        if (writeFile) {
+            fileResult = await fs.writeFile(existingTypeFilePath, sourceTypeFile);
+        }
+
+        return fileResult;
+    }
+
+    async configureServerTypeFiles(wsRoot: vscode.Uri) {
+
+        let sourceTypeFile = await new BackFileMan().getServerTSDef();
+        let existingTypeFilePath = vscode.Uri.joinPath(wsRoot, '.snich', '@types', 'GlideSoft', 'server_scoped.d.ts');
+        let existingTypeFile = undefined;
+        let writeFile = true;
+
+        let fileResult = undefined;
+
+        try {
+            existingTypeFile = await fs.readFile(existingTypeFilePath);
+        } catch (e) {
+            existingTypeFile = undefined;
+        }
+
+        if (existingTypeFile) {
+            //compare and set write file flag
+            let sourceContentHash = crypto.createHash('md5').update(sourceTypeFile).digest("hex");
+            let existingContentHash = crypto.createHash('md5').update(existingTypeFile).digest("hex");
+
+            if (sourceContentHash == existingContentHash) {
+                writeFile = false;
+            }
+        }
+
+        if (writeFile) {
+            fileResult = await fs.writeFile(existingTypeFilePath, sourceTypeFile);
+        }
+
+        return fileResult;
+
+    }
+
+    async configureDotVScodeSettings(wsRoot: vscode.Uri) {
+
         let existingSettingsData: WSDotVscodeSettings = {};
-        let dotSettingsPath = vscode.Uri.joinPath(wsRoot, './vscode', 'settings.json');
+        let dotSettingsPath = vscode.Uri.joinPath(wsRoot, '.vscode', 'settings.json');
+
+        let fileResult = undefined;
 
         let existingSettingsFile;
         try {
@@ -94,17 +183,23 @@ export class WSFileMan {
         return fileResult;
     }
 
+    async configureJSConfigJSON(wsRoot: vscode.Uri) {
 
-    async getDotVScodeSettings() {
-        const wsRoot = this.getWSRootUri();
+        let JSConfigFilePath = vscode.Uri.joinPath(wsRoot, 'jsconfig.json');
+        let JSConfigFile = undefined;
+        let fileResult = undefined;
 
-        if (!wsRoot) {
-            return undefined;
+        try {
+            JSConfigFile = await fs.readFile(JSConfigFilePath);
+        } catch (e) {
+            JSConfigFile = undefined;
         }
 
-        fs.readFile(vscode.Uri.joinPath(wsRoot, '.vscode', 'settings.json'))
-
-        return
+        if (!JSConfigFile) {
+            let JSConfigFileData = {
+                "snich.comment": "This file exists to make the type definitions work. You are welcome to add other properties in here to control behavior of JS files. Please review the JSconfig.json documentation on the vscode website."
+            }
+            fileResult = await fs.writeFile(JSConfigFilePath, Buffer.from(JSON.stringify(JSConfigFileData, null, '\t')));
+        }
     }
-
 }

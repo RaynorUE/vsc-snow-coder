@@ -16,11 +16,19 @@ export class BackFileMan {
         return this.rootUri;
     }
 
-    readFile(uri: vscode.Uri): Thenable<Uint8Array> {
-        return fs.readFile(uri)
+    async readFile(...parameters: string[]) {
+        return await fs.readFile(vscode.Uri.joinPath(this.rootUri, ...parameters))
     }
 
-    writeFile(uri: vscode.Uri, data: Uint8Array) {
-        return fs.writeFile(uri, data);
+    async writeFile(data: Uint8Array, ...parameters: string[]) {
+        return await fs.writeFile(vscode.Uri.joinPath(this.rootUri, ...parameters), data);
+    }
+
+    async getServerTSDef() {
+        return await fs.readFile(vscode.Uri.joinPath(this.rootUri, 'sn_ts_def', 'server_scoped.d.ts'))
+    }
+
+    async getClientTSDef() {
+        return await fs.readFile(vscode.Uri.joinPath(this.rootUri, 'sn_ts_def', 'client.d.ts'))
     }
 }

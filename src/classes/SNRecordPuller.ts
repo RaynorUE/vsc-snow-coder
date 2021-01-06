@@ -1,4 +1,4 @@
-import { snRecord, SNApplication, SNQPItem } from "../myTypes/globals";
+import { snRecord, SNApplication, SNQPItem } from "../@types";
 import { SystemLogHelper } from "./LogHelper";
 import { InstanceMaster, InstancesList } from "./InstanceConfigManager";
 import { RESTClient } from "./RESTClient";
@@ -262,24 +262,24 @@ export class SNFilePuller {
 
         //setup our rest client and grab the available sys_package records.
         client = new RESTClient(selectedInstance);
-        
+
         let packageRecQuery = `active=true^sys_package.sys_class_name!=sys_store_app`;
         packageRecQuery += `^ORsys_package.sys_class_name=NULL^sys_package.sys_class_name!=sys_app`;
         packageRecQuery += `^ORsys_package.sys_class_name=NULL^sys_package.name!=Global`;
         packageRecQuery += `^ORsys_package.name=NULL`;
         //packageRecQuery += '^NQsys_app'
-        
+
         //its rough, but we need to use the /stats call to grab all the unique application files.. since sys_package is not accessible via web services /facepalm
 
         var packageQueryURL = selectedInstance.getURL() + '/api/now/stats/sys_metadata';
         packageQueryURL += '?sysparm_query=sys_scope%3Dglobal%5Esys_package.nameISNOTEMPTY^' + packageRecQuery + '&sysparm_count=true&sysparm_group_by=sys_package.source,sys_package&sysparm_display_value=all'
         var packageResult = await client.get(packageQueryURL, 'Retrieving Sys_package list.');
 
-        if(!packageResult || !packageResult.result){
+        if (!packageResult || !packageResult.result) {
             vscode.window.showWarningMessage('Load all package files aborted. Did not find any packages for the selected instance.');
             return;
         }
-        
+
         let appRecords = packageResult.result;
 
         let appItems = <Array<SNQPItem>>[];
@@ -289,18 +289,18 @@ export class SNFilePuller {
                 name: "",
                 source: ""
             }
-            appRec.groupby_fields.forEach((field:any) => {
-                if(field.field == 'sys_package'){
+            appRec.groupby_fields.forEach((field: any) => {
+                if (field.field == 'sys_package') {
                     appData.sys_id = field.value;
                     appData.name = field.display_value;
                 }
 
-                if(field.field == 'sys_package.source'){
+                if (field.field == 'sys_package.source') {
                     appData.source = field.value;
                 }
             })
 
-            appItems.push({ label: `${appData.name} (${appData.source})`, value: appData});
+            appItems.push({ label: `${appData.name} (${appData.source})`, value: appData });
         });
 
         let appSelected = await vscode.window.showQuickPick(appItems, { placeHolder: "Select Global Scope SN Package to retrieve files from.", ignoreFocusOut: true, matchOnDetail: true });
@@ -337,7 +337,7 @@ export class SNFilePuller {
             });
 
             fields.push('sys_package.name', 'sys_package', 'sys_package.source')
-                        
+
             let encodedQuery = 'sys_package=' + appSys;
 
             let tableRecs = await client.getRecords(tableConfig.name, encodedQuery, fields);
