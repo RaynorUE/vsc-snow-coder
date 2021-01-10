@@ -39,4 +39,9 @@ export class SNICHInstanceDB {
             records = foundRecords;
         }
     }
+
+    async delete(id: string) {
+        const deleteCount = await <Promise<number>>this.DB.asyncRemove({ _id: id });
+        return deleteCount;
+    }
 }
