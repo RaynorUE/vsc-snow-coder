@@ -1,6 +1,7 @@
-declare interface WSDotVscodeSettings {
-    "files.exclude"?: {
+declare namespace WSDotVscodeSettings {
+
+    interface FilesExclude {
         "**/.snich"?: boolean,
-        "**/.vscode"?: boolean,
+        "**/.vscode"?: boolean
     }
 }

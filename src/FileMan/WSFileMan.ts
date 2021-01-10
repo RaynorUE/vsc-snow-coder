@@ -28,8 +28,10 @@ export class WSFileMan {
 
     /**
      * will check to see if the current workspace root is actually a SNICH root... This is to account for times when people open the "Instance named" folder instead of the "workspace" folder they used during setup..
+     * 
+     * @return True: All good, False: Have a workspace folder but not configured, Undefined: No workspace folder open.
      */
-    async validWorkspace(): Promise<Boolean | undefined> {
+    async validateWorkspace(): Promise<Boolean | undefined> {
         const wsRoot = this.getWSRootUri();
         let wsValidity = undefined;
 
@@ -67,7 +69,7 @@ export class WSFileMan {
 
 
         await Promise.all([
-            this.configureDotVScodeSettings(wsRoot),
+            this.configureDotVScodeSettings(),
             this.configureTypeFiles(wsRoot),
             this.configureJSConfigJSON(wsRoot)
         ]);
@@ -152,35 +154,17 @@ export class WSFileMan {
 
     }
 
-    async configureDotVScodeSettings(wsRoot: vscode.Uri) {
+    async configureDotVScodeSettings() {
 
-        let existingSettingsData: WSDotVscodeSettings = {};
-        let dotSettingsPath = vscode.Uri.joinPath(wsRoot, '.vscode', 'settings.json');
+        let settings = vscode.workspace.getConfiguration();
+        let filesExclude:WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
 
-        let fileResult = undefined;
+        
+        filesExclude['**/.snich'] = true;
+        filesExclude['**/.vscode'] = true;
 
-        let existingSettingsFile;
-        try {
-            existingSettingsFile = await fs.readFile(dotSettingsPath);
-        } catch (e) {
-            existingSettingsFile = undefined;
-        }
-
-        if (existingSettingsFile) {
-            existingSettingsData = JSON.parse(existingSettingsFile.toString());
-        }
-
-
-        if (!existingSettingsData['files.exclude']) {
-            existingSettingsData['files.exclude'] = {};
-        }
-
-        existingSettingsData['files.exclude']['**/.snich'] = true;
-        existingSettingsData['files.exclude']['**/.vscode'] = true;
-
-        fileResult = await fs.writeFile(dotSettingsPath, Buffer.from(JSON.stringify(existingSettingsData)));
-
-        return fileResult;
+        //update workspace .vscode settings
+        return await settings.update('files.exclude', filesExclude, false);
     }
 
     async configureJSConfigJSON(wsRoot: vscode.Uri) {
@@ -201,5 +185,6 @@ export class WSFileMan {
             }
             fileResult = await fs.writeFile(JSConfigFilePath, Buffer.from(JSON.stringify(JSConfigFileData, null, '\t')));
         }
+        return fileResult;
     }
 }
