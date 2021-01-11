@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { WSFileMan } from '../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
+import { SNICHConfig } from '../@types/SNICHConfig';
 
 
-export class SNICHInstanceDB {
+export class SNICHInstanceService {
     DB = new AsyncNedb();
     constructor() {
         const DBfilePath = this.getDBFilePath();
@@ -24,20 +25,25 @@ export class SNICHInstanceDB {
     }
 
     async get(query: any) {
-        let record = undefined;
-        let foundRecord = await this.DB.asyncFindOne(query)
+        let record: SNICHConfig.Instance | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Instance>(query)
         if (foundRecord) {
             record = foundRecord;
         }
         return record;
     }
 
-    async getAll() {
-        let records = [];
-        let foundRecords = await this.DB.asyncFind({});
+    async getMultiple(query?: any) {
+        let records: SNICHConfig.Instance[] = [];
+        if (!query) {
+            query = {};
+        }
+        let foundRecords = await this.DB.asyncFind<SNICHConfig.Instance>(query);
         if (foundRecords && foundRecords.length > 0) {
             records = foundRecords;
         }
+
+        return records;
     }
 
     async delete(id: string) {

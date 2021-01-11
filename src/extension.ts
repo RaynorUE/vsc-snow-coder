@@ -71,6 +71,28 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     /**
+     * Table configuration
+     */
+    vscode.commands.registerCommand('snich.instance.setup.new_table', async () => {
+        let logger = new SystemLogHelper();
+        let func = 'snich.instance.setup.new_table';
+        logger.info(lib, func, 'START');
+
+        if (!instanceList.atLeastOneConfigured()) {
+            return;
+        }
+        let selectedInstance: InstanceMaster = await instanceList.selectInstance();
+        if (!selectedInstance) {
+            vscode.window.showWarningMessage('Table Configuration Aborted.');
+            return undefined;
+        }
+        await selectedInstance.tableConfig.syncNew(selectedInstance);
+        logger.info(lib, func, 'END', instanceList);
+
+
+    });
+
+    /**
      * Test Instance Connection
      */
     vscode.commands.registerCommand('snich.setup.test_connection', async () => {
@@ -88,6 +110,75 @@ export function activate(context: vscode.ExtensionContext) {
             await client.testConnection();
         }
         logger.info(lib, func, 'END', instanceList);
+    });
+
+
+
+    /**
+     * Pull a single record from an instance.
+     */
+    vscode.commands.registerCommand('snich.instance.pull_record', async (folder) => {
+        let logger = new SystemLogHelper();
+        let func = 'instance.pull_record';
+        logger.info(lib, func, 'START');
+        if (!instanceList.atLeastOneConfigured()) {
+            return;
+        }
+        let filePuller = new SNFilePuller(instanceList, logger);
+
+        await filePuller.syncRecord();
+        logger.info(lib, func, 'END', instanceList);
+
+    });
+
+
+
+
+    /**
+     * Load all files from a given "Package". This primarily for 'global' scoped apps.
+     */
+    vscode.commands.registerCommand('snich.sys_package.load.all', async () => {
+        let func = 'sys_package_load.all';
+        logger.info(lib, func, 'START');
+
+        if (!instanceList.atLeastOneConfigured()) {
+            return;
+        }
+
+        let fp = new SNFilePuller(instanceList, logger);
+        await fp.pullAllPackageFiles();
+        setTimeout(function () {
+            //faking it for now. Need to fix "async function in tableData for loop..."
+            snichOutput.appendLine('All Package files have been loaded. You may need to refresh your workspace file/folder list.');
+        }, 4000);
+
+    });
+
+
+    /**
+     * Load all application files based on application selection. 
+     */
+    vscode.commands.registerCommand('snich.application.load.all', async () => {
+        let func = 'application.load.all';
+        logger.info(lib, func, 'START');
+
+        if (!instanceList.atLeastOneConfigured()) {
+            return;
+        }
+        let fp = new SNFilePuller(instanceList, logger);
+        await fp.pullAllAppFiles();
+
+        setTimeout(function () {
+            //faking it for now. Need to fix "async function in tableData for loop..."
+            snichOutput.appendLine('All application files have been loaded. You may need to refresh your workspace file/folder list.');
+        }, 4000);
+
+        logger.info(lib, func, 'END', instanceList);
+    });
+
+    //for loading app files we haven't retrieved yet... goal is to "not replace existing" and increase efficiency..?
+    vscode.commands.registerCommand('snich.application.load.new', () => {
+
     });
 
     vscode.commands.registerCommand('snich.application.open_file.in.service_now', async () => {
@@ -124,8 +215,8 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     /**
-     * Run a background script. *gasp*
-     */
+    * Run a background script. *gasp*
+    */
 
     vscode.commands.registerCommand('snich.application.run.background_script.global', async () => {
         let logger = new SystemLogHelper();
@@ -334,91 +425,6 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
 
-    /**
-     * Table configuration
-     */
-    vscode.commands.registerCommand('snich.instance.setup.new_table', async () => {
-        let logger = new SystemLogHelper();
-        let func = 'snich.instance.setup.new_table';
-        logger.info(lib, func, 'START');
-
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
-        }
-        let selectedInstance: InstanceMaster = await instanceList.selectInstance();
-        if (!selectedInstance) {
-            vscode.window.showWarningMessage('Table Configuration Aborted.');
-            return undefined;
-        }
-        await selectedInstance.tableConfig.syncNew(selectedInstance);
-        logger.info(lib, func, 'END', instanceList);
-
-
-    });
-
-    /**
-     * Load all files from a given "Package". This primarily for 'global' scoped apps.
-     */
-    vscode.commands.registerCommand('snich.sys_package.load.all', async () => {
-        let func = 'sys_package_load.all';
-        logger.info(lib, func, 'START');
-
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
-        }
-
-        let fp = new SNFilePuller(instanceList, logger);
-        await fp.pullAllPackageFiles();
-        setTimeout(function () {
-            //faking it for now. Need to fix "async function in tableData for loop..."
-            snichOutput.appendLine('All Package files have been loaded. You may need to refresh your workspace file/folder list.');
-        }, 4000);
-
-    });
-
-
-    /**
-     * Load all application files based on application selection. 
-     */
-    vscode.commands.registerCommand('snich.application.load.all', async () => {
-        let func = 'application.load.all';
-        logger.info(lib, func, 'START');
-
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
-        }
-        let fp = new SNFilePuller(instanceList, logger);
-        await fp.pullAllAppFiles();
-
-        setTimeout(function () {
-            //faking it for now. Need to fix "async function in tableData for loop..."
-            snichOutput.appendLine('All application files have been loaded. You may need to refresh your workspace file/folder list.');
-        }, 4000);
-
-        logger.info(lib, func, 'END', instanceList);
-    });
-
-    //for loading app files we haven't retrieved yet... goal is to "not replace existing" and increase efficiency..?
-    vscode.commands.registerCommand('snich.application.load.new', () => {
-
-    });
-
-    /**
-     * Pull a single record from an instance.
-     */
-    vscode.commands.registerCommand('snich.instance.pull_record', async (folder) => {
-        let logger = new SystemLogHelper();
-        let func = 'instance.pull_record';
-        logger.info(lib, func, 'START');
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
-        }
-        let filePuller = new SNFilePuller(instanceList, logger);
-
-        await filePuller.syncRecord();
-        logger.info(lib, func, 'END', instanceList);
-
-    });
 
     /**
      * compare active editor with server
