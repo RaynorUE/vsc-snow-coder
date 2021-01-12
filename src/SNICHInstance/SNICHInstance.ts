@@ -1,52 +1,79 @@
+import * as vscode from 'vscode';
 import { SNICHConfig } from '../@types/SNICHConfig';
-import { SNICHInstanceService } from './SNICHInstanceService';
-
 
 export class SNICHInstance {
-    inService: SNICHInstanceService;
+    data: SNICHConfig.Instance = {
+        _id: "",
+        connection: {
+            auth: {
+                writeBasicToDisk: false,
 
-    lastSelectedInstanceId: string = "";
+                type: SNICHConfig.authTypes.None
+            },
+            url: ""
+        },
+        name: "",
+        rootPath: vscode.Uri.parse("")
+    };
 
     constructor() {
-        this.inService = new SNICHInstanceService()
     }
 
-    load() {
-        //May need this func to "Load the DB" if we can't do it easily in the constructor due to async..
-    }
+    setName(name: string) { this.data.name = name }
+    getName() { return this.data.name }
 
-    async selectInstance() {
-        //this would be QPItem list to select instances...
-        //get last selected first, then all but last selected, so it's at the top..
+    setId(id: string) { this.data._id = id }
+    getId() { return this.data._id }
 
-        let instanceQPs = [];
-        let lastSelected = undefined;
-        let instances = await this.inService.getMultiple();
+    setRootPath(uri: vscode.Uri) { this.data.rootPath = uri }
+    getRootPath() { return this.data.rootPath }
 
-        if (instances.length === 0) {
-            throw "No instances found. Not sure how we got here without a valid workspace configuration..";
-        }
+    getAuthType() { return this.data.connection.auth.type }
+    setAuthType(authType: SNICHConfig.authTypes) { this.data.connection.auth.type = authType }
 
-        instanceQPs = instances.map((instance) => {
-            if (instance._id == this.lastSelectedInstanceId) {
-                lastSelected = instance;
-            } else {
-                return instance;
-            }
-        })
-
-        if (lastSelected) {
-            instanceQPs.unshift(lastSelected);
-        }
-
-        //show quick pick
+    setUserName(userName: string) {
 
     }
 
-    async saveInstance(instanceData: SNICHConfig.Instance) {
+    setPassword(password: string) {
+        /**
+         * @todo setup crypto!
+         */
+    }
 
+    getPassword() {
+        /**@todo decrypt via crypto. */
+    }
+
+    setBasicAuth(username: string, password: string) {
+        this.setUserName(username);
+        this.setPassword(password);
+    }
+
+    testConnection() {
+        /**
+         * @todo if 401 unauthorized, call handleAuthFailure, which will handle checking auth types and trying to recover authentication.
+         */
+
+    }
+
+    handleAuthFailure() {
+        /**
+         * @todo if 401, and type is basic, re-ask for password. If type is oauth
+         */
+    }
+
+
+
+    /**
+     * Set the internal data object from some source DB, JSON file, etc.
+     * @param data Data loaded from somewhere
+     */
+    setData(data: SNICHConfig.Instance) {
+        //de-reference
+        const newData = { ...data };
+        newData.rootPath = vscode.Uri.parse(`${data.rootPath.scheme}://${data.rootPath.path}`);
+
+        this.data = newData;
     }
 }
-
-
-

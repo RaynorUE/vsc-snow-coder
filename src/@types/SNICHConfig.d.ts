@@ -26,7 +26,7 @@ declare namespace SNICHConfig {
     }
 
     interface Auth {
-        type: "oauth-authorization_code" | "basic";
+        type: authTypes;
         username?: string;
         password?: string;
         writeBasicToDisk: boolean;
@@ -90,5 +90,11 @@ declare namespace SNICHConfig {
         name: string;
         label: string;
         extension: string;
+    }
+
+    enum authTypes {
+        Basic = "Basic",
+        OAuth = "oauth-authorization_code",
+        None = ""
     }
 }

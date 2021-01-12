@@ -4,7 +4,7 @@ import AsyncNedb from 'nedb-async'
 import { SNICHConfig } from '../@types/SNICHConfig';
 
 
-export class SNICHInstanceService {
+export class SNICHInstancesService {
     DB = new AsyncNedb();
     constructor() {
         const DBfilePath = this.getDBFilePath();
