@@ -29,7 +29,6 @@ declare namespace SNICHConfig {
         type: authTypes;
         username?: string;
         password?: string;
-        writeBasicToDisk: boolean;
         OAuth?: OAuthData
     }
 

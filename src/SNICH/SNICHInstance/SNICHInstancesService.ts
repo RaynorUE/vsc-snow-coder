@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { WSFileMan } from '../FileMan/WSFileMan';
+import { WSFileMan } from '../../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
-import { SNICHConfig } from '../@types/SNICHConfig';
+import { SNICHConfig } from '../../@types/SNICHConfig';
 
 
 export class SNICHInstancesService {
