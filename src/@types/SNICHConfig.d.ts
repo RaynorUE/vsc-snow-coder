@@ -27,9 +27,9 @@ declare namespace SNICHConfig {
 
     interface Auth {
         type: authTypes;
-        username?: string;
-        password?: string;
-        OAuth?: OAuthData
+        username: string;
+        password: string;
+        OAuth: OAuthData
     }
 
     interface OAuthData {
@@ -43,8 +43,8 @@ declare namespace SNICHConfig {
     interface OAuthToken {
         access_token: string;
         refresh_token: string;
-        scope: "useraccount";
-        token_type: "Bearer";
+        scope: string;
+        token_type: string;
         expires_in: number;
 
     }
