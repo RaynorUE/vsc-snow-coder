@@ -1,5 +1,7 @@
+import { AxiosRequestConfig } from 'axios';
 import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
+import { SNICHRestClient } from './SNICHRestClient';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
@@ -7,6 +9,7 @@ export class SNICHConnection {
             type: SNICHConfig.authTypes.None,
             username: "",
             password: "",
+            writeBasicToDisk: false,
             OAuth: {
                 client_id: "",
                 client_secret: "",
@@ -28,8 +31,8 @@ export class SNICHConnection {
 
     }
 
-    getURL(){return this.data.url};
-    setURL(url: string){this.data.url = url}
+    getURL() { return this.data.url };
+    setURL(url: string) { this.data.url = url }
 
     setData(data: SNICHConfig.Connection) {
         const newData = { ...data }
@@ -41,10 +44,16 @@ export class SNICHConnection {
     getAuthType() { return this.data.auth.type }
     setAuthType(authType: SNICHConfig.authTypes) { this.data.auth.type = authType }
 
-    getUserName() { return this.data.auth.username}
+    getUserName() { return this.data.auth.username }
     setUserName(userName: string) {
         this.data.auth.username = userName;
     }
+
+    setStoreBasicToDisk(flag: boolean) {
+        this.data.auth.writeBasicToDisk = flag;
+    }
+
+    getStoreBasicToDisk() { return this.data.auth.writeBasicToDisk }
 
     getPassword() {
         if (!this.data.auth.password) {
@@ -59,42 +68,47 @@ export class SNICHConnection {
         /**
          * @todo setup crypto!
          */
-        var crypt = new SNICHCrypto();
-        var encryptedPw = crypt.encrypt(password);
-        this.data.auth.password = encryptedPw;
+        if (password) {
+            var crypt = new SNICHCrypto();
+            var encryptedPw = crypt.encrypt(password);
+            this.data.auth.password = encryptedPw;
+        } else {
+            this.data.auth.password = '';
+        }
+
     }
 
-    getclientId() { return this.data.auth.OAuth?.client_id}
-    setClientId(clientId: string){
+    getclientId() { return this.data.auth.OAuth?.client_id }
+    setClientId(clientId: string) {
         this.data.auth.OAuth.client_id = clientId;
-        
+
     }
 
-    getClientSecret(){ 
-        if(this.data.auth.OAuth.client_secret){
+    getClientSecret() {
+        if (this.data.auth.OAuth.client_secret) {
             return new SNICHCrypto().decrypt(this.data.auth.OAuth.client_secret);
         } else {
             return ``;
         }
     }
 
-    setClientSecret(secret: string){
+    setClientSecret(secret: string) {
         this.data.auth.OAuth.client_secret = new SNICHCrypto().encrypt(secret);
     }
 
-    getOAuthToken() { return this.data.auth.OAuth.token}
-    setOAuthToken(token: SNICHConfig.OAuthToken){
+    getOAuthToken() { return this.data.auth.OAuth.token }
+    setOAuthToken(token: SNICHConfig.OAuthToken) {
         this.data.auth.OAuth.token = token;
     }
 
     /**
      * Will handle if access token has expired and attempt to get a new refresh token..
      */
-    getOAuthAccessToken(){
+    getOAuthAccessToken() {
 
     }
 
-    getOAuthTokenType(){ return this.data.auth.OAuth.token.token_type}
+    getOAuthTokenType() { return this.data.auth.OAuth.token.token_type }
 
     testConnection() {
         /**
@@ -107,6 +121,44 @@ export class SNICHConnection {
         /**
          * @todo if 401, and type is basic, re-ask for password. If type is oauth
          */
+    }
+
+    getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
+        const sConn = this;
+        const rClient = new SNICHRestClient(sConn);
+
+        const config: AxiosRequestConfig = {
+            params: {
+                sysparm_fields: fields.join(','),
+                sysparm_exclude_reference_links: true,
+                sysparm_display_value: displayValue
+            }
+        }
+
+        rClient.get(`/api/now/table/${tableName}/${sys_id}`, config);
+
+    }
+
+    getRecords(tableName: string, query: string, fields: string[], displayValue: boolean | "all") {
+        const sConn = this;
+        const rClient = new SNICHRestClient(sConn);
+
+        const config: AxiosRequestConfig = {
+            params: {
+                sysparm_query: query,
+                sysparm_fields: fields.join(','),
+                sysparm_exclude_reference_links: true,
+                sysparm_display_value: displayValue
+            }
+        }
+
+        rClient.get(`/api/now/table/${tableName}`, config);
+
+    }
+
+    executeBackgroundScript(script: string, scope: string) {
+        // Storing here a way to login with a get request and grab the g_ck and also likely setup the cookiejar
+        // https://dev96649.service-now.com/login.do?user_name=admin&sys_action=sysverb_login&user_password=hz3O0dCsMCeZ
     }
 
 

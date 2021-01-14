@@ -7,7 +7,24 @@ export class SNICHInstance {
         _id: "",
         connection: {
             auth: {
-                type: SNICHConfig.authTypes.None
+                type: SNICHConfig.authTypes.None,
+                writeBasicToDisk: false,
+                username: "",
+                password: "",
+                OAuth: {
+                    client_id: "",
+                    client_secret: "",
+                    lastRetrieved: 0,
+                    token: {
+                        access_token: "",
+                        expires_in: 0,
+                        refresh_token: "",
+                        scope: "",
+                        token_type: ""
+                    }
+                }
+
+
             },
             url: ""
         },
@@ -60,6 +77,12 @@ export class SNICHInstance {
 
     getData() {
         const connData = { ...this.connection.getData() };
+        if (this.connection.getStoreBasicToDisk()) {
+            //clearing before any getData calls... which should be when we write to disk.. This effectively lets us store it in memory.
+            connData.auth.password = '';
+
+        }
+
         this.data.connection = connData; //make sure we have latest connection data as well.
         return this.data
     }

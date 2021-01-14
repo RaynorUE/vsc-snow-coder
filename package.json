@@ -208,7 +208,6 @@
         "webpack-cli": "^3.3.11"
     },
     "dependencies": {
-        "axios": "^0.21.1",
         "nedb": "^1.8.0",
         "nedb-async": "^0.1.6",
         "node-machine-id": "^1.1.12",

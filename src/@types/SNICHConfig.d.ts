@@ -27,6 +27,7 @@ declare namespace SNICHConfig {
 
     interface Auth {
         type: authTypes;
+        writeBasicToDisk: boolean;
         username: string;
         password: string;
         OAuth: OAuthData
