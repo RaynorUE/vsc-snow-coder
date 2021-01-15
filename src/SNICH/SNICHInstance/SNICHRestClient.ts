@@ -51,44 +51,43 @@ export class SNICHRestClient {
     }
 
     async put(url: string, data: any, config?: rp.RequestPromiseOptions) {
+        if(!config){
+            config = {};
+        }
+        config.body = data;
+        let result = await this.client.put(url, config);
+        this.enableAuth();
+        return result;
+    }
+    async patch(url: string, data: any, config?: rp.RequestPromiseOptions) {
+        if(!config){
+            config = {};
+        }
+        config.body = data;
+        let result = await this.client.put(url, config);
+        this.enableAuth();
+        return result;
+    }
+    async post(url: string, data: any, config?: rp.RequestPromiseOptions) {
+        if(!config){
+            config = {};
+        }
+        config.body = data;
+        let result = await this.client.post(url, config);
+        this.enableAuth();
+        return result;
+    }
+    async delete(url: string, config?: rp.RequestPromiseOptions) {
         if (config) {
-            let result = await this.client.get(url, config);
+            let result = await this.client.delete(url, config);
             this.enableAuth();
             return result;
         } else {
-            let result = await this.client.get(url);
+            let result = await this.client.delete(url);
             this.enableAuth();
             return result;
         }
     }
-    async patch(url: string, data: any, config?: rp.RequestPromiseOptions) {
 
-    }
-    async post(url: string, data: any, config?: rp.RequestPromiseOptions) {
 
-    }
-    async delete(url: string, config?: rp.RequestPromiseOptions) {
-
-    }
-
-    async testConnection() {
-        let result;
-        try {
-            let restResult = await this.client.get('/api/now/table/', { qs: { sysparm_query: `user_name=${this.connection.getUserName()}`, sysparm_limit: 1 } });
-            if (restResult.body) {
-                result = true;
-            }
-        } catch (e) {
-            if (e.name == 'statusCodeError' && e.StatusCode == 401) {
-                result = false
-            }
-        }
-
-        return result;
-
-    }
-
-    async runBackgroundScript() {
-
-    }
 }

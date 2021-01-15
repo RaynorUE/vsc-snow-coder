@@ -1,4 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
+import requestPromise = require('request-promise-native');
 import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
@@ -110,10 +111,22 @@ export class SNICHConnection {
 
     getOAuthTokenType() { return this.data.auth.OAuth.token.token_type }
 
-    testConnection() {
-        /**
-         * @todo if 401 unauthorized, call handleAuthFailure, which will handle checking auth types and trying to recover authentication.
-         */
+    async testConnection() {
+        const sConn = this;
+        let rClient = new SNICHRestClient(sConn);
+        let result;
+        try {
+            let restResult = await rClient.get('/api/now/table/', { qs: { sysparm_query: `user_name=${this.getUserName()}`, sysparm_limit: 1 } });
+            if (restResult.statusCode) {
+                result = restResult.statusCode;
+            }
+        } catch (e) {
+            if (e.name == 'statusCodeError' && e.statusCode == 401) {
+                result = e.statusCode
+            }
+        }
+
+        return result;
 
     }
 
@@ -123,12 +136,19 @@ export class SNICHConnection {
          */
     }
 
+    /**
+     * Puts a record in the SN Instance, performing an update with the supplied data.
+     */
+    putRecord(tableName: string, sys_id: string, data: string) {
+
+    }
+
     getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
 
-        const config: AxiosRequestConfig = {
-            params: {
+        const config: requestPromise.RequestPromiseOptions = {
+            qs: {
                 sysparm_fields: fields.join(','),
                 sysparm_exclude_reference_links: true,
                 sysparm_display_value: displayValue
@@ -143,8 +163,8 @@ export class SNICHConnection {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
 
-        const config: AxiosRequestConfig = {
-            params: {
+        const config: requestPromise.RequestPromiseOptions = {
+            qs: {
                 sysparm_query: query,
                 sysparm_fields: fields.join(','),
                 sysparm_exclude_reference_links: true,

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHConnection } from './SNICHConnection';
+import { SNICHRestClient } from './SNICHRestClient';
 
 export class SNICHInstance {
     private data: SNICHConfig.Instance = {
@@ -40,6 +41,13 @@ export class SNICHInstance {
         }
     }
 
+    /**
+     * go through all the various setup questions and process for configuring a new SNICH Instance.
+     */
+    setup(){
+        
+    }
+
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }
 
@@ -56,6 +64,24 @@ export class SNICHInstance {
 
     getConnection() { return this.connection }
 
+    async testConnection(){
+        let resultStatusCode = await this.connection.testConnection();
+
+        if(resultStatusCode === 200){
+            vscode.window.showInformationMessage('Test Connection Successful!');
+        } else if (resultStatusCode == 401){
+            //unauthoried
+            /**
+             * @todo re-ask for authentication information.
+             */
+        } else {
+            vscode.window.showWarningMessage('Unknown error occurred testing connection. Instance might be unavailable or some other failured occured.');
+        }
+    }
+
+    async runBackgroundScript() {
+
+    }
 
     /**
      * Set the internal data object from some source DB, JSON file, etc.
