@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from 'axios';
+import * as vscode from 'vscode';
 import requestPromise = require('request-promise-native');
 import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
@@ -31,6 +31,67 @@ export class SNICHConnection {
     constructor() {
 
     }
+
+    setupAuth(){
+
+        //vscode window asking which auth type
+
+        //if basic auth
+        //ask for username && password method
+
+
+        //if oAuth
+        //ask for "Setup new, got my stuff, open list of OAuth providers";
+
+        //if Setup New, launch to form view (like you do already)
+
+        //if open list of OAuth Provides, open window, and move on..
+
+
+        //ask for OAuth Details method
+        //await clientID
+        //await client secret
+
+        //Method for "Launch Web Server" and "Launch OAuth code grant flow browser", useful for first setup, but also useful when refresh token does not work or is expired..
+
+
+        //finally test connection. Which will handle re-asking for appropriate into based on config..
+        
+    }
+
+    async setupBasicAuth():Promise<boolean> {
+
+        let result = false;
+        //ask for username
+
+        //ask for password
+
+        return result;
+    }
+
+    async setupOAuth():Promise<boolean>{
+
+        let result = false;
+
+        //await for "How to get ClientID/Secret";
+
+        //ask for client id
+
+        //ask for client secret
+
+        //launchOAuth
+
+
+        return result;
+    }
+
+    async launchOAuth():Promise<boolean>{
+        let result = false;
+
+
+        return result;
+    }
+
 
     getURL() { return this.data.url };
     setURL(url: string) { this.data.url = url }
@@ -108,10 +169,11 @@ export class SNICHConnection {
     getOAuthAccessToken() {
 
     }
+    
 
     getOAuthTokenType() { return this.data.auth.OAuth.token.token_type }
 
-    async testConnection() {
+    async testConnection():Promise<number | undefined> {
         const sConn = this;
         let rClient = new SNICHRestClient(sConn);
         let result;
@@ -121,7 +183,8 @@ export class SNICHConnection {
                 result = restResult.statusCode;
             }
         } catch (e) {
-            if (e.name == 'statusCodeError' && e.statusCode == 401) {
+            const error:rpError = e;
+            if (error.name == 'StatusCodeError' && error.statusCode == 401) {
                 result = e.statusCode
             }
         }
@@ -139,11 +202,23 @@ export class SNICHConnection {
     /**
      * Puts a record in the SN Instance, performing an update with the supplied data.
      */
-    putRecord(tableName: string, sys_id: string, data: string) {
+    async putRecord(tableName: string, sys_id: string, body: requestPromise.RequestPromiseOptions) {
+        const sConn = this;
+        const rClient = new SNICHRestClient(sConn);
 
+        //spread in our incoming body object, 
+        const config: requestPromise.RequestPromiseOptions = {
+            body: {...body},
+            qs: {
+                sysparm_exclude_reference_links: true,
+                sysparm_display_value: false,
+            }
+        }
+
+        rClient.put(`/api/now/table/${tableName}/${sys_id}`, config);
     }
 
-    getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
+    async getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
 
@@ -159,9 +234,15 @@ export class SNICHConnection {
 
     }
 
-    getRecords(tableName: string, query: string, fields: string[], displayValue: boolean | "all") {
+    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all"):Promise<any[]> {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
+
+        if(!displayValue){
+            displayValue = false;
+        }
+
+        let result = [];
 
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
@@ -172,7 +253,24 @@ export class SNICHConnection {
             }
         }
 
-        rClient.get(`/api/now/table/${tableName}`, config);
+        let restResults = await rClient.get(`/api/now/table/${tableName}`, config);
+
+
+    }
+
+    /**
+     * 
+     * @param name the name of the user preference to get
+     * @param username The username to get the preference for. If not supplied will grab "global"
+     */
+    async getPreference(name: string, username?: string){
+
+        let encQuery = `name=${name}^system=true^user=NULL`;
+        if(username){
+            encQuery = `name=${name}^user.user_name=${username}`;
+        }
+
+        let result = await this.getRecords('sys_user_preference', encQuery, ['value','name']);
 
     }
 
