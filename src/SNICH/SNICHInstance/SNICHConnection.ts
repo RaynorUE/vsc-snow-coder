@@ -21,7 +21,7 @@ export class SNICHConnection {
                     refresh_token: "",
                     scope: "",
                     token_type: ""
-                }
+                },
             }
 
         },
@@ -32,8 +32,9 @@ export class SNICHConnection {
 
     }
 
-    setupAuth(){
+    async setupAuth():Promise<boolean> {
 
+        return false;
         //vscode window asking which auth type
 
         //if basic auth
@@ -56,10 +57,10 @@ export class SNICHConnection {
 
 
         //finally test connection. Which will handle re-asking for appropriate into based on config..
-        
+
     }
 
-    async setupBasicAuth():Promise<boolean> {
+    async setupBasicAuth(): Promise<boolean> {
 
         let result = false;
         //ask for username
@@ -69,7 +70,7 @@ export class SNICHConnection {
         return result;
     }
 
-    async setupOAuth():Promise<boolean>{
+    async setupOAuth(): Promise<boolean> {
 
         let result = false;
 
@@ -85,95 +86,77 @@ export class SNICHConnection {
         return result;
     }
 
-    async launchOAuth():Promise<boolean>{
+    async launchOAuth(): Promise<boolean> {
         let result = false;
 
 
         return result;
     }
 
-
-    getURL() { return this.data.url };
-    setURL(url: string) { this.data.url = url }
-
-    setData(data: SNICHConfig.Connection) {
-        const newData = { ...data }
-        this.data = newData;
-    }
-
-    getData() { return this.data }
-
-    getAuthType() { return this.data.auth.type }
-    setAuthType(authType: SNICHConfig.authTypes) { this.data.auth.type = authType }
-
-    getUserName() { return this.data.auth.username }
-    setUserName(userName: string) {
-        this.data.auth.username = userName;
-    }
-
-    setStoreBasicToDisk(flag: boolean) {
-        this.data.auth.writeBasicToDisk = flag;
-    }
-
-    getStoreBasicToDisk() { return this.data.auth.writeBasicToDisk }
-
-    getPassword() {
-        if (!this.data.auth.password) {
-            return ``;
-        }
-        var crypt = new SNICHCrypto();
-        var decryptedPw = crypt.decrypt(this.data.auth.password);
-        return decryptedPw || ``;
-    }
-
-    setPassword(password: string) {
-        /**
-         * @todo setup crypto!
-         */
-        if (password) {
-            var crypt = new SNICHCrypto();
-            var encryptedPw = crypt.encrypt(password);
-            this.data.auth.password = encryptedPw;
-        } else {
-            this.data.auth.password = '';
-        }
-
-    }
-
-    getclientId() { return this.data.auth.OAuth?.client_id }
-    setClientId(clientId: string) {
-        this.data.auth.OAuth.client_id = clientId;
-
-    }
-
-    getClientSecret() {
-        if (this.data.auth.OAuth.client_secret) {
-            return new SNICHCrypto().decrypt(this.data.auth.OAuth.client_secret);
-        } else {
-            return ``;
-        }
-    }
-
-    setClientSecret(secret: string) {
-        this.data.auth.OAuth.client_secret = new SNICHCrypto().encrypt(secret);
-    }
-
-    getOAuthToken() { return this.data.auth.OAuth.token }
-    setOAuthToken(token: SNICHConfig.OAuthToken) {
-        this.data.auth.OAuth.token = token;
-    }
-
     /**
      * Will handle if access token has expired and attempt to get a new refresh token..
      */
-    getOAuthAccessToken() {
+    async getOAuthAccessToken(): Promise<SNICHConfig.OAuthToken | undefined> {
+
+        if (this.data.auth.type !== SNICHConfig.authTypes.OAuth) {
+            throw 'Attempted to get an OAuthAccessToken and Auth type is: ' + this.data.auth.type;
+        }
+
+
+        const oAuthData = this.data.auth.OAuth;
+        let launchFlow = false;
+
+        if (!oAuthData.token.access_token) {
+            launchFlow = true;
+        }
+
+        let now = Date.now();
+        let hadTokenFor = now - oAuthData.lastRetrieved + 10000; //add 10000 milliseconds (10 seconds), to account for time sync issues, and making sure we attempt to get a new token BEFORE it actually expires.
+        let expiresIn = oAuthData.token.expires_in * 1000; //SN returns "Seconds" need this to be milliseconds for comparison
+
+
+        if (hadTokenFor < expiresIn && !launchFlow) {
+            //Token not expired, return it!
+            return oAuthData.token;
+
+        } else if (!launchFlow) {
+            //Token expired, get a new one!
+            const sConn = this;
+            const rClient = new SNICHRestClient(sConn);
+
+            const config: requestPromise.RequestPromiseOptions = {
+                form: {
+                    grant_type: "refresh_token",
+                    client_id: oAuthData.client_id,
+                    client_secret: oAuthData.client_secret,
+                    refresh_token: oAuthData.token.refresh_token
+                }
+            }
+
+
+            try {
+                let results: any = await rClient.get('/oauth_token.do', config);
+                if (results) {
+                    let accessToken: SNICHConfig.OAuthToken = results;
+                    return accessToken;
+                }
+
+            } catch (e) {
+                launchFlow = true;
+
+            }
+        }
+
+
+        if (launchFlow) {
+            // call the method to launch the flow and test connection, etc.. 
+        }
+
+
 
     }
-    
 
-    getOAuthTokenType() { return this.data.auth.OAuth.token.token_type }
-
-    async testConnection():Promise<number | undefined> {
+    async testConnection(): Promise<number | undefined> {
         const sConn = this;
         let rClient = new SNICHRestClient(sConn);
         let result;
@@ -183,7 +166,7 @@ export class SNICHConnection {
                 result = restResult.statusCode;
             }
         } catch (e) {
-            const error:rpError = e;
+            const error: rpError = e;
             if (error.name == 'StatusCodeError' && error.statusCode == 401) {
                 result = e.statusCode
             }
@@ -193,7 +176,7 @@ export class SNICHConnection {
 
     }
 
-    handleAuthFailure() {
+    async handleAuthFailure() {
         /**
          * @todo if 401, and type is basic, re-ask for password. If type is oauth
          */
@@ -208,7 +191,7 @@ export class SNICHConnection {
 
         //spread in our incoming body object, 
         const config: requestPromise.RequestPromiseOptions = {
-            body: {...body},
+            body: { ...body },
             qs: {
                 sysparm_exclude_reference_links: true,
                 sysparm_display_value: false,
@@ -234,11 +217,11 @@ export class SNICHConnection {
 
     }
 
-    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all"):Promise<any[]> {
+    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all"): Promise<any[]> {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
 
-        if(!displayValue){
+        if (!displayValue) {
             displayValue = false;
         }
 
@@ -263,20 +246,79 @@ export class SNICHConnection {
      * @param name the name of the user preference to get
      * @param username The username to get the preference for. If not supplied will grab "global"
      */
-    async getPreference(name: string, username?: string){
+    async getPreference(name: string, username?: string) {
 
         let encQuery = `name=${name}^system=true^user=NULL`;
-        if(username){
+        if (username) {
             encQuery = `name=${name}^user.user_name=${username}`;
         }
 
-        let result = await this.getRecords('sys_user_preference', encQuery, ['value','name']);
+        let result = await this.getRecords('sys_user_preference', encQuery, ['value', 'name']);
 
     }
 
-    executeBackgroundScript(script: string, scope: string) {
+    async executeBackgroundScript(script: string, scope: string) {
         // Storing here a way to login with a get request and grab the g_ck and also likely setup the cookiejar
         // https://dev96649.service-now.com/login.do?user_name=admin&sys_action=sysverb_login&user_password=hz3O0dCsMCeZ
+    }
+
+
+    getURL() { return this.data.url };
+    setURL(url: string) { this.data.url = url }
+    setData(data: SNICHConfig.Connection) {
+        const newData = { ...data }
+        this.data = newData;
+    }
+    getData() { return this.data }
+    getAuthType() { return this.data.auth.type }
+    setAuthType(authType: SNICHConfig.authTypes) { this.data.auth.type = authType }
+    getUserName() { return this.data.auth.username }
+    setUserName(userName: string) {
+        this.data.auth.username = userName;
+    }
+    setStoreBasicToDisk(flag: boolean) {
+        this.data.auth.writeBasicToDisk = flag;
+    }
+    getStoreBasicToDisk() { return this.data.auth.writeBasicToDisk }
+    getPassword() {
+        if (!this.data.auth.password) {
+            return ``;
+        }
+        var crypt = new SNICHCrypto();
+        var decryptedPw = crypt.decrypt(this.data.auth.password);
+        return decryptedPw || ``;
+    }
+    setPassword(password: string) {
+        /**
+         * @todo setup crypto!
+         */
+        if (password) {
+            var crypt = new SNICHCrypto();
+            var encryptedPw = crypt.encrypt(password);
+            this.data.auth.password = encryptedPw;
+        } else {
+            this.data.auth.password = '';
+        }
+
+    }
+    getclientId() { return this.data.auth.OAuth?.client_id }
+    setClientId(clientId: string) {
+        this.data.auth.OAuth.client_id = clientId;
+
+    }
+    getClientSecret() {
+        if (this.data.auth.OAuth.client_secret) {
+            return new SNICHCrypto().decrypt(this.data.auth.OAuth.client_secret);
+        } else {
+            return ``;
+        }
+    }
+    setClientSecret(secret: string) {
+        this.data.auth.OAuth.client_secret = new SNICHCrypto().encrypt(secret);
+    }
+    getOAuthToken() { return this.data.auth.OAuth.token }
+    setOAuthToken(token: SNICHConfig.OAuthToken) {
+        this.data.auth.OAuth.token = token;
     }
 
 

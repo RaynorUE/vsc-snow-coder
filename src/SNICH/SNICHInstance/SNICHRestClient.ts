@@ -9,7 +9,9 @@ export class SNICHRestClient {
     constructor(conn: SNICHConnection) {
         this.connection = conn;
         this.client = rp.defaults({
-            baseUrl: this.connection.getURL()
+            baseUrl: this.connection.getURL(),
+            gzip: true,
+            json: true
         })
 
 

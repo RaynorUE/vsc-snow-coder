@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { SNICHConfig } from '../../@types/SNICHConfig';
+import { SystemLogHelper } from '../../classes/LogHelper';
 import { SNICHConnection } from './SNICHConnection';
-import { SNICHRestClient } from './SNICHRestClient';
 
 export class SNICHInstance {
     private data: SNICHConfig.Instance = {
@@ -33,7 +33,10 @@ export class SNICHInstance {
         rootPath: vscode.Uri.parse("")
     };
 
-    connection = new SNICHConnection()
+    logger = new SystemLogHelper();
+    type = "SNICHInstance";
+
+    connection = new SNICHConnection();
 
     constructor(data?: SNICHConfig.Instance) {
         if (data) {
@@ -44,13 +47,84 @@ export class SNICHInstance {
     /**
      * go through all the various setup questions and process for configuring a new SNICH Instance.
      */
-    setup(){
+    async setup():Promise<boolean>{
+        var func = "setup";
+        this.logger.info(this.type, func, "ENTERING");
+
+        let result = false;
+
+        let steps = 1;
+
+        let yesNo:vscode.QuickPickItem[] = [{label:"Yes"}, {label:"No"}];
+
+        step++;
+        let enteredInstanceValue = await vscode.window.showInputBox({ignoreFocusOut: true, prompt:`Enter Instance Name or URL (1/${steps})`, placeHolder:"https://dev00000.service-now.com", validateInput: (value) => this.validateName(value)});
+
+        if(!enteredInstanceValue){
+            return this.abortSetup('No instance name or url entered.');
+        }
+
+        let instanceUrl = ``;
+
+        if(enteredInstanceValue.indexOf('http://') > -1 || enteredInstanceValue.indexOf('https://') > -1){
+            //instance entered IS a URL.
+            instanceUrl = enteredInstanceValue;
+        } else if(enteredInstanceValue.indexOf('.') > -1){
+            //instance entered is not a FULL Url with protocol... add it..
+            instanceUrl = `https://${enteredInstanceValue}`;
+        } else {
+            //last assumption is entered was JUST an instance name..
+            instanceUrl = `https://${enteredInstanceValue}.service-now.com`;
+        }
+
+    
+        let validateInstanceURL = await vscode.window.showQuickPick(yesNo, {ignoreFocusOut: true, placeHolder:`Continue with instance url? ${instanceUrl} (2/${steps})`});
+        if(!validateInstanceURL){
+            return this.abortSetup();
+        }
+
+        if(validateInstanceURL.label == 'No'){
+            return this.setup(); //exit and start setup over again.
+        }
+
+        this.connection.setURL(instanceUrl);
+
+        // Validate folder name. Giving an opportunity to change.
+        let fixedInstanceName = instanceUrl.replace('https://', '').replace(':', '_');
+
+        let instanceName = await vscode.window.showInputBox({prompt: `Create with folder name (3/${steps})`, ignoreFocusOut: true, value: fixedInstanceName});
+        if(!instanceName){
+            return this.abortSetup('No folder name specified.');
+        }
+
+        this.setName(instanceName);
+
+        let authResult = await this.connection.setupAuth();
+        if(!authResult){
+            return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
+        }
+
+        return result;
+
+        this.logger.info(this.type, func, "LEAVING");
         
     }
 
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }
+    validateName(name: string){
+        if(!name){
+            return 'Nothing entered. Try again.';
+        } else {
+            return null;
+        }
+    }
 
+    abortSetup(msg?:string ){
+        vscode.window.showWarningMessage('Instance setup aborted. ' + (msg || "")) ;
+        return false;
+    }
+    
     setId(id: string) { this.data._id = id }
     getId() { return this.data._id }
 
