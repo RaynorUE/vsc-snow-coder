@@ -6,7 +6,7 @@
 		"lib": [
 			"es6"
 		],
-		"typeRoots": ["/src/myTypes"],
+		"typeRoots": ["/src/@Types", "@Types"],
 		"sourceMap": true,
         "rootDir": "src",
 		/* Strict Type-Checking Option */
@@ -19,7 +19,8 @@
 	},
 	"exclude": [
 		"node_modules",
-		".vscode-test"
+		".vscode-test",
+		"SNICH_Background"
 	]
 	
 }

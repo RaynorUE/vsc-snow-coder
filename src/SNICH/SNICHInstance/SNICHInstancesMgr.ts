@@ -1,6 +1,6 @@
 import { SNICHInstance } from './SNICHInstance';
 import { SNICHInstancesService } from './SNICHInstancesService';
-import * as vscode from 'vscode';
+import { SystemLogHelper } from '../../classes/LogHelper';
 
 
 export class SNICHInstancesMgr {
@@ -8,8 +8,11 @@ export class SNICHInstancesMgr {
 
     lastSelectedInstanceId: string = "";
 
-    constructor() {
-        this.inService = new SNICHInstancesService()
+    logger: SystemLogHelper;
+
+    constructor(logger: SystemLogHelper) {
+        this.logger = logger;
+        this.inService = new SNICHInstancesService(this.logger)
     }
 
     load() {
@@ -29,7 +32,7 @@ export class SNICHInstancesMgr {
         if (instanceId) {
             let foundInstance = await this.inService.get({ _id: instanceId });
             if (foundInstance && foundInstance._id) {
-                selectedInstance = new SNICHInstance(foundInstance);
+                selectedInstance = new SNICHInstance(this.logger, foundInstance);
             }
         }
 

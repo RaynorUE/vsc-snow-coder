@@ -1,4 +1,4 @@
-import { snTableField, SNQPItem, snRecord } from "../@types";
+import { snTableField, SNQPItem, snRecord } from "../@Types";
 import { InstanceMaster } from "./InstanceConfigManager";
 import { RESTClient } from "./RESTClient";
 import * as vscode from "vscode";

@@ -1,6 +1,6 @@
 import { RESTClient } from './RESTClient';
 import { SystemLogHelper } from './LogHelper';
-import { SNApplication, InstanceConnectionData, SNQPItem, snTableField } from '../@types';
+import { SNApplication, InstanceConnectionData, SNQPItem, snTableField } from '../@Types';
 import { WorkspaceManager } from './WorkspaceManager';
 import * as vscode from 'vscode';
 import { ConfiguredTables, TableConfig } from './SNDefaultTables';

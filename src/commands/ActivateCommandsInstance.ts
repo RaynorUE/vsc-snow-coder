@@ -1,21 +1,21 @@
-import * as vscode from 'vscode';
-import { extensionContext } from '../extension2';
 import { SystemLogHelper } from '../classes/LogHelper';
+import { SNICHInstance } from '../SNICH/SNICHInstance/SNICHInstance';
 
 export class ActivateCommandsInstance {
 
-    lib = `ActivateCommandsInstance`;
+    type = `ActivateCommandsInstance`;
 
     constructor() { }
 
     async setup() {
         let logger = new SystemLogHelper();
         let func = 'setup.new_instance';
-        logger.info(this.lib, func, 'START');
-        await instanceList.setupNew();
-        logger.info(this.lib, func, 'END');
+        logger.info(this.type, func, 'START');
+        await new SNICHInstance(logger).setup();
+        logger.info(this.type, func, 'END');
     }
 
+    /*
     async testConnection() {
         let logger = new SystemLogHelper();
         let func = 'testConnection';
@@ -62,4 +62,5 @@ export class ActivateCommandsInstance {
         await selectedInstance.tableConfig.syncNew(selectedInstance);
         logger.info(this.lib, func, 'END', instanceList);
     }
+    */
 }

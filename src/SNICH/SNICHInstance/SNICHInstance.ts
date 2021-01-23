@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SystemLogHelper } from '../../classes/LogHelper';
 import { SNICHConnection } from './SNICHConnection';
 
@@ -8,7 +7,7 @@ export class SNICHInstance {
         _id: "",
         connection: {
             auth: {
-                type: SNICHConfig.authTypes.None,
+                type: "None",
                 writeBasicToDisk: false,
                 username: "",
                 password: "",
@@ -30,7 +29,10 @@ export class SNICHInstance {
             url: ""
         },
         name: "",
-        rootPath: vscode.Uri.parse("")
+        rootPath: {
+            path: "",
+            fspath: ""
+        }
     };
 
     logger = new SystemLogHelper();
@@ -38,7 +40,7 @@ export class SNICHInstance {
 
     connection = new SNICHConnection();
 
-    constructor(data?: SNICHConfig.Instance) {
+    constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
         if (data) {
             this.setData(data);
         }
@@ -47,29 +49,25 @@ export class SNICHInstance {
     /**
      * go through all the various setup questions and process for configuring a new SNICH Instance.
      */
-    async setup():Promise<boolean>{
+    async setup(): Promise<boolean> {
         var func = "setup";
         this.logger.info(this.type, func, "ENTERING");
 
         let result = false;
+        let yesNo: vscode.QuickPickItem[] = [{ label: "Yes" }, { label: "No" }];
 
-        let steps = 1;
+        let enteredInstanceValue = await vscode.window.showInputBox({ ignoreFocusOut: true, prompt: `Enter Instance Name or URL.`, placeHolder: "https://dev00000.service-now.com", validateInput: (value) => this.validateName(value) });
 
-        let yesNo:vscode.QuickPickItem[] = [{label:"Yes"}, {label:"No"}];
-
-        step++;
-        let enteredInstanceValue = await vscode.window.showInputBox({ignoreFocusOut: true, prompt:`Enter Instance Name or URL (1/${steps})`, placeHolder:"https://dev00000.service-now.com", validateInput: (value) => this.validateName(value)});
-
-        if(!enteredInstanceValue){
+        if (!enteredInstanceValue) {
             return this.abortSetup('No instance name or url entered.');
         }
 
         let instanceUrl = ``;
 
-        if(enteredInstanceValue.indexOf('http://') > -1 || enteredInstanceValue.indexOf('https://') > -1){
+        if (enteredInstanceValue.indexOf('http://') > -1 || enteredInstanceValue.indexOf('https://') > -1) {
             //instance entered IS a URL.
             instanceUrl = enteredInstanceValue;
-        } else if(enteredInstanceValue.indexOf('.') > -1){
+        } else if (enteredInstanceValue.indexOf('.') > -1) {
             //instance entered is not a FULL Url with protocol... add it..
             instanceUrl = `https://${enteredInstanceValue}`;
         } else {
@@ -77,13 +75,14 @@ export class SNICHInstance {
             instanceUrl = `https://${enteredInstanceValue}.service-now.com`;
         }
 
-    
-        let validateInstanceURL = await vscode.window.showQuickPick(yesNo, {ignoreFocusOut: true, placeHolder:`Continue with instance url? ${instanceUrl} (2/${steps})`});
-        if(!validateInstanceURL){
+        let yesNoInstance = [...yesNo];
+        yesNoInstance[0].label = `Yes --> ${instanceUrl}`;
+        let validateInstanceURL = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, placeHolder: `Continue with instance url? ${instanceUrl}` });
+        if (!validateInstanceURL) {
             return this.abortSetup();
         }
 
-        if(validateInstanceURL.label == 'No'){
+        if (validateInstanceURL.label == 'No') {
             return this.setup(); //exit and start setup over again.
         }
 
@@ -92,44 +91,49 @@ export class SNICHInstance {
         // Validate folder name. Giving an opportunity to change.
         let fixedInstanceName = instanceUrl.replace('https://', '').replace(':', '_');
 
-        let instanceName = await vscode.window.showInputBox({prompt: `Create with folder name (3/${steps})`, ignoreFocusOut: true, value: fixedInstanceName});
-        if(!instanceName){
+        let instanceName = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: fixedInstanceName });
+        if (!instanceName) {
             return this.abortSetup('No folder name specified.');
         }
 
         this.setName(instanceName);
 
         let authResult = await this.connection.setupAuth();
-        if(!authResult){
+        if (!authResult) {
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
         }
 
         return result;
 
         this.logger.info(this.type, func, "LEAVING");
-        
+
     }
 
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }
-    validateName(name: string){
-        if(!name){
+    validateName(name: string) {
+        if (!name) {
             return 'Nothing entered. Try again.';
         } else {
             return null;
         }
     }
 
-    abortSetup(msg?:string ){
-        vscode.window.showWarningMessage('Instance setup aborted. ' + (msg || "")) ;
+    abortSetup(msg?: string) {
+        vscode.window.showWarningMessage('Instance setup aborted. ' + (msg || ""));
         return false;
     }
-    
+
     setId(id: string) { this.data._id = id }
     getId() { return this.data._id }
 
-    setRootPath(uri: vscode.Uri) { this.data.rootPath = uri }
-    getRootPath() { return this.data.rootPath }
+    setRootPath(uri: vscode.Uri) {
+        this.data.rootPath.fspath = uri.fsPath || "";
+        this.data.rootPath.path = uri.path || "";
+    }
+    getRootPath(): vscode.Uri {
+        return vscode.Uri.parse(this.data.rootPath.path);
+    }
 
     setConnection(conn: SNICHConnection) {
         this.connection = conn;
@@ -138,12 +142,12 @@ export class SNICHInstance {
 
     getConnection() { return this.connection }
 
-    async testConnection(){
+    async testConnection() {
         let resultStatusCode = await this.connection.testConnection();
 
-        if(resultStatusCode === 200){
+        if (resultStatusCode === 200) {
             vscode.window.showInformationMessage('Test Connection Successful!');
-        } else if (resultStatusCode == 401){
+        } else if (resultStatusCode == 401) {
             //unauthoried
             /**
              * @todo re-ask for authentication information.
@@ -164,7 +168,6 @@ export class SNICHInstance {
     setData(data: SNICHConfig.Instance) {
         //de-reference
         const newData = { ...data };
-        newData.rootPath = vscode.Uri.parse(`${data.rootPath.scheme}://${data.rootPath.path}`);
 
         this.data = newData;
 

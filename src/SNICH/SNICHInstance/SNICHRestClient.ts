@@ -1,4 +1,3 @@
-import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHConnection } from './SNICHConnection';
 import * as rp from 'request-promise-native';
 import requestPromise = require('request-promise-native');
@@ -30,9 +29,9 @@ export class SNICHRestClient {
 
     enableAuth() {
         const authType = this.connection.getAuthType();
-        if (authType == SNICHConfig.authTypes.Basic) {
+        if (authType == "Basic") {
             this.client = this.client.defaults({ auth: { bearer: undefined, username: this.connection.getUserName(), password: this.connection.getPassword() } });
-        } else if (authType == SNICHConfig.authTypes.OAuth) {
+        } else if (authType == "OAuth") {
             const oAuthToken = this.connection.getOAuthToken();
             this.client = this.client.defaults({ auth: { username: undefined, password: undefined, bearer: `${oAuthToken.access_token}` } });
         } else {
@@ -41,7 +40,7 @@ export class SNICHRestClient {
     }
 
 
-    async get(url: string, config?: rp.RequestPromiseOptions):Promise<requestPromise.FullResponse> {
+    async get(url: string, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
         if (config) {
             let result = await this.client.get(url, config);
             this.enableAuth();
@@ -53,8 +52,8 @@ export class SNICHRestClient {
         }
     }
 
-    async put(url: string, data: any, config?: rp.RequestPromiseOptions):Promise<requestPromise.FullResponse> {
-        if(!config){
+    async put(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+        if (!config) {
             config = {};
         }
         config.body = data;
@@ -62,8 +61,8 @@ export class SNICHRestClient {
         this.enableAuth();
         return result;
     }
-    async patch(url: string, data: any, config?: rp.RequestPromiseOptions):Promise<requestPromise.FullResponse> {
-        if(!config){
+    async patch(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+        if (!config) {
             config = {};
         }
         config.body = data;
@@ -72,8 +71,8 @@ export class SNICHRestClient {
         return result;
     }
 
-    async post(url: string, data: any, config?: rp.RequestPromiseOptions):Promise<requestPromise.FullResponse> {
-        if(!config){
+    async post(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+        if (!config) {
             config = {};
         }
         config.body = data;
@@ -82,7 +81,7 @@ export class SNICHRestClient {
         return result;
     }
 
-    async delete(url: string, config?: rp.RequestPromiseOptions):Promise<requestPromise.FullResponse> {
+    async delete(url: string, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
         if (config) {
             let result = await this.client.delete(url, config);
             this.enableAuth();

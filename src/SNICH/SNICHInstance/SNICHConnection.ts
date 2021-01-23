@@ -1,13 +1,11 @@
-import * as vscode from 'vscode';
 import requestPromise = require('request-promise-native');
-import { SNICHConfig } from '../../@types/SNICHConfig';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
         auth: {
-            type: SNICHConfig.authTypes.None,
+            type: "None",
             username: "",
             password: "",
             writeBasicToDisk: false,
@@ -32,7 +30,7 @@ export class SNICHConnection {
 
     }
 
-    async setupAuth():Promise<boolean> {
+    async setupAuth(): Promise<boolean> {
 
         return false;
         //vscode window asking which auth type
@@ -98,7 +96,7 @@ export class SNICHConnection {
      */
     async getOAuthAccessToken(): Promise<SNICHConfig.OAuthToken | undefined> {
 
-        if (this.data.auth.type !== SNICHConfig.authTypes.OAuth) {
+        if (this.data.auth.type !== 'OAuth') {
             throw 'Attempted to get an OAuthAccessToken and Auth type is: ' + this.data.auth.type;
         }
 
@@ -217,15 +215,13 @@ export class SNICHConnection {
 
     }
 
-    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all"): Promise<any[]> {
+    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all") {
         const sConn = this;
         const rClient = new SNICHRestClient(sConn);
 
         if (!displayValue) {
             displayValue = false;
         }
-
-        let result = [];
 
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
@@ -238,7 +234,7 @@ export class SNICHConnection {
 
         let restResults = await rClient.get(`/api/now/table/${tableName}`, config);
 
-
+        return restResults;
     }
 
     /**
@@ -255,6 +251,7 @@ export class SNICHConnection {
 
         let result = await this.getRecords('sys_user_preference', encQuery, ['value', 'name']);
 
+        return result;
     }
 
     async executeBackgroundScript(script: string, scope: string) {

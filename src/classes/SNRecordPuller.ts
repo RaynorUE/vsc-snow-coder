@@ -1,11 +1,11 @@
-import { snRecord, SNApplication, SNQPItem } from "../@types";
+import { snRecord, SNApplication, SNQPItem } from "../@Types";
 import { SystemLogHelper } from "./LogHelper";
 import { InstanceMaster, InstancesList } from "./InstanceConfigManager";
 import { RESTClient } from "./RESTClient";
 import * as vscode from 'vscode';
 import { WorkspaceManager } from "./WorkspaceManager";
 
-import { snichOutput } from '../extension';
+import { snichOutput } from '../extension.old';
 
 export class SNFilePuller {
 

@@ -39,65 +39,65 @@
 * @since 1.0.0
 */
 
-import {workspace} from 'vscode';
+import { workspace } from 'vscode';
 
 export class SystemLogHelper {
 
     //* Log Level Constants */
-    private _DEBUG:number = 4;
-    private _INFO:number = 3;
-    private _WARN:number = 2;
-    private _ERROR:number = 1;
-    private _NONE:number = 0;
+    private _DEBUG: number = 4;
+    private _INFO: number = 3;
+    private _WARN: number = 2;
+    private _ERROR: number = 1;
+    private _NONE: number = 0;
 
     // entry we're on and padding to provide.
     //private entry:number;
     //private padding:string;
-    private logLevel:number = this._NONE;
+    private logLevel: number = this._NONE;
 
 
-    constructor(){
+    constructor() {
         //this.entry = 0;
         //this.padding = "0000000";
 
         this.setLogLevel();
     }
 
-    private setLogLevel(){
+    private setLogLevel() {
         let settings = workspace.getConfiguration();
         var level = settings.get('snich.logLevel') || 0;
-        if(level === 'Debug'){
+        if (level === 'Debug') {
             this.logLevel = this._DEBUG;
         }
-        else if(level === 'Info'){
+        else if (level === 'Info') {
             this.logLevel = this._INFO;
         }
-        else if(level === 'Warn'){
+        else if (level === 'Warn') {
             this.logLevel = this._WARN;
         }
-        else if(level === 'Error'){
+        else if (level === 'Error') {
             this.logLevel = this._ERROR;
         } else {
             this.logLevel = this._NONE;
         }
     }
 
-    private getLogLevelLabel(level:number) {
-        if(level === 0){
+    private getLogLevelLabel(level: number) {
+        if (level === 0) {
             return " NONE:";
-        } else if(level === 1){
+        } else if (level === 1) {
             return "ERROR:";
-        } else if(level === 2){
+        } else if (level === 2) {
             return " WARN:";
-        } else if(level === 3){
+        } else if (level === 3) {
             return " INFO:";
-        } else if(level === 4){
+        } else if (level === 4) {
             return "DEBUG:";
         }
     }
 
-    inChattyMode(){
-        if(this.logLevel > this._WARN){
+    inChattyMode() {
+        if (this.logLevel > this._WARN) {
             return true;
         } else {
             return false;
@@ -112,7 +112,7 @@ export class SystemLogHelper {
      * @param msg  //the message you want to log
      * @param obj //An object or variable to include.
      */
-    log(level:number, library:string, func:string, msg:string, obj?:any){
+    log(level: number, library: string, func: string, msg: string, obj?: any) {
         if (this.logLevel === this._NONE) {
             return;
         }
@@ -120,14 +120,14 @@ export class SystemLogHelper {
         var entryNumPadded = this.padding.substring(0, this.padding.length - ("" + this.entry).length) + this.entry;
         var fullMsg = `[${entryNumPadded}] - {${library} : ${func}} - ${msg}`;
         */
-       var logLevelLabel = this.getLogLevelLabel(level);
-       var fullMsg = `${logLevelLabel} {${library} : ${func}} - ${msg}`;
+        var logLevelLabel = this.getLogLevelLabel(level);
+        var fullMsg = `${logLevelLabel} {${library} : ${func}} - ${msg}`;
         if (level <= this.logLevel) {
             let log = console.log;
-            
-            if(level === this._WARN){
+
+            if (level === this._WARN) {
                 log = console.warn;
-            } else if (level === this._ERROR){
+            } else if (level === this._ERROR) {
                 log = console.error;
             }
 
@@ -140,16 +140,32 @@ export class SystemLogHelper {
         //this.entry++;
     }
 
-    debug(library:string, func:string, msg:string, obj?:any){
-        this.log(this._DEBUG, library, func, msg, obj);
+    debug(library: string, func: string, msg: string, obj?: any) {
+        if (arguments.length == 3) {
+            this.log(this._DEBUG, library, func, msg);
+        } else {
+            this.log(this._DEBUG, library, func, msg, obj);
+        }
     }
-    info(library:string, func:string, msg:string, obj?:any){
-        this.log(this._INFO, library, func, msg, obj);
+    info(library: string, func: string, msg: string, obj?: any) {
+        if (arguments.length == 3) {
+            this.log(this._INFO, library, func, msg);
+        } else {
+            this.log(this._INFO, library, func, msg, obj);
+        }
     }
-    warn(library:string, func:string, msg:string, obj?:any){
-        this.log(this._WARN, library, func, msg, obj);
+    warn(library: string, func: string, msg: string, obj?: any) {
+        if (arguments.length == 3) {
+            this.log(this._WARN, library, func, msg);
+        } else {
+            this.log(this._WARN, library, func, msg, obj);
+        }
     }
-    error(library:string, func:string, msg:string, obj?:any){
-        this.log(this._ERROR, library, func, msg, obj);
+    error(library: string, func: string, msg: string, obj?: any) {
+        if (arguments.length == 3) {
+            this.log(this._ERROR, library, func, msg);
+        } else {
+            this.log(this._ERROR, library, func, msg, obj);
+        }
     }
 }

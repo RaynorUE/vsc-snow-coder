@@ -1,113 +1,14 @@
 //SCOPED GlideSoft Definition File. In combination with JSConfig.json I provide you intellisense for ServiceNow APIs.
 
 
-/**
- * The DynamicTranslation API provides methods that translate text, in real time, into multiple languages using translation service providers. This API is available for both standard clients and Angular-based Service Portal clients. In addition, you can use this API to detect the language of a specific string and check whether the getDetectedLanguage() and getTranslation() methods are enabled for a translation service. Use this API to create a seamless localization experience for your user interface, enabling one interface to service multiple countries. * * Currently this API supports two translation service providers: Microsoft Azure Translator Service and IBM Watson Translator Service. You can also configure other translation services within your instance and then use the DynamicTranslation API to translate your text. * * To use this API you must activate the Dynamic Translation plugin. For information on this plugin and additional information on Dynamic Translation, refer to Dynamic translation overview. Also, to use this API in a Service Portal widget, you must inject the dynamicTranslation service into the widget client script function. * * Note: The name of the class to use in Service Portal clients is dynamicTranslation, while the name of the class to use in standard clients is DynamicTranslation.
- * 
- * 
- */
-declare class DynamicTranslation {
 
-
-
-    /**
-     * Detects the language of the passed in text.If you pass in a translator, the method uses that translation service to detect the source language. Otherwise, the detection is performed by the default translation service. Ensure that the text you provide contains enough verbiage to enable proper language detection.In addition to the detected language, the response contains a confidence level of the detection, along with other possible language alternatives. If a translator is not passed in, the method also returns the default translation service used to detect the language.
-     * 
-     * @text Text to use to detect the language.
-     * @parms Optional. JSON object that contains additional translation parameters.
-     * @parmstranslator Optional. Translation service to use to translate the text (not case-sensitive).Valid values: Microsoft IBM &lt;custom&gt; Note: To use custom translation services you must first configure the translation service in your instance. For details, see Integrate with a translation service provider. Default: translation service configured in the Translator Configuration [sn_dt_translator_configuration] table.
-     * @example
-     * var detectedResponse = DynamicTranslation.getDetectedLanguage('Please detect the language of this text', {"translator":'IBM'}).then(function(res) {console.log(res); }, function(res) {console.log(res); } );
-     * @example
-     * var detectedResponse = DynamicTranslation.getDetectedLanguage('Please detect the language of this text', {"translator":123}).then(function(res) {console.log(res); }, function(res) {console.log(res); } );
-     * @example
-     * var detectedResponse = dynamicTranslation.getDetectedLanguage('Please detect the language of this text', {"translator":'IBM'}).then(function(res) {console.log(res); }, function(res) {console.log(res); } );
-     * @example
-     * var detectedResponse = dynamicTranslation.getDetectedLanguage('Please detect the language of this text', {"translator":123}).then(function(res) {console.log(res); }, function(res) {console.log(res); } );
-     * @returns JSON object containing the results of the language detection. detectedLanguage: Object. Parameters describing the detected language. code: String. Language code of the detected language. confidence: String. Float value indicating the confidence level of the detected language result. Value is between zero and one. The lower the value, the lower the confidence level. name: String. Language code of the detected language. alternatives: Object. Description of other languages that also may be a match. code: String. Language code of the alternative language. confidence: String. Float value indicating the confidence level of the alternative language. Value is between zero and one. The lower the value, the lower the confidence level. name: String. Language code of the alternative language. translator: String. Translation service used to detect the language. For example: { "detectedLanguage": { "code": "en", "confidence": "1", "name": "en" }, "alternatives": [ { "code": "vi", "confidence": "0.86", "name": "vi" }, { "code": "id", "confidence": "0.86", "name": "id" } ], "translator": "Microsoft"} 
-     */
-    getDetectedLanguage(text: String, parms: Object, parmstranslator: String): Object;
-
-    /**
-     * Translates the passed in text to one or more languages.The method uses translation services, such as Microsoft Azure Translator Service and IBM Watson Translator Service, to perform the translation. If you do not pass in translation parameters, the method uses the system default.
-     * 
-     * @textToTranslate Text to translate.
-     * @parms Optional. JSON object that contains additional translation parameters.
-     * @parmstargetLanguages Optional. List of language codes to use to translate the text. The method returns translated text for each language code.Default: User preferred language.
-     * @parmstranslator Optional. Translation service to use to translate the text (not case-sensitive).Valid values: Microsoft IBM &lt;custom&gt; Default: Default translation service configured in the instance (defined in Translator Configurations).
-     * @parmssourceLanguage Optional. Language code of the source text.Default: Translation service detects the source language.
-     * @parmsadditionalParameters Optional. Array of JSON objects. Each object contains key-value pairs that provide additional information for performing the translation.
-     * @parmsadditionalParameters[]parameterName Optional. Key name.Valid values: textype: Type of text to translate. For Microsoft Azure Translator Service only. 
-     * @parmsadditionalParameters[]parameterValue Optional. Value of the associated key.Valid values: plain: Standard text string html: HTML text string Default: plain
-     * @example
-     * DynamicTranslation.getTranslation("Translate this text using platform from client", {
-     *   "targetLanguages": ["fr", "it"],
-     *   "additionalParameters": [{
-     *     "parameterName": "texttype",
-     *     "parameterValue": "plain"
-     *   }],
-     *   "translator": "Microsoft"
-     *  }).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * 
-     * @example
-     * DynamicTranslation.getTranslation("Translate this text using platform from client", {
-     *   "targetLanguages": ["123”],
-     *   "additionalParameters": [{
-     *     "parameterName": "texttype",
-     *     "parameterValue": "plain"
-     *   }],
-     *   "translator": "Microsoft"
-     *  }).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * 
-     * @example
-     * dynamicTranslation.getTranslation("Translate this text using platform from client", {
-     *   "targetLanguages": ["fr", "it"],
-     *   "additionalParameters": [{
-     *     "parameterName": "texttype",
-     *     "parameterValue": "plain"
-     *   }],
-     *   "translator": "Microsoft"
-     *  }).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * 
-     * @example
-     * dynamicTranslation.getTranslation("Translate this text using platform from client", {
-     *   "targetLanguages": [123],
-     *   "additionalParameters": [{
-     *     "parameterName": "texttype",
-     *     "parameterValue": "plain"
-     *   }],
-     *   "translator": "Microsoft"
-     *  }).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * 
-     * @returns Results of the text translation. translations: Object. Language translations. targetLanguage: String. Language code to which the source text was translated. translatedText: String. Translated text. translator: String. Translation service used to translate the text. detectedLanguage: Object. Detected language code of the source text. Returned only if the source language code is not passed in. code: String. Language code of the detected language. name: String. Language code of the detected language. For example: {"translations":[ { "targetLanguage":"it", "translatedText":"Tradurre questo testo utilizzando la piattaforma dal server" }, { "targetLanguage":"fr", "translatedText":"Traduire ce texte en utilisant la plate-forme à partir du serveur" } ], "translator":"Microsoft", "detectedLanguage":{"code":"en","name":"en"}
-     * }
-     */
-    getTranslation(textToTranslate: String, parms: Object, parmstargetLanguages: Array<any>, parmstranslator: String, parmssourceLanguage: String, parmsadditionalParameters: Object, parmsadditionalParameters[]parameterName: String, parmsadditionalParameters[]parameterValue: String): Object;
-
-    /**
-     * Determines whether the getDetectedLanguage() and getTranslation() methods are enabled for a translation service.If you pass in a specific translation service, the API checks the method activation for that translation service; otherwise the method checks the default translation service.
-     * 
-     * @translator Optional. Translation service to verify whether the methods are active. Translation services are configured under the Translator Configuration menu.Possible values - not case-sensitive: Microsoft IBM &lt;custom&gt; Note: To use custom translation services you must first configure the translation service in your instance. For details, see Integrate with a translation service provider. 
-     * @example
-     * DynamicTranslation.isEnabled('AWS').then(function(res){console.log(res);}, function(res){console.log(res);});
-     * @example
-     * dynamicTranslation.isEnabled('AWS').then(function(res){console.log(res);}, function(res){console.log(res);});
-     * @example
-     * DynamicTranslation.isEnabled(123).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * @example
-     * dynamicTranslation.isEnabled(123).then(function(res){console.log(res);}, function(res){console.log(res);});
-     * @returns The following are error messages that the API may return and indications as to their root cause. Translator ("translator" field) is invalid (40003): The passed in translator parameter is not a String. 
-     */
-    isEnabled(translator: String): Errormessages;
-
-}
 
 /**
  * The g_aw API enables a UI Action or client script to open a specified record in an Agent Workspace tab. There is no constructor for the GlideAgentWorkspace class. Access GlideAgentWorkspace methods using the g_aw global object.
  * 
  * 
  */
-declare class GlideAgentWorkspace (g_aw) {
+declare class GlideAgentWorkspace {
 
 
 
@@ -131,7 +32,7 @@ declare class GlideAgentWorkspace (g_aw) {
      * g_aw.openRecord('sys_user', '62826bf03710200044e0bfc8bcbe5df1', {hideDetails: true}); 
      * @returns  
      */
-    openRecord(table: String, sysId: String, params: Object, paramsreadOnlyForm: Boolean, paramsdefaultTab: String, paramshideDetails: Boolean): None;
+    openRecord(table: String, sysId: String, params: Object, paramsreadOnlyForm: Boolean, paramsdefaultTab: String, paramshideDetails: Boolean): void;
 
 }
 
@@ -3661,7 +3562,8 @@ declare class StopWatch {
  * A JSON String of Data will be returned. Recommend logging value to see content.
  */
 
-declare interface JSONString {}
-declare class g_form extends GlideForm{}
-declare class g_list extends GlideListV3{}
-declare class g_menu extends GlideMenu{}
+declare interface JSONString { }
+declare class g_form extends GlideForm { }
+declare class g_list extends GlideListV3 { }
+declare class g_menu extends GlideMenu { }
+declare class g_aw extends GlideAgentWorkspace { }

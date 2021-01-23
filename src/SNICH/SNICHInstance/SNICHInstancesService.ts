@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
-import { SNICHConfig } from '../../@types/SNICHConfig';
+import { SystemLogHelper } from '../../classes/LogHelper';
 
 
 export class SNICHInstancesService {
     DB = new AsyncNedb();
-    constructor() {
+    logger: SystemLogHelper;
+    constructor(logger: SystemLogHelper) {
+        this.logger = logger;
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {
             throw new Error('Unable to load instance! Somehow this got called without valid workspace!');
@@ -15,7 +17,7 @@ export class SNICHInstancesService {
     }
 
     getDBFilePath(): vscode.Uri | undefined {
-        const wsRootUri = new WSFileMan().getWSRootUri();
+        const wsRootUri = new WSFileMan(this.logger).getWSRootUri();
         let dbPath = undefined;
         if (wsRootUri) {
             dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'instances.db');

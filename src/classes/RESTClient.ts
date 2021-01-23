@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { SystemLogHelper } from './LogHelper';
 import { InstanceMaster, InstanceConfig } from './InstanceConfigManager';
-import { snRecord } from '../@types';
+import { snRecord } from '../@Types';
 import * as request from 'request-promise-native';
 import { WorkspaceManager } from './WorkspaceManager';
-import { snichOutput } from '../extension';
+import { snichOutput } from '../extension.old';
 import * as https from 'https';
 import * as crypto from 'crypto';
 import * as url from 'url';

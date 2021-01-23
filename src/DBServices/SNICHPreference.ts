@@ -1,11 +1,14 @@
 import * as vscode from 'vscode';
 import { WSFileMan } from '../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
+import { SystemLogHelper } from '../classes/LogHelper';
 
 
 export class SNICHPreferenceDB {
     DB = new AsyncNedb();
-    constructor() {
+    logger: SystemLogHelper;
+    constructor(logger: SystemLogHelper) {
+        this.logger = logger;
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {
             throw new Error('Unable to get preferences! Somehow this got called without valid workspace!');
@@ -14,7 +17,7 @@ export class SNICHPreferenceDB {
     }
 
     getDBFilePath(): vscode.Uri | undefined {
-        const wsRootUri = new WSFileMan().getWSRootUri();
+        const wsRootUri = new WSFileMan(this.logger).getWSRootUri();
         let dbPath = undefined;
         if (wsRootUri) {
             dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'preferences.db');
@@ -36,7 +39,8 @@ export class SNICHPreferenceDB {
         let records = [];
         let foundRecords = await this.DB.asyncFind({});
         if (foundRecords && foundRecords.length > 0) {
-            records = foundRecords;
+            records = <Array<any>>foundRecords;
         }
+        return records;
     }
 }

@@ -1,10 +1,8 @@
-import * as vscode from 'vscode';
-
 declare namespace SNICHConfig {
     interface Instance {
 
         name: string;
-        rootPath: vscode.Uri;
+        rootPath: vscodeUriRaw;
         connection: Connection;
         _id: string;
 
@@ -24,6 +22,8 @@ declare namespace SNICHConfig {
         url: string;
         auth: Auth;
     }
+
+    type authTypes = keyof typeof authTypeEnums
 
     interface Auth {
         type: authTypes;
@@ -92,7 +92,12 @@ declare namespace SNICHConfig {
         extension: string;
     }
 
-    enum authTypes {
+    interface vscodeUriRaw {
+        fspath: string,
+        path: string
+    }
+
+    enum authTypeEnums {
         Basic = "Basic",
         OAuth = "oauth-authorization_code",
         None = ""
