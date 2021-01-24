@@ -69,10 +69,6 @@ export class SNICHConnection {
         }
 
 
-
-
-
-
         //finally test connection. Which will handle re-asking for appropriate into based on config..
         this.logger.info(this.type, func, "LEAVING");
 
@@ -81,26 +77,47 @@ export class SNICHConnection {
 
     async setupBasicAuth(): Promise<boolean> {
         var func = "setupBasicAuth";
+        this.logger.info(this.type, func, "ENTERING");
         let result = false;
 
+        this.setAuthType("Basic");
+        this.setStoreBasicToDisk(true);
 
-        //if basic auth
-        //ask for username && password method
+        let username = await this.askForUsername();
+        let password = await this.askForPassword();
 
+        if (!username || !password) {
+            this.abortSetup();
+        }
 
         let connTest = await this.testConnection();
-        if (connTest != 200) {
-            if (connTest == 401) {
 
-            } else {
-                this.logger.info(this.type, func, "LEAVING");
-                return false;
-            }
-
-        }
+        this.logger.info(this.type, func, "LEAVING");
 
 
         return result;
+    }
+
+    async askForUsername(): Promise<string> {
+        let username = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ prompt: "Enter User Name", ignoreFocusOut: true });
+        if (username) {
+            this.setUserName(username);
+        } else {
+            username = "";
+        }
+
+        return username;
+    }
+
+    async askForPassword(): Promise<string> {
+        let password = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ prompt: `Enter password for ${this.getUserName()}`, password: true, ignoreFocusOut: true });
+        if (password) {
+            this.setPassword(password);
+        } else {
+            password = "";
+        }
+
+        return password;
     }
 
     async setupOAuth(): Promise<boolean> {
@@ -143,10 +160,7 @@ export class SNICHConnection {
         return result;
     }
 
-    abortSetup(msg?: string) {
-        vscode.window.showWarningMessage(`Instance Authentication Setup Aborted. ${msg || ""}`);
-        return false;
-    }
+
 
     /**
      * Will handle if access token has expired and attempt to get a new refresh token..
@@ -211,14 +225,25 @@ export class SNICHConnection {
 
     }
 
-    async testConnection(): Promise<number | undefined> {
+    async testConnection(attemptNumber?: number): Promise<boolean> {
+        let func = 'testConnection';
+        this.logger.info(this.type, func, "ENTERING");
+
         const sConn = this;
         let rClient = new SNICHRestClient(sConn);
-        let result;
+
+        let result = false;
+        let retry = false;
+        let maxAttempts = 3;
+        if (!attemptNumber) {
+            attemptNumber = 0;
+        }
+
+
         try {
-            let restResult = await rClient.get('/api/now/table/', { qs: { sysparm_query: `user_name=${this.getUserName()}`, sysparm_limit: 1 } });
-            if (restResult.statusCode) {
-                result = restResult.statusCode;
+            let restResult: any = await rClient.get('/api/now/table/', { qs: { sysparm_query: `sys_id=javascript:gs.getUserID()`, sysparm_limit: 1, sysparm_fields: "user_name" } });
+            if (restResult.user_name) {
+                result = true;
             }
         } catch (e) {
             const error: rpError = e;
@@ -226,6 +251,10 @@ export class SNICHConnection {
                 result = e.statusCode
             }
         }
+
+        if ()
+
+            this.logger.info(this.type, func, "LEAVING");
 
         return result;
 
@@ -375,5 +404,8 @@ export class SNICHConnection {
         this.data.auth.OAuth.token = token;
     }
 
-
+    abortSetup(msg?: string) {
+        vscode.window.showWarningMessage(`Instance Authentication Setup Aborted. ${msg || ""}`);
+        return false;
+    }
 }
