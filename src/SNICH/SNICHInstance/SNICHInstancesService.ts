@@ -26,6 +26,14 @@ export class SNICHInstancesService {
         return dbPath;
     }
 
+    async insert(instanceData: SNICHConfig.Instance) {
+
+    }
+
+    async update(_id: string, data: any) {
+
+    }
+
     async get(query: any) {
         let record: SNICHConfig.Instance | undefined = undefined;
         let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Instance>(query)

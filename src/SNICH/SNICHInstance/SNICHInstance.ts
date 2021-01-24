@@ -100,12 +100,14 @@ export class SNICHInstance {
 
         let authResult = await this.connection.setupAuth();
         if (!authResult) {
+            this.logger.info(this.type, func, "LEAVING");
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
         }
 
+        this.logger.info(this.type, func, "LEAVING");
+
         return result;
 
-        this.logger.info(this.type, func, "LEAVING");
 
     }
 

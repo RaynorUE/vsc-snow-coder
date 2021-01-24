@@ -1,6 +1,9 @@
 import requestPromise = require('request-promise-native');
+import { SNQPItem } from '../../@Types';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
+import * as vscode from 'vscode';
+import { SystemLogHelper } from '../../classes/LogHelper';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
@@ -26,18 +29,84 @@ export class SNICHConnection {
         url: ""
     }
 
-    constructor() {
+    type = "SNICHConnection";
+    logger: SystemLogHelper;
 
+    constructor(logger: SystemLogHelper) {
+        this.logger = logger;
     }
 
     async setupAuth(): Promise<boolean> {
+        var func = "setupAuth";
+        this.logger.info(this.type, func, "ENTERING");
+
+
+        //vscode window asking which auth type
+
+        let authOptions = <Array<SNQPItem>>[
+            { label: "Basic", description: "Use basic authentication. Password stored un-encrypted.", value: "basic" },
+            { label: "OAuth (Preferred)", description: "Use OAuth to authenticate. SNICH never sees your username or password.", value: "OAuth" },
+        ];
+
+        let authSelect = await vscode.window.showQuickPick(authOptions, { placeHolder: "Select an authentcation option", ignoreFocusOut: false });
+
+        if (!authSelect) {
+            this.logger.info(this.type, func, "LEAVING");
+            return this.abortSetup();
+        }
+
+        let authSetup = false;
+
+        if (authSelect.value == "basic") {
+            authSetup = await this.setupBasicAuth();
+        } else if (authSelect.value == "OAuth") {
+            authSetup = await this.setupOAuth();
+        }
+
+        if (!authSetup) {
+            this.logger.info(this.type, func, "LEAVING");
+            return false;
+        }
+
+
+
+
+
+
+        //finally test connection. Which will handle re-asking for appropriate into based on config..
+        this.logger.info(this.type, func, "LEAVING");
 
         return false;
-        //vscode window asking which auth type
+    }
+
+    async setupBasicAuth(): Promise<boolean> {
+        var func = "setupBasicAuth";
+        let result = false;
+
 
         //if basic auth
         //ask for username && password method
 
+
+        let connTest = await this.testConnection();
+        if (connTest != 200) {
+            if (connTest == 401) {
+
+            } else {
+                this.logger.info(this.type, func, "LEAVING");
+                return false;
+            }
+
+        }
+
+
+        return result;
+    }
+
+    async setupOAuth(): Promise<boolean> {
+        var func = "setupOAuth";
+
+        let result = false;
 
         //if oAuth
         //ask for "Setup new, got my stuff, open list of OAuth providers";
@@ -53,33 +122,16 @@ export class SNICHConnection {
 
         //Method for "Launch Web Server" and "Launch OAuth code grant flow browser", useful for first setup, but also useful when refresh token does not work or is expired..
 
+        let connTest = await this.testConnection();
+        if (connTest != 200) {
+            if (connTest == 401) {
 
-        //finally test connection. Which will handle re-asking for appropriate into based on config..
+            } else {
+                this.logger.info(this.type, func, "LEAVING");
+                return false;
+            }
 
-    }
-
-    async setupBasicAuth(): Promise<boolean> {
-
-        let result = false;
-        //ask for username
-
-        //ask for password
-
-        return result;
-    }
-
-    async setupOAuth(): Promise<boolean> {
-
-        let result = false;
-
-        //await for "How to get ClientID/Secret";
-
-        //ask for client id
-
-        //ask for client secret
-
-        //launchOAuth
-
+        }
 
         return result;
     }
@@ -89,6 +141,11 @@ export class SNICHConnection {
 
 
         return result;
+    }
+
+    abortSetup(msg?: string) {
+        vscode.window.showWarningMessage(`Instance Authentication Setup Aborted. ${msg || ""}`);
+        return false;
     }
 
     /**
