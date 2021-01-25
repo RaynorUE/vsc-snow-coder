@@ -235,6 +235,7 @@ export class SNICHConnection {
         let result = false;
         let retry = false;
         let maxAttempts = 3;
+
         if (!attemptNumber) {
             attemptNumber = 0;
         }
@@ -248,14 +249,23 @@ export class SNICHConnection {
         } catch (e) {
             const error: rpError = e;
             if (error.name == 'StatusCodeError' && error.statusCode == 401) {
-                result = e.statusCode
+                result = false;
+                retry = true;
             }
         }
 
-        if ()
+        if (retry && attemptNumber < maxAttempts) {
+            this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
+            if (this.data.auth.type == 'Basic') {
+                await this.askForPassword();
+            } else {
 
-            this.logger.info(this.type, func, "LEAVING");
+            }
+            attemptNumber++;
+            return await this.testConnection(attemptNumber);
+        }
 
+        this.logger.info(this.type, func, "LEAVING");
         return result;
 
     }

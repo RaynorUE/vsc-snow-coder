@@ -38,9 +38,10 @@ export class SNICHInstance {
     logger = new SystemLogHelper();
     type = "SNICHInstance";
 
-    connection = new SNICHConnection();
+    connection: SNICHConnection;
 
     constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
+        this.connection = new SNICHConnection(logger);
         if (data) {
             this.setData(data);
         }
@@ -172,12 +173,7 @@ export class SNICHInstance {
         const newData = { ...data };
 
         this.data = newData;
-
-        const newConn = new SNICHConnection();
-        newConn.setData(newData.connection);
-
-        this.connection = newConn;
-
+        this.connection.setData(newData.connection);
     }
 
     getData() {
