@@ -11,7 +11,7 @@ export class SNICHCrypto {
         let key = this.getKey();
         let encryptedParts = [];
         let iv = this.getIV();
-        let cipher = crypto.createCipheriv("aes256", key, iv);
+        let cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
         encryptedParts.push(cipher.update(value, "binary", "hex"));
         encryptedParts.push(cipher.final("hex"));
 
@@ -32,7 +32,7 @@ export class SNICHCrypto {
         let key = this.getKey();
 
         if (key && iv) {
-            let decipher = crypto.createDecipheriv("aes256", key, iv);
+            let decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
             decryptedParts.push(decipher.update(encrypted, "hex", "binary"));
             decryptedParts.push(decipher.final("binary"));
             return decryptedParts.join("");

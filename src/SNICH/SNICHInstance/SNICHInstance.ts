@@ -146,15 +146,10 @@ export class SNICHInstance {
     getConnection() { return this.connection }
 
     async testConnection() {
-        let resultStatusCode = await this.connection.testConnection();
+        let result = await this.connection.testConnection();
 
-        if (resultStatusCode === 200) {
+        if (result) {
             vscode.window.showInformationMessage('Test Connection Successful!');
-        } else if (resultStatusCode == 401) {
-            //unauthoried
-            /**
-             * @todo re-ask for authentication information.
-             */
         } else {
             vscode.window.showWarningMessage('Unknown error occurred testing connection. Instance might be unavailable or some other failured occured.');
         }

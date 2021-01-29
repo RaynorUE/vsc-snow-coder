@@ -90,7 +90,14 @@ export class SNICHConnection {
             this.abortSetup();
         }
 
-        let connTest = await this.testConnection();
+        let connResult = false;
+        try {
+            connResult = await this.testConnection();
+        } catch (e) {
+            connResult = false;
+        }
+
+        result = connResult;
 
         this.logger.info(this.type, func, "LEAVING");
 
@@ -122,7 +129,7 @@ export class SNICHConnection {
 
     async setupOAuth(): Promise<boolean> {
         var func = "setupOAuth";
-
+        this.logger.info(this.type, func, "ENTERING");
         let result = false;
 
         //if oAuth
@@ -138,17 +145,18 @@ export class SNICHConnection {
         //await client secret
 
         //Method for "Launch Web Server" and "Launch OAuth code grant flow browser", useful for first setup, but also useful when refresh token does not work or is expired..
-
-        let connTest = await this.testConnection();
-        if (connTest != 200) {
-            if (connTest == 401) {
-
-            } else {
-                this.logger.info(this.type, func, "LEAVING");
-                return false;
-            }
-
-        }
+        /*
+                let connTest = await this.testConnection();
+                if (connTest != 200) {
+                    if (connTest == 401) {
+        
+                    } else {
+                        this.logger.info(this.type, func, "LEAVING");
+                        return false;
+                    }
+        
+                }
+                */
 
         return result;
     }
@@ -229,42 +237,47 @@ export class SNICHConnection {
         let func = 'testConnection';
         this.logger.info(this.type, func, "ENTERING");
 
-        const sConn = this;
-        let rClient = new SNICHRestClient(sConn);
+
+        //passing "THIS" is an issue. Do I just move all this out here? What's the point of RESTClient?
+        //const sConn = this;
+        // let rClient = new SNICHRestClient(sConn);
 
         let result = false;
         let retry = false;
-        let maxAttempts = 3;
+        //let maxAttempts = 3;
 
         if (!attemptNumber) {
             attemptNumber = 0;
         }
 
+        this.logger.debug(this.type, func, "About to get the current user!");
 
         try {
             let restResult: any = await rClient.get('/api/now/table/', { qs: { sysparm_query: `sys_id=javascript:gs.getUserID()`, sysparm_limit: 1, sysparm_fields: "user_name" } });
+            this.logger.debug(this.type, func, "result: ", restResult);
             if (restResult.user_name) {
                 result = true;
             }
         } catch (e) {
+            this.logger.warn(this.type, func, "an error occurred making the rest call!", e);
             const error: rpError = e;
             if (error.name == 'StatusCodeError' && error.statusCode == 401) {
                 result = false;
                 retry = true;
             }
         }
-
-        if (retry && attemptNumber < maxAttempts) {
-            this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
-            if (this.data.auth.type == 'Basic') {
-                await this.askForPassword();
-            } else {
-
-            }
-            attemptNumber++;
-            return await this.testConnection(attemptNumber);
-        }
-
+        /*
+                if (retry && attemptNumber < maxAttempts) {
+                    this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
+                    if (this.data.auth.type == 'Basic') {
+                        await this.askForPassword();
+                    } else {
+        
+                    }
+                    attemptNumber++;
+                    return await this.testConnection(attemptNumber);
+                }
+        */
         this.logger.info(this.type, func, "LEAVING");
         return result;
 
