@@ -1,21 +1,32 @@
 import { SNICHConnection } from './SNICHConnection';
 import * as rp from 'request-promise-native';
-import requestPromise = require('request-promise-native');
+import { SystemLogHelper } from '../../classes/LogHelper';
 
 export class SNICHRestClient {
     connection: SNICHConnection;
+    logger: SystemLogHelper;
     client = rp;
-    constructor(conn: SNICHConnection) {
+    type = 'SNICHRestClient';
+    constructor(logger: SystemLogHelper, conn: SNICHConnection) {
+        var func = 'constructor';
+        this.logger = logger;
+        this.logger.info(this.type, func, "ENTERING");
         this.connection = conn;
-        this.client = rp.defaults({
-            baseUrl: this.connection.getURL(),
-            gzip: true,
-            json: true
-        })
-
+        this.logger.debug(this.type, func, "Set this.connection");
 
         this.enableAuth();
 
+        this.logger.info(this.type, func, "LEAVING");
+
+    }
+
+    getClientDefaults(): rp.RequestPromiseOptions {
+        var rpOptions: rp.RequestPromiseOptions = {
+            baseUrl: this.connection.getURL(),
+            gzip: true,
+            json: true
+        };
+        return rpOptions;
     }
 
 
@@ -28,19 +39,28 @@ export class SNICHRestClient {
     }
 
     enableAuth() {
+        var func = 'enableAuth';
+        this.logger.info(this.type, func, "ENTERING");
         const authType = this.connection.getAuthType();
         if (authType == "Basic") {
-            this.client = this.client.defaults({ auth: { bearer: undefined, username: this.connection.getUserName(), password: this.connection.getPassword() } });
+            this.logger.debug(this.type, func, "BAsic auth! setting it up!");
+            const basicOptions = { ...this.getClientDefaults(), auth: { user: this.connection.getUserName(), pass: this.connection.getPassword() } };
+            this.client = rp.defaults(basicOptions);
         } else if (authType == "OAuth") {
+            this.logger.debug(this.type, func, "OAuth! setting it up!");
             const oAuthToken = this.connection.getOAuthToken();
-            this.client = this.client.defaults({ auth: { username: undefined, password: undefined, bearer: `${oAuthToken.access_token}` } });
+            const OAuthOptions = { ...this.getClientDefaults(), auth: { bearer: `${oAuthToken.access_token}` } }
+            this.logger.debug(this.type, func, 'basic options: ', OAuthOptions);
+            this.client = rp.defaults(OAuthOptions);
         } else {
             throw new Error("Auth type not defined. Unable to create SNICHRestClient");
         }
+        this.logger.info(this.type, func, "LEAVING");
+
     }
 
 
-    async get(url: string, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+    async get(url: string, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (config) {
             let result = await this.client.get(url, config);
             this.enableAuth();
@@ -52,7 +72,7 @@ export class SNICHRestClient {
         }
     }
 
-    async put(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+    async put(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (!config) {
             config = {};
         }
@@ -61,7 +81,7 @@ export class SNICHRestClient {
         this.enableAuth();
         return result;
     }
-    async patch(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+    async patch(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (!config) {
             config = {};
         }
@@ -71,7 +91,7 @@ export class SNICHRestClient {
         return result;
     }
 
-    async post(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+    async post(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (!config) {
             config = {};
         }
@@ -81,7 +101,7 @@ export class SNICHRestClient {
         return result;
     }
 
-    async delete(url: string, config?: rp.RequestPromiseOptions): Promise<requestPromise.FullResponse> {
+    async delete(url: string, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (config) {
             let result = await this.client.delete(url, config);
             this.enableAuth();

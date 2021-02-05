@@ -9,13 +9,12 @@ export class SNICHCrypto {
 
     encrypt(value: string) {
         let key = this.getKey();
-        let encryptedParts = [];
         let iv = this.getIV();
-        let cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-        encryptedParts.push(cipher.update(value, "binary", "hex"));
-        encryptedParts.push(cipher.final("hex"));
+        let cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+        let encrypted = Buffer.concat([cipher.update(value), cipher.final()]);
 
-        return encryptedParts.join("") + ":" + iv.toString('hex');
+
+        return encrypted.toString('hex') + ":" + iv.toString('hex');
     }
 
     decrypt(value: string): string | undefined {
@@ -25,16 +24,16 @@ export class SNICHCrypto {
         }
 
         let cryptoParts = value.split(':');
-        let encrypted = cryptoParts[0];
+        let encrypted = Buffer.from(cryptoParts[0], 'hex');
         let iv = Buffer.from(cryptoParts[1], 'hex');
 
         let decryptedParts = [];
         let key = this.getKey();
 
         if (key && iv) {
-            let decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
-            decryptedParts.push(decipher.update(encrypted, "hex", "binary"));
-            decryptedParts.push(decipher.final("binary"));
+            let decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+            decryptedParts.push(decipher.update(encrypted));
+            decryptedParts.push(decipher.final());
             return decryptedParts.join("");
         } else {
             return;

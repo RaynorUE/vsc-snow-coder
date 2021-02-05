@@ -33,7 +33,11 @@ export class SNICHConnection {
     logger: SystemLogHelper;
 
     constructor(logger: SystemLogHelper) {
+        var func = 'constructor';
         this.logger = logger;
+        this.logger.info(this.type, func, "ENTERING");
+
+        this.logger.info(this.type, func, "LEAVING");
     }
 
     async setupAuth(): Promise<boolean> {
@@ -62,17 +66,10 @@ export class SNICHConnection {
         } else if (authSelect.value == "OAuth") {
             authSetup = await this.setupOAuth();
         }
-
-        if (!authSetup) {
-            this.logger.info(this.type, func, "LEAVING");
-            return false;
-        }
-
-
-        //finally test connection. Which will handle re-asking for appropriate into based on config..
+        this.logger.info(this.type, func, "Authsetup: ", authSetup);
         this.logger.info(this.type, func, "LEAVING");
 
-        return false;
+        return authSetup;
     }
 
     async setupBasicAuth(): Promise<boolean> {
@@ -106,7 +103,12 @@ export class SNICHConnection {
     }
 
     async askForUsername(): Promise<string> {
-        let username = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ prompt: "Enter User Name", ignoreFocusOut: true });
+        var inputConfig: vscode.InputBoxOptions = {
+            prompt: `Enter User Name`,
+            ignoreFocusOut: true,
+            validateInput: (value) => this.inputEntryMandatory(value)
+        }
+        let username = await vscode.window.showInputBox(inputConfig);
         if (username) {
             this.setUserName(username);
         } else {
@@ -117,7 +119,13 @@ export class SNICHConnection {
     }
 
     async askForPassword(): Promise<string> {
-        let password = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ prompt: `Enter password for ${this.getUserName()}`, password: true, ignoreFocusOut: true });
+        var inputConfig: vscode.InputBoxOptions = {
+            prompt: `Enter password for ${this.getUserName()}`,
+            password: true,
+            ignoreFocusOut: true,
+            validateInput: (value) => this.inputEntryMandatory(value)
+        }
+        let password = await vscode.window.showInputBox(inputConfig);
         if (password) {
             this.setPassword(password);
         } else {
@@ -199,7 +207,7 @@ export class SNICHConnection {
         } else if (!launchFlow) {
             //Token expired, get a new one!
             const sConn = this;
-            const rClient = new SNICHRestClient(sConn);
+            const rClient = new SNICHRestClient(this.logger, sConn);
 
             const config: requestPromise.RequestPromiseOptions = {
                 form: {
@@ -236,15 +244,11 @@ export class SNICHConnection {
     async testConnection(attemptNumber?: number): Promise<boolean> {
         let func = 'testConnection';
         this.logger.info(this.type, func, "ENTERING");
-
-
-        //passing "THIS" is an issue. Do I just move all this out here? What's the point of RESTClient?
-        //const sConn = this;
-        // let rClient = new SNICHRestClient(sConn);
+        let rClient = new SNICHRestClient(this.logger, this);
 
         let result = false;
         let retry = false;
-        //let maxAttempts = 3;
+        let maxAttempts = 3;
 
         if (!attemptNumber) {
             attemptNumber = 0;
@@ -253,9 +257,9 @@ export class SNICHConnection {
         this.logger.debug(this.type, func, "About to get the current user!");
 
         try {
-            let restResult: any = await rClient.get('/api/now/table/', { qs: { sysparm_query: `sys_id=javascript:gs.getUserID()`, sysparm_limit: 1, sysparm_fields: "user_name" } });
+            let restResult: any = await rClient.get('/api/now/table/sys_user', { qs: { sysparm_query: `sys_id=javascript:gs.getUserID()`, sysparm_limit: 1, sysparm_fields: "user_name" } });
             this.logger.debug(this.type, func, "result: ", restResult);
-            if (restResult.user_name) {
+            if (restResult.result[0]?.user_name) {
                 result = true;
             }
         } catch (e) {
@@ -266,18 +270,18 @@ export class SNICHConnection {
                 retry = true;
             }
         }
-        /*
-                if (retry && attemptNumber < maxAttempts) {
-                    this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
-                    if (this.data.auth.type == 'Basic') {
-                        await this.askForPassword();
-                    } else {
-        
-                    }
-                    attemptNumber++;
-                    return await this.testConnection(attemptNumber);
-                }
-        */
+
+        if (retry && attemptNumber < maxAttempts) {
+            this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
+            if (this.data.auth.type == 'Basic') {
+                await this.askForPassword();
+            } else {
+
+            }
+            attemptNumber++;
+            return await this.testConnection(attemptNumber);
+        }
+
         this.logger.info(this.type, func, "LEAVING");
         return result;
 
@@ -294,7 +298,7 @@ export class SNICHConnection {
      */
     async putRecord(tableName: string, sys_id: string, body: requestPromise.RequestPromiseOptions) {
         const sConn = this;
-        const rClient = new SNICHRestClient(sConn);
+        const rClient = new SNICHRestClient(this.logger, sConn);
 
         //spread in our incoming body object, 
         const config: requestPromise.RequestPromiseOptions = {
@@ -310,7 +314,7 @@ export class SNICHConnection {
 
     async getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
         const sConn = this;
-        const rClient = new SNICHRestClient(sConn);
+        const rClient = new SNICHRestClient(this.logger, sConn);
 
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
@@ -326,7 +330,7 @@ export class SNICHConnection {
 
     async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all") {
         const sConn = this;
-        const rClient = new SNICHRestClient(sConn);
+        const rClient = new SNICHRestClient(this.logger, sConn);
 
         if (!displayValue) {
             displayValue = false;
@@ -387,11 +391,19 @@ export class SNICHConnection {
     }
     getStoreBasicToDisk() { return this.data.auth.writeBasicToDisk }
     getPassword() {
+        var func = 'getPassword';
+        this.logger.info(this.type, func, "ENTERING");
         if (!this.data.auth.password) {
             return ``;
         }
+
         var crypt = new SNICHCrypto();
+        this.logger.debug(this.type, func, "About to decrypt password: ", this.data.auth.password);
         var decryptedPw = crypt.decrypt(this.data.auth.password);
+        this.logger.debug(this.type, func, "Finished decrypting password");
+
+        this.logger.info(this.type, func, "LEAVING");
+
         return decryptedPw || ``;
     }
     setPassword(password: string) {
@@ -430,5 +442,13 @@ export class SNICHConnection {
     abortSetup(msg?: string) {
         vscode.window.showWarningMessage(`Instance Authentication Setup Aborted. ${msg || ""}`);
         return false;
+    }
+
+    inputEntryMandatory(value: any) {
+        if (!value) {
+            return 'Entry required.';
+        } else {
+            return null;
+        }
     }
 }
