@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
-import { SNICHConnection } from './SNICHConnection';
+import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 
 export class SNICHInstance {
     private data: SNICHConfig.Instance = {

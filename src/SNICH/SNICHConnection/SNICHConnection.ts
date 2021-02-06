@@ -4,6 +4,7 @@ import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHOAuth } from '../SNICHOAuth/SNICHOAuth';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
@@ -140,6 +141,8 @@ export class SNICHConnection {
         this.logger.info(this.type, func, "ENTERING");
         let result = false;
 
+        let OAuthResult = await new SNICHOAuth().getOAuth();
+
         //if oAuth
         //ask for "Setup new, got my stuff, open list of OAuth providers";
 
@@ -272,14 +275,22 @@ export class SNICHConnection {
         }
 
         if (retry && attemptNumber < maxAttempts) {
+            let testAgain = false;
             this.logger.warn(this.type, func, `Bad login. Retrying... Attempt ( ${attemptNumber} / ${maxAttempts} )`);
             if (this.data.auth.type == 'Basic') {
-                await this.askForPassword();
+                let newUsername = await this.askForUsername();
+                let newPw = await this.askForPassword();
+                if (newPw && newUsername) {
+                    testAgain = true;
+                }
             } else {
 
             }
-            attemptNumber++;
-            return await this.testConnection(attemptNumber);
+            if (testAgain) {
+                attemptNumber++;
+                return await this.testConnection(attemptNumber);
+            }
+
         }
 
         this.logger.info(this.type, func, "LEAVING");
