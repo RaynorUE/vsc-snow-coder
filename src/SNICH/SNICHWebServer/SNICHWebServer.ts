@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as url from 'url';
 import http = require('http');
 
-export class SNICHOAuthWebServer {
+export class SNICHWebServer {
     constructor() {
 
     }
@@ -12,7 +12,7 @@ export class SNICHOAuthWebServer {
      * Start the web server.
      * @param state the state to check for against when getting the result back.
      */
-    async listen(state: string): Promise<string | undefined> {
+    async listenForCode(state: string): Promise<string | undefined> {
         const extensionPath = extensionContext.extensionUri;
         let keyPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'key.pem');
         let certPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'cert.pem');

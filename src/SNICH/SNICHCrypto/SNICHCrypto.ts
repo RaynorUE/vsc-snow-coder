@@ -7,6 +7,10 @@ export class SNICHCrypto {
     constructor() {
     }
 
+    getOAuthState() {
+        return crypto.randomBytes(16).toString("hex");
+    }
+
     encrypt(value: string) {
         let key = this.getKey();
         let iv = this.getIV();

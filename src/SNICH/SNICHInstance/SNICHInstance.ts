@@ -14,7 +14,7 @@ export class SNICHInstance {
                 OAuth: {
                     client_id: "",
                     client_secret: "",
-                    lastRetrieved: 0,
+                    token_expires_on: 0,
                     token: {
                         access_token: "",
                         expires_in: 0,
@@ -23,8 +23,6 @@ export class SNICHInstance {
                         token_type: ""
                     }
                 }
-
-
             },
             url: ""
         },
@@ -41,10 +39,12 @@ export class SNICHInstance {
     connection: SNICHConnection;
 
     constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
-        this.connection = new SNICHConnection(logger);
         if (data) {
             this.setData(data);
         }
+
+        this.connection = new SNICHConnection(logger, this.getId());
+
     }
 
     /**
@@ -55,7 +55,7 @@ export class SNICHInstance {
         this.logger.info(this.type, func, "ENTERING");
 
         let result = false;
-        let yesNo: vscode.QuickPickItem[] = [{ label: "Yes" }, { label: "No" }];
+        let yesNo: vscode.QuickPickItem[] = [{ label: "$(thumbsup) Yes" }, { label: "$(thumbsdown) No" }];
 
         let enteredInstanceValue = await vscode.window.showInputBox({ ignoreFocusOut: true, prompt: `Enter Instance Name or URL.`, placeHolder: "https://dev00000.service-now.com", validateInput: (value) => this.validateName(value) });
 
@@ -76,8 +76,6 @@ export class SNICHInstance {
             instanceUrl = `https://${enteredInstanceValue}.service-now.com`;
         }
 
-        let yesNoInstance = [...yesNo];
-        yesNoInstance[0].label = `Yes --> ${instanceUrl}`;
         let validateInstanceURL = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, placeHolder: `Continue with instance url? ${instanceUrl}` });
         if (!validateInstanceURL) {
             return this.abortSetup();

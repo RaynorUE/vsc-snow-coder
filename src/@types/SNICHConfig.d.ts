@@ -36,7 +36,7 @@ declare namespace SNICHConfig {
     interface OAuthData {
         client_id: string;
         client_secret: string;
-        lastRetrieved: number;
+        token_expires_on: number;
         token: OAuthToken
 
     }

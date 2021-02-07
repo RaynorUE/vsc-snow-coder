@@ -4,7 +4,7 @@ import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
-import { SNICHOAuth } from '../SNICHOAuth/SNICHOAuth';
+import { SNICHWebServer } from '../SNICHWebServer/SNICHWebServer';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
@@ -16,7 +16,7 @@ export class SNICHConnection {
             OAuth: {
                 client_id: "",
                 client_secret: "",
-                lastRetrieved: 0,
+                token_expires_on: 0,
                 token: {
                     access_token: "",
                     expires_in: 0,
@@ -29,14 +29,17 @@ export class SNICHConnection {
         },
         url: ""
     }
+    private redirectURL = `http://localhost:62000/snich_oauth_redirect`;
 
     type = "SNICHConnection";
     logger: SystemLogHelper;
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SystemLogHelper, instanceId: string) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, "ENTERING");
+
+        //load service, load snich connection data or stub in new.
 
         this.logger.info(this.type, func, "LEAVING");
     }
@@ -49,8 +52,8 @@ export class SNICHConnection {
         //vscode window asking which auth type
 
         let authOptions = <Array<SNQPItem>>[
-            { label: "Basic", description: "Use basic authentication. Password stored un-encrypted.", value: "basic" },
-            { label: "OAuth (Preferred)", description: "Use OAuth to authenticate. SNICH never sees your username or password.", value: "OAuth" },
+            { label: "$(account) Basic", description: "Use basic authentication. Password stored un-encrypted.", value: "basic" },
+            { label: "$(lock) OAuth", description: "Use OAuth to authenticate. SNICH never sees your username or password.", value: "OAuth" },
         ];
 
         let authSelect = await vscode.window.showQuickPick(authOptions, { placeHolder: "Select an authentcation option", ignoreFocusOut: false });
@@ -141,7 +144,69 @@ export class SNICHConnection {
         this.logger.info(this.type, func, "ENTERING");
         let result = false;
 
-        let OAuthResult = await new SNICHOAuth().getOAuth();
+
+
+        let launchChoices: Array<vscode.QuickPickItem> = [
+            {
+                label: "$(new-file) Create New",
+                description: "Launch browser directly to form pre-filled with necessary bits on: " + this.getURL()
+            },
+            {
+                label: "$(globe) View Existing",
+                description: "I have an existing App Registry. Launch My browser directly to list of OAuth App Registrations."
+            },
+            {
+                label: "$(check) I'm good",
+                description: "I Have already setup an OAuth Application Registry and I have my Client ID and Client Secret handy."
+            }
+        ]
+
+        let launchToOAuthAppRegistry = await vscode.window.showQuickPick(launchChoices, { ignoreFocusOut: true, placeHolder: `OAuth Application Registry on ${this.getURL()}?` });
+
+        if (!launchToOAuthAppRegistry || !launchToOAuthAppRegistry.label) {
+            this.logger.info(this.type, func, "LEAVING");
+            return false;
+        }
+
+        if (launchToOAuthAppRegistry.label == 'Create New') {
+            let newAppQueryParams = `sys_id=-1&sysparm_query=type=client^redirect_url=${this.redirectURL}^name=VSCode%20S.N.I.C.H.%20Users^logo_url=https://github.com/RaynorUE/snich/blob/master/images/icon-sn-oauth.PNG%3Fraw=true&sysparm_transaction_scope=global`; //?raw=true'
+            let appRegURL = vscode.Uri.parse(`${this.getURL()}/oauth_entity.do?${newAppQueryParams}`, true);
+            vscode.env.openExternal(appRegURL)
+        }
+
+        if (launchToOAuthAppRegistry.label == 'View Existing') {
+            let queryParams = 'sysparm_query=type=client';
+            let appRegURL = vscode.Uri.parse(`${this.getURL()}/oauth_entity_list.do?${queryParams}`, true);
+            vscode.env.openExternal(appRegURL)
+        }
+
+        let clientID = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ value: this.getclientId(), prompt: "Enter Client ID (1/2)", ignoreFocusOut: true, validateInput: (value) => this.inputEntryMandatory(value) });
+        let clientSecret = await vscode.window.showInputBox(<vscode.InputBoxOptions>{ value: this.getClientSecret(), prompt: "Enter Client Secret (2/2)", ignoreFocusOut: true, validateInput: (value) => this.inputEntryMandatory(value) });
+
+        if (!clientID || !clientSecret) {
+            this.logger.info(this.type, func, "LEAVING");
+            return false;
+        }
+
+        this.setAuthType('OAuth');
+        this.setClientId(clientID);
+        this.setClientSecret(clientSecret);
+
+        let state = new SNICHCrypto().getOAuthState();
+        // launch to the instance OAuth auth page. And startup our web server to listen for the response!
+        const appRegURL = vscode.Uri.parse(`${this.getURL()}/oauth_auth.do?response_type=code&client_id=${this.getclientId()}&state=${state}&redirect_url=${this.redirectURL}`, true)
+        //const appRegURL = vscode.Uri.parse(`${this.getURL()}/oauth_auth.do?client_id=${this.getclientId()}`);
+        vscode.env.openExternal(appRegURL);
+
+        let OAuthResult = await new SNICHWebServer().listenForCode(state);
+
+        if (!OAuthResult) {
+            this.logger.info(this.type, func, "OAuth setup aborted or failed.");
+            this.logger.info(this.type, func, "LEAVING");
+            return false;
+        }
+
+
 
         //if oAuth
         //ask for "Setup new, got my stuff, open list of OAuth providers";
@@ -168,6 +233,7 @@ export class SNICHConnection {
         
                 }
                 */
+        this.logger.info(this.type, func, 'END');
 
         return result;
     }
@@ -179,69 +245,86 @@ export class SNICHConnection {
         return result;
     }
 
-
-
     /**
      * Will handle if access token has expired and attempt to get a new refresh token..
      */
-    async getOAuthAccessToken(): Promise<SNICHConfig.OAuthToken | undefined> {
-
-        if (this.data.auth.type !== 'OAuth') {
-            throw 'Attempted to get an OAuthAccessToken and Auth type is: ' + this.data.auth.type;
-        }
-
+    async getAccessToken(oauthCode?: String): Promise<string | undefined> {
+        let func = 'getOAuthAccessToken';
+        this.logger.info(this.type, func, "ENTERING");
 
         const oAuthData = this.data.auth.OAuth;
-        let launchFlow = false;
 
-        if (!oAuthData.token.access_token) {
-            launchFlow = true;
-        }
+        //check to see if token is expired (looking 10 secs into future, so we trigger expired before token is actuall expired, reducing likelihood of actually using the expired token)
+        let tokenExpired = (Date.now() + 10000) - oAuthData.token_expires_on <= 0;
 
-        let now = Date.now();
-        let hadTokenFor = now - oAuthData.lastRetrieved + 10000; //add 10000 milliseconds (10 seconds), to account for time sync issues, and making sure we attempt to get a new token BEFORE it actually expires.
-        let expiresIn = oAuthData.token.expires_in * 1000; //SN returns "Seconds" need this to be milliseconds for comparison
+        let res = undefined;
 
-
-        if (hadTokenFor < expiresIn && !launchFlow) {
+        if (!tokenExpired && !oauthCode) {
+            this.logger.debug(this.type, func, "Token not expired! Returning!");
             //Token not expired, return it!
-            return oAuthData.token;
+            res = oAuthData.token.access_token;
 
-        } else if (!launchFlow) {
-            //Token expired, get a new one!
-            const sConn = this;
-            const rClient = new SNICHRestClient(this.logger, sConn);
+        } else {
+            const oauthTokenURL = `${this.getURL()}/oauth_token.do`;
+            let rClient = new SNICHRestClient(this.logger, this);
 
-            const config: requestPromise.RequestPromiseOptions = {
-                form: {
-                    grant_type: "refresh_token",
-                    client_id: oAuthData.client_id,
-                    client_secret: oAuthData.client_secret,
-                    refresh_token: oAuthData.token.refresh_token
-                }
-            }
-
-
-            try {
-                let results: any = await rClient.get('/oauth_token.do', config);
-                if (results) {
-                    let accessToken: SNICHConfig.OAuthToken = results;
-                    return accessToken;
+            if (oauthCode) {
+                this.logger.debug(this.type, func, "Getting a new token with an Authorization Code.");
+                let reqOpts: requestPromise.RequestPromiseOptions = {
+                    form: {
+                        grant_type: "authorization_code",
+                        client_id: this.getclientId(),
+                        client_secret: this.getClientSecret(),
+                        code: oauthCode,
+                        redirect_uri: this.redirectURL
+                    }
                 }
 
-            } catch (e) {
-                launchFlow = true;
+                let tokenData: any;
 
+                try {
+                    rClient.disableAuth();
+                    tokenData = await rClient.post(oauthTokenURL, reqOpts);
+
+                } catch (e) {
+                    this.logger.error(this.type, func, "Error attempting to get new token using auth code", JSON.stringify(e, null, 4));
+                }
+
+                if (tokenData && tokenData.access_token) {
+                    this.data.auth.OAuth.token = tokenData;
+                    this.data.auth.OAuth.token_expires_on = this.calcExpiresOn(tokenData.expires_in);
+                    res = tokenData.access_token;
+                }
+
+            } else if (oAuthData.token?.refresh_token) {
+                this.logger.debug(this.type, func, "Token expired. Getting a new one using refresh token!");
+
+                const config: requestPromise.RequestPromiseOptions = {
+                    form: {
+                        grant_type: "refresh_token",
+                        client_id: oAuthData.client_id,
+                        client_secret: oAuthData.client_secret,
+                        refresh_token: oAuthData.token.refresh_token
+                    }
+                }
+
+                let tokenData: any;
+
+                try {
+                    tokenData = await rClient.post('/oauth_token.do', config);
+                } catch (e) {
+                    this.logger.error(this.type, func, "Error attempting to get token using refresh token: ", JSON.stringify(e, null, 4));
+                }
+
+                if (tokenData && tokenData.access_token) {
+                    this.data.auth.OAuth.token = tokenData;
+                    this.data.auth.OAuth.token_expires_on = this.calcExpiresOn(tokenData.expires_in);
+                }
             }
         }
 
-
-        if (launchFlow) {
-            // call the method to launch the flow and test connection, etc.. 
-        }
-
-
-
+        this.logger.info(this.type, func, "LEAVING");
+        return res;
     }
 
     async testConnection(attemptNumber?: number): Promise<boolean> {
@@ -461,5 +544,9 @@ export class SNICHConnection {
         } else {
             return null;
         }
+    }
+
+    calcExpiresOn(durSecs: number) {
+        return Date.now() + (durSecs * 1000);
     }
 }
