@@ -1,6 +1,7 @@
 import { SNICHInstance } from './SNICHInstance';
 import { SNICHInstancesService } from './SNICHInstancesService';
 import { SystemLogHelper } from '../../classes/LogHelper';
+import * as vscode from 'vscode';
 
 
 export class SNICHInstancesMgr {
@@ -65,6 +66,17 @@ export class SNICHInstancesMgr {
     }
 
     async saveInstance(instanceData: SNICHInstance) {
+
+    }
+
+    /**
+     * This method should be called for the "workspace on delete" command, in which we check to see if the folder is the instance folder
+     * 
+     * @todo consider moving this to SNICHInstance? Nah... 
+     * 
+     * @param instanceRoot the folder path of the instance to cleanup
+     */
+    async removeInstance(instanceRoot: vscode.Uri) {
 
     }
 }
