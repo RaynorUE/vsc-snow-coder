@@ -34,7 +34,7 @@ export class SNICHConnectionsService {
         return dbPath;
     }
 
-    async insert(instanceData: SNICHConfig.Instance) {
+    async insert(connectionData: SNICHConfig.Connection) {
 
     }
 
@@ -42,9 +42,18 @@ export class SNICHConnectionsService {
 
     }
 
+    async getById(_id: string) {
+        let record: SNICHConfig.Connection | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>({ _id: _id });
+        if (foundRecord) {
+            record = foundRecord;
+        }
+        return record;
+    }
+
     async get(query: any) {
-        let record: SNICHConfig.Instance | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Instance>(query)
+        let record: SNICHConfig.Connection | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>(query)
         if (foundRecord) {
             record = foundRecord;
         }
@@ -52,11 +61,11 @@ export class SNICHConnectionsService {
     }
 
     async getMultiple(query?: any) {
-        let records: SNICHConfig.Instance[] = [];
+        let records: SNICHConfig.Connection[] = [];
         if (!query) {
             query = {};
         }
-        let foundRecords = await this.DB.asyncFind<SNICHConfig.Instance>(query);
+        let foundRecords = await this.DB.asyncFind<SNICHConfig.Connection>(query);
         if (foundRecords && foundRecords.length > 0) {
             records = foundRecords;
         }

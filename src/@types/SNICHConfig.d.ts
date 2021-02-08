@@ -3,15 +3,14 @@ declare namespace SNICHConfig {
 
         name: string;
         rootPath: vscodeUriRaw;
-        connection: Connection;
-        _id: string;
+        _id: string | undefined;
 
     }
 
 
     interface PreferenceMap {
         instance_id: string;
-        _id: string;
+        _id: string | undefined;
         name: string;
         filename: string;
         description: string;
@@ -19,6 +18,8 @@ declare namespace SNICHConfig {
     }
 
     interface Connection {
+        _id: string | undefined;
+        instance_id: string;
         url: string;
         auth: Auth;
     }
@@ -51,7 +52,7 @@ declare namespace SNICHConfig {
     }
 
     interface Application {
-        _id: string;
+        _id: string | undefined;
         instance_id: string;
         name: string;
         sys_id: string;
@@ -62,7 +63,7 @@ declare namespace SNICHConfig {
     }
 
     interface File {
-        _id: string;
+        _id: string | undefined;
         instance_id: string;
         application_id: string;
         fsPath: string;

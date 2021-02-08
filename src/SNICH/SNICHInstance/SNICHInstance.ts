@@ -1,31 +1,12 @@
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
+import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
+import { SNICHInstancesService } from './SNICHInstancesService';
 
 export class SNICHInstance {
     private data: SNICHConfig.Instance = {
-        _id: "",
-        connection: {
-            auth: {
-                type: "None",
-                writeBasicToDisk: false,
-                username: "",
-                password: "",
-                OAuth: {
-                    client_id: "",
-                    client_secret: "",
-                    token_expires_on: 0,
-                    token: {
-                        access_token: "",
-                        expires_in: 0,
-                        refresh_token: "",
-                        scope: "",
-                        token_type: ""
-                    }
-                }
-            },
-            url: ""
-        },
+        _id: undefined,
         name: "",
         rootPath: {
             path: "",
@@ -39,10 +20,11 @@ export class SNICHInstance {
     connection: SNICHConnection;
 
     constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
+        // If data is supplied, (likely called from instance selection) then use it!
         if (data) {
-            this.setData(data);
-        }
+            this.data = data;
 
+        }
         this.connection = new SNICHConnection(logger, this.getId());
 
     }
@@ -55,6 +37,19 @@ export class SNICHInstance {
         this.logger.info(this.type, func, "ENTERING");
 
         let result = false;
+
+        //to save as we go.
+        const iService = new SNICHInstancesService(this.logger);
+
+        if (this.getId() === undefined) {
+            let insertResult = await iService.insert(this.getData());
+            if (!insertResult) {
+                this.logger.error(this.type, func, "Initial instance insert failed. Aborting setting!");
+                this.logger.info(this.type, func, "LEAVING");
+                return this.abortSetup("Critical failure. Check console logs.");
+            }
+        }
+
         let yesNo: vscode.QuickPickItem[] = [{ label: "$(thumbsup) Yes" }, { label: "$(thumbsdown) No" }];
 
         let enteredInstanceValue = await vscode.window.showInputBox({ ignoreFocusOut: true, prompt: `Enter Instance Name or URL.`, placeHolder: "https://dev00000.service-now.com", validateInput: (value) => this.validateName(value) });
@@ -63,7 +58,7 @@ export class SNICHInstance {
             return this.abortSetup('No instance name or url entered.');
         }
 
-        let instanceUrl = ``;
+        let instanceUrl = this.connection.getURL() || ``;
 
         if (enteredInstanceValue.indexOf('http://') > -1 || enteredInstanceValue.indexOf('https://') > -1) {
             //instance entered IS a URL.
@@ -85,10 +80,13 @@ export class SNICHInstance {
             return this.setup(); //exit and start setup over again.
         }
 
+        //save url
+        await iService.update(this.getId(), this.getData());
+
         this.connection.setURL(instanceUrl);
 
         // Validate folder name. Giving an opportunity to change.
-        let fixedInstanceName = instanceUrl.replace('https://', '').replace(':', '_');
+        let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace(':', '_');
 
         let instanceName = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: fixedInstanceName });
         if (!instanceName) {
@@ -97,17 +95,26 @@ export class SNICHInstance {
 
         this.setName(instanceName);
 
+        await iService.update(this.getId(), this.getData());
+
         let authResult = await this.connection.setupAuth();
         if (!authResult) {
             this.logger.info(this.type, func, "LEAVING");
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
         }
 
+        let wsFileman = new WSFileMan(this.logger);
+        const wsRoot = wsFileman.getWSRootUri();
+        if (!wsRoot) {
+            this.logger.error(this.type, func, 'For some reason we got here without a workspace root... we should have checked all that before now..')
+            return this.abortSetup('No workspace loaded. Please load a folder to use as your workspace.');
+        }
+
+        this.setRootPath(vscode.Uri.joinPath(wsRoot, this.getName()));
+
         this.logger.info(this.type, func, "LEAVING");
 
         return result;
-
-
     }
 
     setName(name: string) { this.data.name = name }
@@ -138,7 +145,6 @@ export class SNICHInstance {
 
     setConnection(conn: SNICHConnection) {
         this.connection = conn;
-        this.data.connection = conn.getData()
     }
 
     getConnection() { return this.connection }
@@ -164,20 +170,10 @@ export class SNICHInstance {
     setData(data: SNICHConfig.Instance) {
         //de-reference
         const newData = { ...data };
-
         this.data = newData;
-        this.connection.setData(newData.connection);
     }
 
     getData() {
-        const connData = { ...this.connection.getData() };
-        if (this.connection.getStoreBasicToDisk()) {
-            //clearing before any getData calls... which should be when we write to disk.. This effectively lets us store it in memory.
-            connData.auth.password = '';
-
-        }
-
-        this.data.connection = connData; //make sure we have latest connection data as well.
         return this.data
     }
 }

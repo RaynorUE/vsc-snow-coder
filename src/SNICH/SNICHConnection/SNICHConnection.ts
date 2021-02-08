@@ -8,6 +8,8 @@ import { SNICHWebServer } from '../SNICHWebServer/SNICHWebServer';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
+        _id: undefined,
+        instance_id: "",
         auth: {
             type: "None",
             username: "",
@@ -29,12 +31,13 @@ export class SNICHConnection {
         },
         url: ""
     }
+
     private redirectURL = `http://localhost:62000/snich_oauth_redirect`;
 
     type = "SNICHConnection";
     logger: SystemLogHelper;
 
-    constructor(logger: SystemLogHelper, instanceId: string) {
+    constructor(logger: SystemLogHelper, instanceId?: string) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, "ENTERING");
