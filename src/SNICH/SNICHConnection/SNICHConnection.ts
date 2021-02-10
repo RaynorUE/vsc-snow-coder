@@ -37,7 +37,7 @@ export class SNICHConnection {
     type = "SNICHConnection";
     logger: SystemLogHelper;
 
-    constructor(logger: SystemLogHelper, instanceId?: string) {
+    constructor(logger: SystemLogHelper) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, "ENTERING");
@@ -45,6 +45,10 @@ export class SNICHConnection {
         //load service, load snich connection data or stub in new.
 
         this.logger.info(this.type, func, "LEAVING");
+    }
+
+    async load(instanceId: string) {
+
     }
 
     async setupAuth(): Promise<boolean> {
@@ -113,7 +117,8 @@ export class SNICHConnection {
         var inputConfig: vscode.InputBoxOptions = {
             prompt: `Enter User Name`,
             ignoreFocusOut: true,
-            validateInput: (value) => this.inputEntryMandatory(value)
+            validateInput: (value) => this.inputEntryMandatory(value),
+            value: this.getUserName() || ""
         }
         let username = await vscode.window.showInputBox(inputConfig);
         if (username) {

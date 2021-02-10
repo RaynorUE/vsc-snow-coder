@@ -1,0 +1,116 @@
+{
+	"SystemLogHelper Debug Message (this.logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaDebug",
+        "description": "(this.logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "this.logger.debug(this.type, func, \"${1:Your Debug Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Info Message (this.logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaInfo",
+        "description": "(this.logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "this.logger.info(this.type, func, \"${1:Your Info Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Warn Message (this.logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaWarn",
+        "description": "(this.logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "this.logger.warn(this.type, func, \"${1:Your Warning Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Error Message (this.logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaError",
+        "description": "(this.logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "this.logger.error(this.type, func, \"${1:Onos an error has occured!}\", ${2:varName});"
+
+        ]
+    },
+    "SystemLogHelper Report Exception Message (this.logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaReportException",
+        "description": "(this.logger) Insert a Report Exception log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "this.logger.reportException(this.type, func, e);"
+        ]
+    },
+
+	"SystemLogHelper Debug Message (logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaDebugGeneral",
+        "description": "(logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "logger.debug(lib, func, \"${1:Your Debug Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Info Message (logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaInfoGeneral",
+        "description": "(logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "logger.info(lib, func, \"${1:Your Info Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Warn Message (logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaWarnGeneral",
+        "description": "(logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "logger.warn(lib, func, \"${1:Your Warning Message}\", ${2:varName});"
+        ]
+    },
+    "SystemLogHelper Error Message (logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaErrorGeneral",
+        "description": "(logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "logger.error(lib, func, \"${1:Onos an error has occured!}\", ${2:varName});"
+
+        ]
+    },
+    "SystemLogHelper Report Exception Message (logger)" : {
+        "scope":"typescript",
+        "prefix": "yalaReportExceptionGeneral",
+        "description": "(logger) Insert a Report Exception log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
+        "body": [
+            "logger.reportException(lib, func, e);"
+        ]
+    },
+    "New Business Rule with Yansa Documentation" : {
+		"scope":"typescript",
+        "prefix": "yalaBrNewFunc",
+        "body": [
+            "var lib = '${1:Business Rule}';",
+            "var func = '${2:BrName}';",
+            "var logger = new SystemLogHelper(true);",
+            "try{",
+            "\tlogger.info(lib, func, 'ENTERING');",
+            "\t$0",
+            "} catch(e){",
+            "\tlogger.reportException(lib, func, e);",
+            "} finally{",
+            "\tlogger.info(lib, func, 'LEAVING');",
+            "\tlogger.writeCumulativeEntries(true);",
+            "}"
+        ],
+        "description": "Create a new business rule interior function body with Yansa structure and logging standards"
+    },
+    "Log Variable General Scripts" : {
+        "scope":"typescript",
+        "prefix": "yalaLogVarGeneral",
+		"body":["logger.debug(lib, func, \"${1:varName}: \", ${1:varName});"],
+        "description": "Create a new business rule interior function body with Yansa structure and logging standards"
+    },
+	"Create a debug entry for logging a variable":{
+        "scope":"typescript",
+		"prefix":"yalaLogVarClass",
+		"description":"Stub in a logg.",
+		"body":["this.logger.debug(this.type, func, \"${1:varName}: \",${1:varName});"]
+	}
+}

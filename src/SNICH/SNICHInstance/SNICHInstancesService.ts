@@ -16,7 +16,7 @@ export class SNICHInstancesService {
             throw new Error('Unable to load instance! Somehow this got called without valid workspace!');
         }
         this.DB = new AsyncNedb({
-            filename: DBfilePath,
+            filename: DBfilePath.fsPath,
             autoload: true,
         })
     }
@@ -34,6 +34,8 @@ export class SNICHInstancesService {
     async insert(data: SNICHConfig.Instance) {
         let func = 'insert';
         this.logger.info(this.type, func, "ENTERING");
+        this.logger.debug(this.type, func, "data: ", data);
+
         let res = undefined;
 
         try {
@@ -45,11 +47,12 @@ export class SNICHInstancesService {
             let insertResult = await this.DB.asyncInsert<SNICHConfig.Instance>(data);
 
             if (insertResult) {
+                this.logger.debug(this.type, func, "insertResult: ", insertResult);
                 res = insertResult;
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, JSON.stringify(e));
+            this.logger.error(this.type, func, e);
             res = undefined;
         } finally {
             this.logger.info(this.type, func, "LEAVING");
@@ -62,6 +65,9 @@ export class SNICHInstancesService {
     async update(_id: string | undefined, data: SNICHConfig.Instance) {
         let func = 'update'
         this.logger.info(this.type, func, "ENTERING");
+        this.logger.debug(this.type, func, "_id: ", _id);
+        this.logger.debug(this.type, func, "data: ", data);
+
         let res = false;
         try {
             if (_id === undefined) {
@@ -74,13 +80,22 @@ export class SNICHInstancesService {
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, JSON.stringify(e));
+            this.logger.error(this.type, func, e);
             res = false;
         } finally {
             this.logger.info(this.type, func, "LEAVING");
         }
 
         return res;
+    }
+
+    async getById(_id: string) {
+        let record: SNICHConfig.Instance | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Instance>({ _id: _id });
+        if (foundRecord) {
+            record = foundRecord;
+        }
+        return record;
     }
 
     async get(query: any) {

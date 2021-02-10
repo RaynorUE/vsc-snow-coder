@@ -1,4 +1,4 @@
-import { extensionContext } from '../../extension';
+//import { extensionContext } from '../../extension';
 import * as vscode from 'vscode';
 import * as url from 'url';
 import http = require('http');
@@ -13,10 +13,11 @@ export class SNICHWebServer {
      * @param state the state to check for against when getting the result back.
      */
     async listenForCode(state: string): Promise<string | undefined> {
+        /*
         const extensionPath = extensionContext.extensionUri;
         let keyPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'key.pem');
         let certPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'cert.pem');
-        /*
+        
         let oauthServOptions = {
             key: await vscode.workspace.fs.readFile(keyPath),
             cert: await vscode.workspace.fs.readFile(certPath)

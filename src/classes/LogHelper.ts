@@ -168,4 +168,8 @@ export class SystemLogHelper {
             this.log(this._ERROR, library, func, msg, obj);
         }
     }
+
+    reportException(library: string, func: string, e: any) {
+        this.log(this._ERROR, library, func, 'EXCEPTION', e);
+    }
 }

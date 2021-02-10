@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
+import { InstanceFileMan } from '../../FileMan/InstanceFileMan';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
@@ -41,18 +42,14 @@ export class SNICHInstance {
         //to save as we go.
         const iService = new SNICHInstancesService(this.logger);
 
-        if (this.getId() === undefined) {
-            let insertResult = await iService.insert(this.getData());
-            if (!insertResult) {
-                this.logger.error(this.type, func, "Initial instance insert failed. Aborting setting!");
-                this.logger.info(this.type, func, "LEAVING");
-                return this.abortSetup("Critical failure. Check console logs.");
-            }
-        }
+        let yesNo: YesNo[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
-        let yesNo: vscode.QuickPickItem[] = [{ label: "$(thumbsup) Yes" }, { label: "$(thumbsdown) No" }];
-
-        let enteredInstanceValue = await vscode.window.showInputBox({ ignoreFocusOut: true, prompt: `Enter Instance Name or URL.`, placeHolder: "https://dev00000.service-now.com", validateInput: (value) => this.validateName(value) });
+        let enteredInstanceValue = await vscode.window.showInputBox({
+            ignoreFocusOut: true,
+            prompt: `Enter Instance Name or URL.`,
+            placeHolder: "https://dev00000.service-now.com",
+            validateInput: (value) => this.inputEntryMandatory(value)
+        });
 
         if (!enteredInstanceValue) {
             return this.abortSetup('No instance name or url entered.');
@@ -71,31 +68,57 @@ export class SNICHInstance {
             instanceUrl = `https://${enteredInstanceValue}.service-now.com`;
         }
 
-        let validateInstanceURL = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, placeHolder: `Continue with instance url? ${instanceUrl}` });
+        let validateInstanceURL = await vscode.window.showQuickPick([...yesNo], { ignoreFocusOut: true, placeHolder: `Continue with instance url? ${instanceUrl}` });
         if (!validateInstanceURL) {
             return this.abortSetup();
         }
 
-        if (validateInstanceURL.label == 'No') {
+        if (validateInstanceURL.value == "no") {
+            this.logger.info(this.type, func, "LEAVING");
             return this.setup(); //exit and start setup over again.
         }
-
-        //save url
-        await iService.update(this.getId(), this.getData());
 
         this.connection.setURL(instanceUrl);
 
         // Validate folder name. Giving an opportunity to change.
         let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace(':', '_');
 
-        let instanceName = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: fixedInstanceName });
+        let instanceName = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: fixedInstanceName, validateInput: (value) => this.inputEntryMandatory(value) });
         if (!instanceName) {
             return this.abortSetup('No folder name specified.');
         }
 
         this.setName(instanceName);
 
-        await iService.update(this.getId(), this.getData());
+        let foundInstance = await iService.get({ name: this.getName() });
+
+        if (foundInstance) {
+            this.logger.debug(this.type, func, "Found instance!", foundInstance);
+            let continueConfig = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, placeHolder: `Instance found by name [${this.getName()}]. Continue and reconfigure instance?` });
+            if (!continueConfig) {
+                this.logger.info(this.type, func, "LEAVING");
+                return this.abortSetup();
+            }
+
+            if (continueConfig.value == 'yes') {
+                this.setData(foundInstance);
+            } else {
+                this.logger.info(this.type, func, "LEAVING");
+                return this.setup();
+            }
+        } else {
+            let insertResult = await iService.insert(this.getData());
+            if (!insertResult || !insertResult._id) {
+                this.logger.error(this.type, func, "Initial instance insert failed. Aborting setting!");
+                this.logger.info(this.type, func, "LEAVING");
+                return this.abortSetup("Critical failure. Check console logs.");
+            } else {
+                this.setId(insertResult._id);
+                let dataSoFar = this.connection.getData();
+                this.connection = new SNICHConnection(this.logger, this.getId());
+                this.connection.setData(dataSoFar);
+            }
+        }
 
         let authResult = await this.connection.setupAuth();
         if (!authResult) {
@@ -111,21 +134,19 @@ export class SNICHInstance {
         }
 
         this.setRootPath(vscode.Uri.joinPath(wsRoot, this.getName()));
+        await iService.update(this.getId(), this.getData())
+
+        let iFileMan = new InstanceFileMan(this.logger);
+        await iFileMan.createInstanceRoot(this.getRootPath());
 
         this.logger.info(this.type, func, "LEAVING");
-
+        vscode.window.showInformationMessage('Instance setup success! Time to start syncing files!');
         return result;
     }
 
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }
-    validateName(name: string) {
-        if (!name) {
-            return 'Nothing entered. Try again.';
-        } else {
-            return null;
-        }
-    }
+
 
     abortSetup(msg?: string) {
         vscode.window.showWarningMessage('Instance setup aborted. ' + (msg || ""));
@@ -176,5 +197,18 @@ export class SNICHInstance {
     getData() {
         return this.data
     }
+
+    inputEntryMandatory(value: any) {
+        if (!value) {
+            return 'Entry required.';
+        } else {
+            return null;
+        }
+    }
 }
 
+
+
+declare interface YesNo extends vscode.QuickPickItem {
+    value: string;
+}

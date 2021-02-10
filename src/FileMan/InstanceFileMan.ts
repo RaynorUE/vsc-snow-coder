@@ -6,12 +6,10 @@ import { SystemLogHelper } from '../classes/LogHelper';
  */
 
 export class InstanceFileMan {
-    instance: SNICHConfig.Instance;
     logger: SystemLogHelper;
     type = 'InstanceFileMan';
 
-    constructor(logger: SystemLogHelper, instance: SNICHConfig.Instance) {
-        this.instance = instance;
+    constructor(logger: SystemLogHelper) {
         this.logger = logger;
     }
 
@@ -24,19 +22,27 @@ export class InstanceFileMan {
 
         try {
             let fs = vscode.workspace.fs;
-            let existingDir = await fs.readDirectory(iRoot);
+            let existingDir;
+            try {
+                existingDir = await fs.readDirectory(iRoot);
+            } catch (e) {
+                existingDir = undefined;
+            }
+
             if (existingDir) {
+                this.logger.debug(this.type, func, "Found existing directory. Returning true!");
                 res = true;
             } else {
-
-                let newDir = await fs.createDirectory(iRoot);
+                this.logger.debug(this.type, func, "Did not find existing directing... creating it!");
+                await fs.createDirectory(iRoot);
                 res = true; // if we make it to this line, previous did not throw an error, otherwise directory got created... somewhere! hah.
             }
         } catch (e) {
-
+            this.logger.reportException(this.type, func, e);
         } finally {
             this.logger.info(this.type, func, "LEAVING");
         }
+        return res;
     }
 
 }
