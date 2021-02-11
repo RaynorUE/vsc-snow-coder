@@ -12,7 +12,8 @@ export class SNICHInstance {
         rootPath: {
             path: "",
             fspath: ""
-        }
+        },
+        last_selected: 0
     };
 
     logger = new SystemLogHelper();
@@ -24,10 +25,92 @@ export class SNICHInstance {
         // If data is supplied, (likely called from instance selection) then use it!
         if (data) {
             this.data = data;
-
         }
-        this.connection = new SNICHConnection(logger, this.getId());
+        this.connection = new SNICHConnection(logger);
 
+    }
+
+    async load() {
+        var func = 'load';
+        this.logger.info(this.type, func, "ENTERING");
+
+        const iService = new SNICHInstancesService(this.logger);
+        //how many total?
+        const count = await iService.count();
+        if (count == 1) {
+            let snInstances = await iService.getMultiple();
+            this.setData(snInstances[0]);
+
+            this.connection = new SNICHConnection(this.logger);
+            var id = this.getId();
+            if (id) {
+                this.logger.info(this.type, func, "Have id, loading connection for instance: ", id);
+                await this.connection.load(id);
+            }
+        } else {
+            this.selectInstance();
+        }
+
+        this.logger.info(this.type, func, `LEAVING`);
+    }
+
+    async save() {
+        var func = 'save';
+        this.logger.info(this.type, func, `ENTERING`);
+        const iService = new SNICHInstancesService(this.logger);
+        if (this.data._id) {
+            await iService.update(this.data._id, this.getData());
+        } else {
+            let insertResult = await iService.insert(this.getData());
+            if (insertResult) {
+                this.setData(insertResult); //so we store _id in class/memory
+            }
+        }
+        this.logger.info(this.type, func, `LEAVING`);
+    }
+
+
+    async selectInstance(): Promise<boolean | undefined> {
+        var func = 'selectInstance';
+        this.logger.info(this.type, func, "ENTERING");
+
+        var res = undefined;
+
+        try {
+
+            let instanceQPs: qpWithValue[] = [];
+
+            let iService = new SNICHInstancesService(this.logger);
+            let instances = await iService.getMultiple({}, [['sort', { last_selected: -1 }]]);
+            if (instances && instances.length > 0) {
+                instanceQPs = instances.map((instance) => {
+                    let qp: qpWithValue = {
+                        value: instance,
+                        label: instance.name,
+                    }
+                    return qp;
+                })
+            } else {
+                throw new Error('Got here but no instances configured!');
+            }
+
+            let selectedQp = await vscode.window.showQuickPick(instanceQPs, { ignoreFocusOut: true, placeHolder: "Select instance" });
+            if (selectedQp) {
+                this.setData(selectedQp.value);
+                this.connection = new SNICHConnection(this.logger);
+                await this.connection.load(this.getId());
+                res = true;
+            }
+
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e);
+            res = undefined;
+        } finally {
+            this.logger.info(this.type, func, "LEAVING");
+        }
+
+        return res;
     }
 
     /**
@@ -42,7 +125,7 @@ export class SNICHInstance {
         //to save as we go.
         const iService = new SNICHInstancesService(this.logger);
 
-        let yesNo: YesNo[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
+        let yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
         let enteredInstanceValue = await vscode.window.showInputBox({
             ignoreFocusOut: true,
@@ -102,22 +185,25 @@ export class SNICHInstance {
 
             if (continueConfig.value == 'yes') {
                 this.setData(foundInstance);
+                const dataSoFar = this.connection.getData();
+                await this.connection.load(foundInstance._id);
+                this.connection.setData(dataSoFar); //this is to update the URL incase they entered a different one..
+                this.connection.save();
             } else {
                 this.logger.info(this.type, func, "LEAVING");
                 return this.setup();
             }
         } else {
-            let insertResult = await iService.insert(this.getData());
-            if (!insertResult || !insertResult._id) {
-                this.logger.error(this.type, func, "Initial instance insert failed. Aborting setting!");
-                this.logger.info(this.type, func, "LEAVING");
-                return this.abortSetup("Critical failure. Check console logs.");
-            } else {
-                this.setId(insertResult._id);
-                let dataSoFar = this.connection.getData();
-                this.connection = new SNICHConnection(this.logger, this.getId());
-                this.connection.setData(dataSoFar);
-            }
+            /**
+             * @todo, i think issue is we are smashing over data, wit
+             */
+            await this.save();
+            const dataSoFar = this.connection.getData();
+            await this.connection.load(this.getId());
+            dataSoFar._id = this.connection.getId();
+            this.connection.setData(dataSoFar);
+            await this.connection.save();
+
         }
 
         let authResult = await this.connection.setupAuth();
@@ -134,10 +220,14 @@ export class SNICHInstance {
         }
 
         this.setRootPath(vscode.Uri.joinPath(wsRoot, this.getName()));
-        await iService.update(this.getId(), this.getData())
+
 
         let iFileMan = new InstanceFileMan(this.logger);
         await iFileMan.createInstanceRoot(this.getRootPath());
+
+        this.logger.debug(this.type, func, "All done. Saving instance and connection data!");
+        await this.save();
+        await this.connection.save();
 
         this.logger.info(this.type, func, "LEAVING");
         vscode.window.showInformationMessage('Instance setup success! Time to start syncing files!');
@@ -170,19 +260,6 @@ export class SNICHInstance {
 
     getConnection() { return this.connection }
 
-    async testConnection() {
-        let result = await this.connection.testConnection();
-
-        if (result) {
-            vscode.window.showInformationMessage('Test Connection Successful!');
-        } else {
-            vscode.window.showWarningMessage('Unknown error occurred testing connection. Instance might be unavailable or some other failured occured.');
-        }
-    }
-
-    async runBackgroundScript() {
-
-    }
 
     /**
      * Set the internal data object from some source DB, JSON file, etc.
@@ -209,6 +286,6 @@ export class SNICHInstance {
 
 
 
-declare interface YesNo extends vscode.QuickPickItem {
-    value: string;
+declare interface qpWithValue extends vscode.QuickPickItem {
+    value: any;
 }

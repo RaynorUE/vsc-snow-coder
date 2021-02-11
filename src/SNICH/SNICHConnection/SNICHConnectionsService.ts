@@ -19,7 +19,10 @@ export class SNICHConnectionsService {
             throw new Error('Unable to load instance! Somehow this got called without valid workspace!');
         }
 
-        this.DB = new AsyncNedb(this.getDBFilePath())
+        this.DB = new AsyncNedb({
+            filename: DBfilePath.fsPath,
+            autoload: true,
+        })
 
         this.logger.info(this.type, func, "LEAVING");
     }
@@ -34,12 +37,70 @@ export class SNICHConnectionsService {
         return dbPath;
     }
 
-    async insert(connectionData: SNICHConfig.Connection) {
+    async insert(data: SNICHConfig.Connection) {
+        let func = 'insert';
+        this.logger.info(this.type, func, "ENTERING");
+        this.logger.debug(this.type, func, "data: ", data);
 
+        let res = undefined;
+
+        try {
+
+            if (data._id !== undefined) {
+                throw new Error('Attempted to insert an connection that already exists.');
+            }
+
+            let insertResult = await this.DB.asyncInsert<SNICHConfig.Connection>(data);
+
+            if (insertResult) {
+                this.logger.debug(this.type, func, "insertResult: ", insertResult);
+                res = insertResult;
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, e);
+            res = undefined;
+        } finally {
+            this.logger.info(this.type, func, "LEAVING");
+        }
+
+        return res;
     }
 
     async update(_id: string, data: any) {
+        let func = 'update'
+        this.logger.info(this.type, func, "ENTERING");
+        this.logger.debug(this.type, func, "_id: ", _id);
+        this.logger.debug(this.type, func, "data: ", data);
 
+        let res = false;
+        try {
+            if (_id === undefined) {
+                throw new Error("Attempted to update and ID was undefined. Will be unable to find record!");
+            }
+
+            let updateResult = await this.DB.asyncUpdate({ _id: _id }, data);
+            if (updateResult) {
+                res = true;
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, e);
+            res = false;
+        } finally {
+            this.logger.info(this.type, func, "LEAVING");
+        }
+
+        return res;
+    }
+
+    async getByInstanceId(_id: string) {
+        let record: SNICHConfig.Connection | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>({ instance_id: _id });
+        if (foundRecord) {
+            record = foundRecord;
+        }
+        return record;
     }
 
     async getById(_id: string) {

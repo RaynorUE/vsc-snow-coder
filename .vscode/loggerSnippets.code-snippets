@@ -4,7 +4,7 @@
         "prefix": "yalaDebug",
         "description": "(this.logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "this.logger.debug(this.type, func, \"${1:Your Debug Message}\", ${2:varName});"
+            "this.logger.debug(this.type, func, `${1:Your Debug Message}`);"
         ]
     },
     "SystemLogHelper Info Message (this.logger)" : {
@@ -12,7 +12,7 @@
         "prefix": "yalaInfo",
         "description": "(this.logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "this.logger.info(this.type, func, \"${1:Your Info Message}\", ${2:varName});"
+            "this.logger.info(this.type, func, `${1:Your Info Message}`);"
         ]
     },
     "SystemLogHelper Warn Message (this.logger)" : {
@@ -20,7 +20,7 @@
         "prefix": "yalaWarn",
         "description": "(this.logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "this.logger.warn(this.type, func, \"${1:Your Warning Message}\", ${2:varName});"
+            "this.logger.warn(this.type, func, `${1:Your Warning Message}`);"
         ]
     },
     "SystemLogHelper Error Message (this.logger)" : {
@@ -28,7 +28,7 @@
         "prefix": "yalaError",
         "description": "(this.logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "this.logger.error(this.type, func, \"${1:Onos an error has occured!}\", ${2:varName});"
+            "this.logger.error(this.type, func, `${1:Onos an error has occured!}`);"
 
         ]
     },
@@ -46,7 +46,7 @@
         "prefix": "yalaDebugGeneral",
         "description": "(logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "logger.debug(lib, func, \"${1:Your Debug Message}\", ${2:varName});"
+            "logger.debug(lib, func, `${1:Your Debug Message}`);"
         ]
     },
     "SystemLogHelper Info Message (logger)" : {
@@ -54,7 +54,7 @@
         "prefix": "yalaInfoGeneral",
         "description": "(logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "logger.info(lib, func, \"${1:Your Info Message}\", ${2:varName});"
+            "logger.info(lib, func, `${1:Your Info Message}`);"
         ]
     },
     "SystemLogHelper Warn Message (logger)" : {
@@ -62,7 +62,7 @@
         "prefix": "yalaWarnGeneral",
         "description": "(logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "logger.warn(lib, func, \"${1:Your Warning Message}\", ${2:varName});"
+            "logger.warn(lib, func, `${1:Your Warning Message}`);"
         ]
     },
     "SystemLogHelper Error Message (logger)" : {
@@ -70,7 +70,7 @@
         "prefix": "yalaErrorGeneral",
         "description": "(logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
         "body": [
-            "logger.error(lib, func, \"${1:Onos an error has occured!}\", ${2:varName});"
+            "logger.error(lib, func, `${1:Onos an error has occured!}`);"
 
         ]
     },
@@ -104,13 +104,13 @@
     "Log Variable General Scripts" : {
         "scope":"typescript",
         "prefix": "yalaLogVarGeneral",
-		"body":["logger.debug(lib, func, \"${1:varName}: \", ${1:varName});"],
+		"body":["logger.debug(lib, func, `${1:varName}: `, ${1:varName});"],
         "description": "Create a new business rule interior function body with Yansa structure and logging standards"
     },
 	"Create a debug entry for logging a variable":{
         "scope":"typescript",
 		"prefix":"yalaLogVarClass",
 		"description":"Stub in a logg.",
-		"body":["this.logger.debug(this.type, func, \"${1:varName}: \",${1:varName});"]
+		"body":["this.logger.debug(this.type, func, `${1:varName}: `,${1:varName});"]
 	}
 }

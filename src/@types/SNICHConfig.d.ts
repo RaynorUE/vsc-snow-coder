@@ -4,6 +4,7 @@ declare namespace SNICHConfig {
         name: string;
         rootPath: vscodeUriRaw;
         _id: string | undefined;
+        last_selected: number;
 
     }
 

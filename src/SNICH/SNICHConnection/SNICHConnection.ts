@@ -5,6 +5,7 @@ import { SNICHRestClient } from './SNICHRestClient';
 import * as vscode from 'vscode';
 import { SystemLogHelper } from '../../classes/LogHelper';
 import { SNICHWebServer } from '../SNICHWebServer/SNICHWebServer';
+import { SNICHConnectionsService } from './SNICHConnectionsService';
 
 export class SNICHConnection {
     private data: SNICHConfig.Connection = {
@@ -47,9 +48,42 @@ export class SNICHConnection {
         this.logger.info(this.type, func, "LEAVING");
     }
 
-    async load(instanceId: string) {
-
+    async load(instanceId?: string) {
+        var func = 'load';
+        this.logger.info(this.type, func, `ENTERING`);
+        if (!instanceId) {
+            this.logger.info(this.type, func, `LEAVING`);
+            throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
+        } else {
+            const connService = new SNICHConnectionsService(this.logger);
+            let foundConnection = await connService.getByInstanceId(instanceId);
+            if (foundConnection) {
+                this.setData(foundConnection);
+            } else {
+                this.logger.debug(this.type, func, `Cannot find connection by id, but id provided, creating new connection.`);
+                this.data.instance_id = instanceId;
+                await this.save();
+            }
+        }
+        this.logger.info(this.type, func, `LEAVING`);
     }
+
+    async save() {
+        var func = 'save';
+        this.logger.info(this.type, func, `ENTERING`);
+        const connService = new SNICHConnectionsService(this.logger);
+        if (this.data._id) {
+            await connService.update(this.data._id, this.getData());
+        } else {
+            let insertResult = await connService.insert(this.getData());
+            if (insertResult) {
+                this.setData(insertResult); //so we store _id in class/memory
+            }
+        }
+        this.logger.info(this.type, func, `LEAVING`);
+    }
+
+
 
     async setupAuth(): Promise<boolean> {
         var func = "setupAuth";
@@ -78,7 +112,9 @@ export class SNICHConnection {
             authSetup = await this.setupOAuth();
         }
         this.logger.info(this.type, func, "Authsetup: ", authSetup);
+        await this.save();
         this.logger.info(this.type, func, "LEAVING");
+
 
         return authSetup;
     }
@@ -482,6 +518,7 @@ export class SNICHConnection {
         this.data = newData;
     }
     getData() { return this.data }
+
     getAuthType() { return this.data.auth.type }
     setAuthType(authType: SNICHConfig.authTypes) { this.data.auth.type = authType }
     getUserName() { return this.data.auth.username }
@@ -552,6 +589,10 @@ export class SNICHConnection {
         } else {
             return null;
         }
+    }
+
+    getId() {
+        return this.data._id;
     }
 
     calcExpiresOn(durSecs: number) {

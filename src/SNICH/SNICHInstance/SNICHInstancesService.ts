@@ -31,6 +31,10 @@ export class SNICHInstancesService {
         return dbPath;
     }
 
+    async count() {
+        return await this.DB.asyncCount({});
+    }
+
     async insert(data: SNICHConfig.Instance) {
         let func = 'insert';
         this.logger.info(this.type, func, "ENTERING");
@@ -107,12 +111,13 @@ export class SNICHInstancesService {
         return record;
     }
 
-    async getMultiple(query?: any) {
+    async getMultiple(query?: any, options?: any) {
         let records: SNICHConfig.Instance[] = [];
         if (!query) {
             query = {};
         }
-        let foundRecords = await this.DB.asyncFind<SNICHConfig.Instance>(query);
+        let foundRecords = await this.DB.asyncFind<SNICHConfig.Instance>(query, options);
+
         if (foundRecords && foundRecords.length > 0) {
             records = foundRecords;
         }
