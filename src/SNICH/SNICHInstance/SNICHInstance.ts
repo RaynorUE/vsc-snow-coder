@@ -34,6 +34,7 @@ export class SNICHInstance {
         var func = 'load';
         this.logger.info(this.type, func, "ENTERING");
 
+        let result: boolean | undefined = false;
         const iService = new SNICHInstancesService(this.logger);
         //how many total?
         const count = await iService.count();
@@ -46,12 +47,14 @@ export class SNICHInstance {
             if (id) {
                 this.logger.info(this.type, func, "Have id, loading connection for instance: ", id);
                 await this.connection.load(id);
+                result = true;
             }
         } else {
-            this.selectInstance();
+            result = await this.selectInstance();
         }
 
         this.logger.info(this.type, func, `LEAVING`);
+        return result;
     }
 
     async save() {
@@ -100,6 +103,8 @@ export class SNICHInstance {
                 this.connection = new SNICHConnection(this.logger);
                 await this.connection.load(this.getId());
                 res = true;
+            } else {
+                res = false;
             }
 
 

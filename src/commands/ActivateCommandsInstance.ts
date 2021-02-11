@@ -1,5 +1,6 @@
 import { SystemLogHelper } from '../classes/LogHelper';
 import { SNICHInstance } from '../SNICH/SNICHInstance/SNICHInstance';
+import * as vscode from 'vscode';
 
 export class ActivateCommandsInstance {
 
@@ -15,23 +16,36 @@ export class ActivateCommandsInstance {
         logger.info(this.type, func, 'END');
     }
 
-    /*
+
     async testConnection() {
         let logger = new SystemLogHelper();
         let func = 'testConnection';
-        logger.info(this.lib, func, 'START');
+        logger.info(this.type, func, 'START');
 
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
+        let sInstance = new SNICHInstance(logger);
+        let loadResult = await sInstance.load();
+
+        if (loadResult == false) {
+            vscode.window.showWarningMessage('Test connection aborted! No instance selected!');
+        } else if (loadResult == undefined) {
+            vscode.window.showErrorMessage('Got here and no instances were available. Odd...');
+        } else if (loadResult == true) {
+
+            let connResult = await sInstance.connection.testConnection();
+            logger.debug(this.type, func, `connResult: `, connResult);
+            if (connResult) {
+                vscode.window.showInformationMessage('Test connection succesful!');
+            } else {
+                vscode.window.showErrorMessage('Test connection failed!');
+            }
+
+        } else {
+            throw new Error('Weird.. super weird..');
         }
 
-        let selectedInstance = await instanceList.selectInstance();
-        if (selectedInstance) {
-            let client = new RESTClient(selectedInstance, logger);
-            await client.testConnection();
-        }
-        logger.info(this.lib, func, 'END', instanceList);
+        logger.info(this.type, func, 'END');
     }
+    /*
 
     async pullRecord() {
         let logger = new SystemLogHelper();

@@ -40,8 +40,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
     vscode.commands.registerCommand('snich.instance.setup', () => new ActivateCommandsInstance().setup());
-    /*vscode.commands.registerCommand('snich.instance.setup.new_table', new ActivateCommandsInstance().configureTable);
-    vscode.commands.registerCommand('snich.instance.test_connection', new ActivateCommandsInstance().testConnection);
+    vscode.commands.registerCommand('snich.instance.test_connection', () => new ActivateCommandsInstance().testConnection());
+    /*vscode.commands.registerCommand('snich.instance.setup.new_table', () => new ActivateCommandsInstance().configureTable());
+    
     vscode.commands.registerCommand('snich.instance.pull_record', new ActivateCommandsInstance().pullRecord);*/
 
 
