@@ -77,7 +77,7 @@ declare namespace SNICHConfig {
     }
 
     interface Table {
-        _id: string;
+        _id: string | undefined;
         instance_id: string;
         name: string;
         label: string;
@@ -88,7 +88,6 @@ declare namespace SNICHConfig {
     }
 
     interface Field {
-        table: string;
         name: string;
         label: string;
         extension: string;

@@ -488,6 +488,32 @@ export class SNICHConnection {
         return restResults;
     }
 
+    async getAggregate(tableName: string, query: string, fields: string[], displayValue?: boolean | "all") {
+        var func = 'getAggregate';
+        this.logger.info(this.type, func, `ENTERING`);
+        const sConn = this;
+        const rClient = new SNICHRestClient(this.logger, sConn);
+
+        if (!displayValue) {
+            displayValue = false;
+        }
+
+        const config: requestPromise.RequestPromiseOptions = {
+            qs: {
+                sysparm_query: query,
+                sysparm_group_by: fields.join(','),
+                sysparm_count: true,
+                sysparm_display_value: displayValue
+            }
+        }
+
+        let restResults = await rClient.get(`/api/now/count/${tableName}`, config);
+        this.logger.info(this.type, func, `LEAVING`);
+
+        return restResults;
+
+    }
+
     /**
      * 
      * @param name the name of the user preference to get
