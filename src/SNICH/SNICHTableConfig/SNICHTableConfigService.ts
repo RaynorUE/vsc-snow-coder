@@ -4,40 +4,35 @@ import AsyncNedb from 'nedb-async'
 import { SystemLogHelper } from '../../classes/LogHelper';
 
 
-export class SNICHConnectionsService {
+export class SNICHTableConfigService {
     DB = new AsyncNedb();
     logger: SystemLogHelper;
-    type = "SNICHConnectionsService";
+    type = "SNICHTableConfigService"
 
     constructor(logger: SystemLogHelper) {
-        let func = `constructor`;
         this.logger = logger;
-        this.logger.info(this.type, func, "ENTERING");
-
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {
-            throw new Error('Unable to load instance! Somehow this got called without valid workspace!');
+            throw new Error('Unable to load TableConfigDB! Somehow this got called without valid workspace!');
         }
-
         this.DB = new AsyncNedb({
             filename: DBfilePath.fsPath,
             autoload: true,
         });
-
-        this.logger.info(this.type, func, "LEAVING");
     }
 
     getDBFilePath(): vscode.Uri | undefined {
         const wsRootUri = new WSFileMan(this.logger).getWSRootUri();
         let dbPath = undefined;
         if (wsRootUri) {
-            dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'connections.db');
+            dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'tables.db');
         }
 
         return dbPath;
     }
 
-    async insert(data: SNICHConfig.Connection) {
+
+    async insert(data: SNICHConfig.Table) {
         let func = 'insert';
         this.logger.info(this.type, func, "ENTERING");
         this.logger.debug(this.type, func, "data: ", data);
@@ -50,7 +45,7 @@ export class SNICHConnectionsService {
                 throw new Error('Attempted to insert an connection that already exists.');
             }
 
-            let insertResult = await this.DB.asyncInsert<SNICHConfig.Connection>(data);
+            let insertResult = await this.DB.asyncInsert<SNICHConfig.Table>(data);
 
             if (insertResult) {
                 this.logger.debug(this.type, func, "insertResult: ", insertResult);
@@ -95,8 +90,8 @@ export class SNICHConnectionsService {
     }
 
     async getByInstanceId(_id: string) {
-        let record: SNICHConfig.Connection | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>({ instance_id: _id });
+        let record: SNICHConfig.Table | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>({ instance_id: _id });
         if (foundRecord) {
             record = foundRecord;
         }
@@ -104,8 +99,8 @@ export class SNICHConnectionsService {
     }
 
     async getById(_id: string) {
-        let record: SNICHConfig.Connection | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>({ _id: _id });
+        let record: SNICHConfig.Table | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>({ _id: _id });
         if (foundRecord) {
             record = foundRecord;
         }
@@ -113,8 +108,8 @@ export class SNICHConnectionsService {
     }
 
     async get(query: any) {
-        let record: SNICHConfig.Connection | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>(query)
+        let record: SNICHConfig.Table | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>(query)
         if (foundRecord) {
             record = foundRecord;
         }
@@ -122,11 +117,11 @@ export class SNICHConnectionsService {
     }
 
     async getMultiple(query?: any) {
-        let records: SNICHConfig.Connection[] = [];
+        let records: SNICHConfig.Table[] = [];
         if (!query) {
             query = {};
         }
-        let foundRecords = await this.DB.asyncFind<SNICHConfig.Connection>(query);
+        let foundRecords = await this.DB.asyncFind<SNICHConfig.Table>(query);
         if (foundRecords && foundRecords.length > 0) {
             records = foundRecords;
         }

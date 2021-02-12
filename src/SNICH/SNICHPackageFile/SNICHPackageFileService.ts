@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
-import { WSFileMan } from '../FileMan/WSFileMan';
+import { WSFileMan } from '../../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
-import { SystemLogHelper } from '../classes/LogHelper';
+import { SystemLogHelper } from '../../classes/LogHelper';
 
 
 export class SNICHFileDB {
-    DB = new AsyncNedb();
     logger: SystemLogHelper;
+    DB = new AsyncNedb();
     constructor(logger: SystemLogHelper) {
         this.logger = logger;
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {
-            throw new Error('Unable to load TableConfigDB! Somehow this got called without valid workspace!');
+            throw new Error('Unable to load instance! Somehow this got called without valid workspace!');
         }
         this.DB = new AsyncNedb(this.getDBFilePath())
     }
@@ -20,7 +20,7 @@ export class SNICHFileDB {
         const wsRootUri = new WSFileMan(this.logger).getWSRootUri();
         let dbPath = undefined;
         if (wsRootUri) {
-            dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'table_config.db');
+            dbPath = vscode.Uri.joinPath(wsRootUri, '.snich', 'db', 'files.db');
         }
 
         return dbPath;
