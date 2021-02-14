@@ -76,9 +76,13 @@ declare namespace SNICHConfig {
         sys_app: string;
     }
 
-    interface Table {
-        _id: string | undefined;
+    interface TableConfig {
+        _id: string | undefined,
         instance_id: string;
+        tables: Table[];
+    }
+
+    interface Table {
         name: string;
         label: string;
         display_field: string;

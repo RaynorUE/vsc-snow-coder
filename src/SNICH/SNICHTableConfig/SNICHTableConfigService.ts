@@ -32,7 +32,7 @@ export class SNICHTableConfigService {
     }
 
 
-    async insert(data: SNICHConfig.Table) {
+    async insert(data: SNICHConfig.TableConfig) {
         let func = 'insert';
         this.logger.info(this.type, func, "ENTERING");
         this.logger.debug(this.type, func, "data: ", data);
@@ -45,7 +45,7 @@ export class SNICHTableConfigService {
                 throw new Error('Attempted to insert an connection that already exists.');
             }
 
-            let insertResult = await this.DB.asyncInsert<SNICHConfig.Table>(data);
+            let insertResult = await this.DB.asyncInsert<SNICHConfig.TableConfig>(data);
 
             if (insertResult) {
                 this.logger.debug(this.type, func, "insertResult: ", insertResult);
@@ -90,8 +90,8 @@ export class SNICHTableConfigService {
     }
 
     async getByInstanceId(_id: string) {
-        let record: SNICHConfig.Table | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>({ instance_id: _id });
+        let record: SNICHConfig.TableConfig | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.TableConfig>({ instance_id: _id });
         if (foundRecord) {
             record = foundRecord;
         }
@@ -99,8 +99,8 @@ export class SNICHTableConfigService {
     }
 
     async getById(_id: string) {
-        let record: SNICHConfig.Table | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>({ _id: _id });
+        let record: SNICHConfig.TableConfig | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.TableConfig>({ _id: _id });
         if (foundRecord) {
             record = foundRecord;
         }
@@ -108,8 +108,8 @@ export class SNICHTableConfigService {
     }
 
     async get(query: any) {
-        let record: SNICHConfig.Table | undefined = undefined;
-        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Table>(query)
+        let record: SNICHConfig.TableConfig | undefined = undefined;
+        let foundRecord = await this.DB.asyncFindOne<SNICHConfig.TableConfig>(query)
         if (foundRecord) {
             record = foundRecord;
         }
@@ -117,11 +117,11 @@ export class SNICHTableConfigService {
     }
 
     async getMultiple(query?: any) {
-        let records: SNICHConfig.Table[] = [];
+        let records: SNICHConfig.TableConfig[] = [];
         if (!query) {
             query = {};
         }
-        let foundRecords = await this.DB.asyncFind<SNICHConfig.Table>(query);
+        let foundRecords = await this.DB.asyncFind<SNICHConfig.TableConfig>(query);
         if (foundRecords && foundRecords.length > 0) {
             records = foundRecords;
         }
