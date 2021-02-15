@@ -462,6 +462,7 @@ export class SNICHConnection {
             }
         }
 
+
         rClient.get(`/api/now/table/${tableName}/${sys_id}`, config);
 
     }
@@ -472,6 +473,10 @@ export class SNICHConnection {
 
         if (!displayValue) {
             displayValue = false;
+        }
+
+        if (!fields.includes('sys_id')) {
+            fields.push('sys_id');
         }
 
         const config: requestPromise.RequestPromiseOptions = {
@@ -496,6 +501,10 @@ export class SNICHConnection {
 
         if (!displayValue) {
             displayValue = false;
+        }
+
+        if (!fields.includes('sys_id')) {
+            fields.push('sys_id');
         }
 
         const config: requestPromise.RequestPromiseOptions = {
