@@ -493,7 +493,7 @@ export class SNICHConnection {
         return restResults;
     }
 
-    async getAggregate(tableName: string, query: string, fields: string[], displayValue?: boolean | "all") {
+    async getAggregate(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", sortUpdated?: "ASC" | "DESC") {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
         const sConn = this;
@@ -507,6 +507,10 @@ export class SNICHConnection {
             fields.push('sys_id');
         }
 
+        if (sortUpdated && !fields.includes('sys_updated_on')) {
+            fields.push('sys_updated_on');
+        }
+
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
                 sysparm_query: query,
@@ -516,10 +520,39 @@ export class SNICHConnection {
             }
         }
 
-        let restResults = await rClient.get(`/api/now/count/${tableName}`, config);
+        let restResponse: any = await rClient.get(`/api/now/count/${tableName}`, config);
+        this.logger.debug(this.type, func, `restResults: `, restResponse);
+
+        let res: any[] = [];
+        if (restResponse) {
+            let restResults = restResponse.result;
+            if (restResults && restResults.length > 0) {
+                //remap into flat object since aggregate can be messy..
+
+                res = restResults.map((recRes: any) => {
+                    var newObj: any = {};
+                    recRes.groupby_fields.forEach((field: any) => {
+                        let value = field.value;
+                        if (field.field == 'sys_updated_on') {
+                            value = Date.parse(value);
+                        }
+                        newObj[field.field] = value;
+                    });
+
+                    return newObj;
+                })
+
+                if (sortUpdated == 'ASC') {
+                    res = res.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
+                } else if (sortUpdated == 'DESC') {
+                    res = res.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
+                }
+            }
+        }
+
         this.logger.info(this.type, func, `LEAVING`);
 
-        return restResults;
+        return res;
 
     }
 
