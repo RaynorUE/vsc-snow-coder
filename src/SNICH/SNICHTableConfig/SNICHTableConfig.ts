@@ -2,7 +2,7 @@ import { SystemLogHelper } from "../../classes/LogHelper";
 import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
-import { RequestPromiseOptions } from "request-promise-native";
+
 
 export class SNICHTableConfig {
 
@@ -161,7 +161,7 @@ export class SNICHTableConfig {
             return;
         }
 
-        let selectedTable = tableSelection.value;
+        //let selectedTable = tableSelection.value;
 
         /**
          * @todo get all the fields for this table

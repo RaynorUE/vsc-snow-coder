@@ -1,9 +1,12 @@
 //import { extensionContext } from '../../extension';
 import * as vscode from 'vscode';
 import * as url from 'url';
-import http = require('http');
+import * as https from 'https';
+import { extensionContext } from '../../extension';
 
 export class SNICHWebServer {
+    server: any;
+
     constructor() {
 
     }
@@ -13,19 +16,19 @@ export class SNICHWebServer {
      * @param state the state to check for against when getting the result back.
      */
     async listenForCode(state: string): Promise<string | undefined> {
-        /*
+
         const extensionPath = extensionContext.extensionUri;
         let keyPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'key.pem');
         let certPath = vscode.Uri.joinPath(extensionPath, 'WebServer', 'ssl', 'cert.pem');
-        
-        let oauthServOptions = {
-            key: await vscode.workspace.fs.readFile(keyPath),
-            cert: await vscode.workspace.fs.readFile(certPath)
+
+        let oauthServOptions: https.ServerOptions = {
+            key: (await vscode.workspace.fs.readFile(keyPath)).toString(),
+            cert: (await vscode.workspace.fs.readFile(certPath)).toString()
         };
-        */
+
         //lets start with just and http server? Since it'll be localhost..?
         let result = await new Promise<string | undefined>((resolve, reject) => {
-            const server = http.createServer(function (req, res) {
+            this.server = https.createServer(oauthServOptions, (req, res) => {
 
                 const oauthRedirectPath = /snich_oauth_redirect?.*/;
 
@@ -55,7 +58,7 @@ export class SNICHWebServer {
                     });
 
                     res.write(JSON.stringify(errObj, null, 4))
-                    server.close();
+                    this.server.close();
                     vscode.window.showErrorMessage('Failed OAuth configuration. Please retry instance setup again.');
                     resolve(undefined);
                 }
@@ -63,12 +66,15 @@ export class SNICHWebServer {
                 res.end();
             })
 
-            server.listen(62000);
+            this.server.listen(62000);
         })
 
         return result;
+    }
 
-
-
+    closeServer() {
+        if (this.server && this.server.close) {
+            this.server.close();
+        }
     }
 }

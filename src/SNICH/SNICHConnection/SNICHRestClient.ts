@@ -35,7 +35,8 @@ export class SNICHRestClient {
      * Must be called after every request, or we will re-enable auth.
      */
     disableAuth() {
-        this.client = this.client.defaults({ auth: undefined });
+        const basicOptions = { ...this.getClientDefaults(), auth: undefined };
+        this.client = rp.defaults(basicOptions);
     }
 
     enableAuth() {
@@ -91,11 +92,10 @@ export class SNICHRestClient {
         return result;
     }
 
-    async post(url: string, data: any, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
+    async post(url: string, config?: rp.RequestPromiseOptions): Promise<rp.FullResponse> {
         if (!config) {
             config = {};
         }
-        config.body = data;
         let result = await this.client.post(url, config);
         this.enableAuth();
         return result;

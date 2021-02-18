@@ -95,11 +95,15 @@ export class SNICHConnectionsService {
     }
 
     async getByInstanceId(_id: string) {
+        var func = 'getByInstanceId';
+        this.logger.info(this.type, func, `ENTERING`);
         let record: SNICHConfig.Connection | undefined = undefined;
         let foundRecord = await this.DB.asyncFindOne<SNICHConfig.Connection>({ instance_id: _id });
         if (foundRecord) {
+            this.logger.info(this.type, func, `Found!`, foundRecord);
             record = foundRecord;
         }
+        this.logger.info(this.type, func, `LEAVING`);
         return record;
     }
 

@@ -192,7 +192,7 @@ export class SNICHInstance {
                 this.setData(foundInstance);
                 const dataSoFar = this.connection.getData();
                 await this.connection.load(foundInstance._id);
-                this.connection.setData(dataSoFar); //this is to update the URL incase they entered a different one..
+                this.connection.setURL(dataSoFar.url);
                 this.connection.save();
             } else {
                 this.logger.info(this.type, func, "LEAVING");
