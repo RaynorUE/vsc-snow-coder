@@ -478,9 +478,13 @@ export class SNICHConnection {
         rClient.put(`/api/now/table/${tableName}/${sys_id}`, config);
     }
 
-    async getRecord(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all") {
+    async getRecord<T>(tableName: string, sys_id: string, fields: string[], displayValue: boolean | "all"): Promise<T | undefined> {
+        var func = 'getRecord';
+        this.logger.info(this.type, func, `ENTERING`);
         const sConn = this;
         const rClient = new SNICHRestClient(this.logger, sConn);
+
+        let result = undefined;
 
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
@@ -490,14 +494,31 @@ export class SNICHConnection {
             }
         }
 
+        let restResponse = undefined;
+        try {
 
-        rClient.get(`/api/now/table/${tableName}/${sys_id}`, config);
+            restResponse = rClient.get<T>(`/api/now/table/${tableName}/${sys_id}`, config);
+            if (restResponse) {
+                result = restResponse;
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+            return result;
+        }
 
     }
 
-    async getRecords(tableName: string, query: string, fields: string[], displayValue?: boolean | "all") {
+    async getRecords<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all"): Promise<T[]> {
+        var func = 'getRecords';
+        this.logger.info(this.type, func, `ENTERING`);
         const sConn = this;
         const rClient = new SNICHRestClient(this.logger, sConn);
+
+        let result: T[] = [];
 
         if (!displayValue) {
             displayValue = false;
@@ -516,9 +537,22 @@ export class SNICHConnection {
             }
         }
 
-        let restResults = await rClient.get(`/api/now/table/${tableName}`, config);
+        let restResponse = undefined;
 
-        return restResults;
+        try {
+            restResponse = await rClient.get<T[]>(`/api/now/table/${tableName}`, config);
+
+            if (restResponse) {
+                result = restResponse
+            }
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+            return result;
+        }
+
     }
 
     async getAggregate(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", sortUpdated?: "ASC" | "DESC") {
