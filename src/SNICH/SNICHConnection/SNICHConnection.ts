@@ -486,6 +486,10 @@ export class SNICHConnection {
 
         let result = undefined;
 
+        if (!fields.includes('sys_id')) {
+            fields.push('sys_id');
+        }
+
         const config: requestPromise.RequestPromiseOptions = {
             qs: {
                 sysparm_fields: fields.join(','),
@@ -497,9 +501,9 @@ export class SNICHConnection {
         let restResponse = undefined;
         try {
 
-            restResponse = rClient.get<T>(`/api/now/table/${tableName}/${sys_id}`, config);
+            restResponse = await rClient.get<SNTableAPIResponse<T>>(`/api/now/table/${tableName}/${sys_id}`, config);
             if (restResponse) {
-                result = restResponse;
+                result = restResponse.result;
             }
 
         } catch (e) {
@@ -540,10 +544,10 @@ export class SNICHConnection {
         let restResponse = undefined;
 
         try {
-            restResponse = await rClient.get<T[]>(`/api/now/table/${tableName}`, config);
+            restResponse = await rClient.get<SNTableAPIResponse<T[]>>(`/api/now/table/${tableName}`, config);
 
             if (restResponse) {
-                result = restResponse
+                result = restResponse.result;
             }
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
@@ -555,11 +559,13 @@ export class SNICHConnection {
 
     }
 
-    async getAggregate(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", sortUpdated?: "ASC" | "DESC") {
+    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", sortUpdated?: "ASC" | "DESC"): Promise<T[]> {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
         const sConn = this;
         const rClient = new SNICHRestClient(this.logger, sConn);
+
+        let result: T[] = [];
 
         if (!displayValue) {
             displayValue = false;
@@ -582,39 +588,55 @@ export class SNICHConnection {
             }
         }
 
-        let restResponse: any = await rClient.get(`/api/now/count/${tableName}`, config);
-        this.logger.debug(this.type, func, `restResults: `, restResponse);
+        let restResponse = undefined;
 
-        let res: any[] = [];
-        if (restResponse) {
-            let restResults = restResponse.result;
-            if (restResults && restResults.length > 0) {
-                //remap into flat object since aggregate can be messy..
+        try {
+            restResponse = await rClient.get<SNTableStatsResponse>(`/api/now/stats/${tableName}`, config);
 
-                res = restResults.map((recRes: any) => {
-                    var newObj: any = {};
-                    recRes.groupby_fields.forEach((field: any) => {
-                        let value = field.value;
-                        if (field.field == 'sys_updated_on') {
-                            value = Date.parse(value);
-                        }
-                        newObj[field.field] = value;
+            if (restResponse) {
+                let restResults = restResponse.result;
+                if (restResults && restResults.length > 0) {
+                    //remap into flat object since aggregate can be messy..
+                    let mappedResults = restResults.map((recRes: any) => {
+                        var newObj: any = {};
+                        recRes.groupby_fields.forEach((field: any) => {
+                            let value = field.value;
+                            if (field.field == 'sys_updated_on') {
+                                value = Date.parse(value);
+                            }
+                            newObj[field.field] = value;
+
+                            if (displayValue == 'all') {
+                                let dv = field.display_value;
+                                newObj[field.field] = {
+                                    value: value,
+                                    display_value: dv
+                                }
+                            }
+                        });
+
+                        return newObj;
                     });
 
-                    return newObj;
-                })
+                    if (sortUpdated) {
+                        if (sortUpdated == 'ASC') {
+                            mappedResults = mappedResults.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
+                        } else if (sortUpdated == 'DESC') {
+                            mappedResults = mappedResults.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
+                        }
+                    }
 
-                if (sortUpdated == 'ASC') {
-                    res = res.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
-                } else if (sortUpdated == 'DESC') {
-                    res = res.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
+                    result = mappedResults;
                 }
             }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+            return result;
         }
-
-        this.logger.info(this.type, func, `LEAVING`);
-
-        return res;
 
     }
 

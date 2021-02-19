@@ -127,7 +127,7 @@ export class SNICHTableConfig {
             let func = 'getTablesWithProgress';
             this.logger.info(this.type, func, `ENTERING`);
             queryParts.push('ORDERBYDESCsys_updated_on');
-            var tableRecsResp: any = sConn.getRecords('sys_db_object', queryParts.join('^'), ['name', 'label', 'sys_scope', 'sys_package'], true);
+            var tableRecsResp = sConn.getAggregate<sys_db_object>('sys_db_object', queryParts.join('^'), ['name', 'label', 'sys_scope', 'sys_package', 'sys_scope.scope', 'sys_package.source'], 'all');
 
             res = tableRecsResp;
             this.logger.info(this.type, func, `LEAVING`);
@@ -143,12 +143,11 @@ export class SNICHTableConfig {
             return;
         }
 
-        var tableQPs: qpWithValue[] = tableResult.result?.map((rec: any) => {
+        var tableQPs: qpWithValue[] = tableResult.map((rec) => {
             var qpItem: qpWithValue = {
-                label: `${rec.label} [${rec.name}]`,
+                label: `${rec.label.display_value} [${rec.name.display_value}]`,
                 value: rec,
-                description: `${rec.sys_package} (${rec.sys_scope})`
-
+                description: `${rec.sys_package.display_value} (${rec.sys_scope.display_value})`
             };
             return qpItem;
         })
