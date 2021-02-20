@@ -10,7 +10,9 @@ export class SNICHTableConfigService {
     type = "SNICHTableConfigService"
 
     constructor(logger: SystemLogHelper) {
+        var func = 'constructor';
         this.logger = logger;
+        this.logger.info(this.type, func, `ENTERING`);
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {
             throw new Error('Unable to load TableConfigDB! Somehow this got called without valid workspace!');
@@ -19,6 +21,7 @@ export class SNICHTableConfigService {
             filename: DBfilePath.fsPath,
             autoload: true,
         });
+        this.logger.info(this.type, func, `LEAVING`);
     }
 
     getDBFilePath(): vscode.Uri | undefined {
@@ -90,11 +93,14 @@ export class SNICHTableConfigService {
     }
 
     async getByInstanceId(_id: string) {
+        var func = 'getByInstanceId';
+        this.logger.info(this.type, func, `ENTERING`);
         let record: SNICHConfig.TableConfig | undefined = undefined;
         let foundRecord = await this.DB.asyncFindOne<SNICHConfig.TableConfig>({ instance_id: _id });
         if (foundRecord) {
             record = foundRecord;
         }
+        this.logger.info(this.type, func, `LEAVING`, record);
         return record;
     }
 

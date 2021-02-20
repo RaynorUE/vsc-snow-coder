@@ -4,9 +4,9 @@
     "displayName": "S.N.I.C.H. Canary",
     "description": "ServiceNow Integrated Code Helper - Canary. Get the latest as I build stuff ready to be tested! Provide feedback to integratenate@gmail.com",
     "icon": "images/icon-canary.png",
-    "version": "1.40.85",
+    "version": "1.40.95",
     "liveVersion": "1.1.0",
-    "canaryVersion": "1.40.85",
+    "canaryVersion": "1.40.95",
     "betaVersion": "1.0.6",
     "keywords": [
         "SNICH",
@@ -49,7 +49,7 @@
         "onCommand:snich.instance.setup",
         "onCommand:snich.instance.test_connection",
         "onCommand:snich.instance.pull_record",
-        "onCommand:snich.instance.setup.new_table",
+        "onCommand:snich.instance.setup.new_app_file_table",
         "onCommand:snich.application.load.all",
         "onCommand:snich.activeEditor.compare_with_server",
         "workspaceContains:**/.snich"
@@ -93,7 +93,7 @@
                 "category": "SNICH"
             },
             {
-                "command": "snich.instance.setup.new_table",
+                "command": "snich.instance.setup.new_app_file_table",
                 "title": "Configure Table (New and Update)",
                 "category": "SNICH"
             },

@@ -27,24 +27,35 @@ export class SNICHTableConfig {
         this.logger.info(this.type, func, `ENTERING`);
         this.logger.debug(this.type, func, `instanceId: `, instanceId);
 
-        if (!instanceId) {
-            this.logger.info(this.type, func, `LEAVING`);
-            throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
-        } else {
-            const tConfigSrv = new SNICHTableConfigService(this.logger);
-            let foundTConfig = await tConfigSrv.getByInstanceId(instanceId);
-            if (foundTConfig) {
-                this.setData(foundTConfig);
+        let result = false;
+
+        try {
+            if (!instanceId) {
+                this.logger.info(this.type, func, `LEAVING`);
+                throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
             } else {
-                this.logger.debug(this.type, func, `Cannot find connection by instance_id, but instance_id provided.`);
+                const tConfigSrv = new SNICHTableConfigService(this.logger);
+                let foundTConfig = await tConfigSrv.getByInstanceId(instanceId);
+                if (foundTConfig) {
+                    this.setData(foundTConfig);
+                    result = true;
+                } else {
+                    this.logger.debug(this.type, func, `Cannot find TableConfig by instance_id, but instance_id provided.`);
 
-                /** @todo load tables using preferences. */
+                    /** @todo load tables using preferences. */
 
-                this.data.instance_id = instanceId;
-                await this.save();
+                    this.data.instance_id = instanceId;
+                    await this.save();
+                    result = true;
+                }
             }
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+            return result;
         }
-        this.logger.info(this.type, func, `LEAVING`);
     }
 
     async save() {
@@ -109,32 +120,25 @@ export class SNICHTableConfig {
         this.logger.info(this.type, func, `ENTERING`);
 
         var sConn = new SNICHConnection(this.logger);
-        sConn.load(this.data.instance_id);
+        await sConn.load(this.data.instance_id);
 
 
+        let tableProgOpts: vscode.ProgressOptions = { location: vscode.ProgressLocation.Notification, cancellable: true, title: "SNICH: Getting tables." };
 
-        let tableResult = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true, title: "SNICH: Getting tables." }, async (prog, cancelToken) => {
-            let queryParts = [];
+        let tableResult = undefined;
+        let queryParts = [];
 
-            let res = undefined;
+        if (appFile) {
+            queryParts.push('super_class.name=sys_metadata');
+        } else {
+            queryParts.push('super_class.name!=sys_metadata');
+        }
 
-            if (appFile) {
-                queryParts.push('super_class.name=sys_metadata');
-            } else {
-                queryParts.push('super_class.name!=sys_metadata');
-            }
+        this.logger.info(this.type, func, `ENTERING`);
+        queryParts.push('ORDERBYDESCsys_updated_on');
+        tableResult = await sConn.getAggregate<sys_db_object>('sys_db_object', queryParts.join('^'), ['name', 'label', 'sys_scope', 'sys_package', 'sys_scope.scope', 'sys_package.source'], 'all', tableProgOpts);
+        this.logger.debug(this.type, func, `tableResult`, tableResult);
 
-            let func = 'getTablesWithProgress';
-            this.logger.info(this.type, func, `ENTERING`);
-            queryParts.push('ORDERBYDESCsys_updated_on');
-            var tableRecsResp = sConn.getAggregate<sys_db_object>('sys_db_object', queryParts.join('^'), ['name', 'label', 'sys_scope', 'sys_package', 'sys_scope.scope', 'sys_package.source'], 'all');
-
-            res = tableRecsResp;
-            this.logger.info(this.type, func, `LEAVING`);
-            return res;
-
-
-        })
 
 
         if (!tableResult) {
@@ -145,9 +149,10 @@ export class SNICHTableConfig {
 
         var tableQPs: qpWithValue[] = tableResult.map((rec) => {
             var qpItem: qpWithValue = {
-                label: `${rec.label.display_value} [${rec.name.display_value}]`,
+                label: `${rec.label.display_value}`,
                 value: rec,
-                description: `${rec.sys_package.display_value} (${rec.sys_scope.display_value})`
+                description: `${rec.name.display_value}`,
+                detail: `${rec.sys_package.display_value} (${rec.sys_scope.display_value})`
             };
             return qpItem;
         })
@@ -160,7 +165,10 @@ export class SNICHTableConfig {
             return;
         }
 
-        //let selectedTable = tableSelection.value;
+        let selectedTable = tableSelection.value;
+        this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
+
+
 
         /**
          * @todo get all the fields for this table

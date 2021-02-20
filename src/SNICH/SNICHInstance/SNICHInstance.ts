@@ -16,17 +16,16 @@ export class SNICHInstance {
         last_selected: 0
     };
 
-    logger = new SystemLogHelper();
+    logger: SystemLogHelper;
     type = "SNICHInstance";
 
-    connection: SNICHConnection;
-
     constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
-        // If data is supplied, (likely called from instance selection) then use it!
-        if (data) {
-            this.data = data;
-        }
-        this.connection = new SNICHConnection(logger);
+        var func = 'constructor';
+        this.logger = logger;
+
+        this.logger.info(this.type, func, `ENTERING`);
+
+        this.logger.info(this.type, func, `LEAVING`);
 
     }
 
@@ -41,16 +40,13 @@ export class SNICHInstance {
         if (count == 1) {
             let snInstances = await iService.getMultiple();
             this.setData(snInstances[0]);
+            result = true;
 
-            this.connection = new SNICHConnection(this.logger);
-            var id = this.getId();
-            if (id) {
-                this.logger.info(this.type, func, "Have id, loading connection for instance: ", id);
-                await this.connection.load(id);
-                result = true;
-            }
-        } else {
+        } else if (count > 1) {
             result = await this.selectInstance();
+        } else {
+            this.logger.error(this.type, func, `No instances configured. Cannot load!`);
+            result = false;
         }
 
         this.logger.info(this.type, func, `LEAVING`);
@@ -100,8 +96,6 @@ export class SNICHInstance {
             let selectedQp = await vscode.window.showQuickPick(instanceQPs, { ignoreFocusOut: true, placeHolder: "Select instance" });
             if (selectedQp) {
                 this.setData(selectedQp.value);
-                this.connection = new SNICHConnection(this.logger);
-                await this.connection.load(this.getId());
                 res = true;
             } else {
                 res = false;
@@ -143,7 +137,7 @@ export class SNICHInstance {
             return this.abortSetup('No instance name or url entered.');
         }
 
-        let instanceUrl = this.connection.getURL() || ``;
+        let instanceUrl = '';
 
         if (enteredInstanceValue.indexOf('http://') > -1 || enteredInstanceValue.indexOf('https://') > -1) {
             //instance entered IS a URL.
@@ -166,7 +160,8 @@ export class SNICHInstance {
             return this.setup(); //exit and start setup over again.
         }
 
-        this.connection.setURL(instanceUrl);
+        const connection = new SNICHConnection(this.logger);
+        connection.setURL(instanceUrl);
 
         // Validate folder name. Giving an opportunity to change.
         let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace(':', '_');
@@ -190,10 +185,10 @@ export class SNICHInstance {
 
             if (continueConfig.value == 'yes') {
                 this.setData(foundInstance);
-                const dataSoFar = this.connection.getData();
-                await this.connection.load(foundInstance._id);
-                this.connection.setURL(dataSoFar.url);
-                this.connection.save();
+                const dataSoFar = connection.getData();
+                await connection.load(foundInstance._id);
+                connection.setURL(dataSoFar.url);
+                connection.save();
             } else {
                 this.logger.info(this.type, func, "LEAVING");
                 return this.setup();
@@ -203,15 +198,15 @@ export class SNICHInstance {
              * @todo, i think issue is we are smashing over data, wit
              */
             await this.save();
-            const dataSoFar = this.connection.getData();
-            await this.connection.load(this.getId());
-            dataSoFar._id = this.connection.getId();
-            this.connection.setData(dataSoFar);
-            await this.connection.save();
+            const dataSoFar = connection.getData();
+            await connection.load(this.getId());
+            dataSoFar._id = connection.getId();
+            connection.setData(dataSoFar);
+            await connection.save();
 
         }
 
-        let authResult = await this.connection.setupAuth();
+        let authResult = await connection.setupAuth();
         if (!authResult) {
             this.logger.info(this.type, func, "LEAVING");
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
@@ -232,7 +227,7 @@ export class SNICHInstance {
 
         this.logger.debug(this.type, func, "All done. Saving instance and connection data!");
         await this.save();
-        await this.connection.save();
+        await connection.save();
 
         this.logger.info(this.type, func, "LEAVING");
         vscode.window.showInformationMessage('Instance setup success! Time to start syncing files!');
@@ -258,13 +253,6 @@ export class SNICHInstance {
     getRootPath(): vscode.Uri {
         return vscode.Uri.parse(this.data.rootPath.path);
     }
-
-    setConnection(conn: SNICHConnection) {
-        this.connection = conn;
-    }
-
-    getConnection() { return this.connection }
-
 
     /**
      * Set the internal data object from some source DB, JSON file, etc.

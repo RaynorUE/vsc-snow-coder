@@ -83,8 +83,6 @@ export class SNICHConnection {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
-
-
     async setupAuth(): Promise<boolean> {
         var func = "setupAuth";
         this.logger.info(this.type, func, "ENTERING");
@@ -559,83 +557,98 @@ export class SNICHConnection {
 
     }
 
-    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", sortUpdated?: "ASC" | "DESC"): Promise<T[]> {
+    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC"): Promise<T[]> {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
-        const sConn = this;
-        const rClient = new SNICHRestClient(this.logger, sConn);
 
-        let result: T[] = [];
+        let execute = async (progress?: vscode.Progress<{ message?: string | undefined; increment?: number | undefined; }>, cancelToken?: vscode.CancellationToken) => {
+            let func = 'execute';
 
-        if (!displayValue) {
-            displayValue = false;
-        }
+            this.logger.debug(this.type, func, `progress: `, progress);
+            this.logger.debug(this.type, func, `cancelToken: `, cancelToken);
 
-        if (!fields.includes('sys_id')) {
-            fields.push('sys_id');
-        }
+            const sConn = this;
+            const rClient = new SNICHRestClient(this.logger, sConn);
 
-        if (sortUpdated && !fields.includes('sys_updated_on')) {
-            fields.push('sys_updated_on');
-        }
+            let result: T[] = [];
 
-        const config: requestPromise.RequestPromiseOptions = {
-            qs: {
-                sysparm_query: query,
-                sysparm_group_by: fields.join(','),
-                sysparm_count: true,
-                sysparm_display_value: displayValue
+            if (!displayValue) {
+                displayValue = false;
             }
-        }
 
-        let restResponse = undefined;
+            if (!fields.includes('sys_id')) {
+                fields.push('sys_id');
+            }
 
-        try {
-            restResponse = await rClient.get<SNTableStatsResponse>(`/api/now/stats/${tableName}`, config);
+            if (sortUpdated && !fields.includes('sys_updated_on')) {
+                fields.push('sys_updated_on');
+            }
 
-            if (restResponse) {
-                let restResults = restResponse.result;
-                if (restResults && restResults.length > 0) {
-                    //remap into flat object since aggregate can be messy..
-                    let mappedResults = restResults.map((recRes: any) => {
-                        var newObj: any = {};
-                        recRes.groupby_fields.forEach((field: any) => {
-                            let value = field.value;
-                            if (field.field == 'sys_updated_on') {
-                                value = Date.parse(value);
-                            }
-                            newObj[field.field] = value;
-
-                            if (displayValue == 'all') {
-                                let dv = field.display_value;
-                                newObj[field.field] = {
-                                    value: value,
-                                    display_value: dv
-                                }
-                            }
-                        });
-
-                        return newObj;
-                    });
-
-                    if (sortUpdated) {
-                        if (sortUpdated == 'ASC') {
-                            mappedResults = mappedResults.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
-                        } else if (sortUpdated == 'DESC') {
-                            mappedResults = mappedResults.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
-                        }
-                    }
-
-                    result = mappedResults;
+            const config: requestPromise.RequestPromiseOptions = {
+                qs: {
+                    sysparm_query: query,
+                    sysparm_group_by: fields.join(','),
+                    sysparm_count: true,
+                    sysparm_display_value: displayValue
                 }
             }
 
-        } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = [];
-        } finally {
-            this.logger.info(this.type, func, `LEAVING`);
-            return result;
+            let restResponse = undefined;
+            this.logger.debug(this.type, func, `About to get...`);
+            try {
+                restResponse = await rClient.get<SNTableStatsResponse>(`/api/now/stats/${tableName}`, config);
+                this.logger.info(this.type, func, `restResponse:`, restResponse);
+
+                if (restResponse) {
+                    let restResults = restResponse.result;
+                    if (restResults && restResults.length > 0) {
+                        //remap into flat object since aggregate can be messy..
+                        let mappedResults = restResults.map((recRes: any) => {
+                            var newObj: any = {};
+                            recRes.groupby_fields.forEach((field: any) => {
+                                let value = field.value;
+                                if (field.field == 'sys_updated_on') {
+                                    value = Date.parse(value);
+                                }
+                                newObj[field.field] = value;
+
+                                if (displayValue == 'all') {
+                                    let dv = field.display_value;
+                                    newObj[field.field] = {
+                                        value: value,
+                                        display_value: dv
+                                    }
+                                }
+                            });
+
+                            return newObj;
+                        });
+
+                        if (sortUpdated) {
+                            if (sortUpdated == 'ASC') {
+                                mappedResults = mappedResults.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
+                            } else if (sortUpdated == 'DESC') {
+                                mappedResults = mappedResults.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
+                            }
+                        }
+
+                        result = mappedResults;
+                    }
+                }
+
+            } catch (e) {
+                this.logger.error(this.type, func, `Onos an error has occured!`, e);
+                result = [];
+            } finally {
+                this.logger.info(this.type, func, `LEAVING`);
+                return result;
+            }
+        }
+
+        if (progressOpts) {
+            return await vscode.window.withProgress(progressOpts, execute);
+        } else {
+            return await execute();
         }
 
     }
