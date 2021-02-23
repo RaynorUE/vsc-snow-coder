@@ -120,6 +120,20 @@ export class SNICHTableConfig {
         this.logger.info(this.type, func, `ENTERING`);
 
         let tableResult = await this.getInstanceTables(appFile);
+        let yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
+
+        const table: SNICHConfig.Table = {
+            name: "",
+            additional_display_fields: [],
+            display_field: "",
+            fields: [],
+            label: "",
+            group_by: {
+                extension: "",
+                label: "",
+                name: ""
+            }
+        }
 
         if (!tableResult || tableResult.length === 0) {
             vscode.window.showErrorMessage('Failed attempting to get list of tables. Please review logs.');
@@ -146,14 +160,49 @@ export class SNICHTableConfig {
         }
 
 
-        let selectedTable = tableSelection.value;
+        let selectedTable: sys_db_object = tableSelection.value;
         this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
-        let tableFields = await this.getInstanceTableFields();
+        table.name = selectedTable.name.value;
 
-        /**
-         * @todo get all the fields for this table
-         */
+        let tableFields = await this.getInstanceTableFields(selectedTable.name.value);
+        this.logger.debug(this.type, func, `tableFields: `, tableFields);
+
+        let groupByFields: qpWithValue[] = []
+        tableFields.forEach((rec) => {
+            let qpItem: qpWithValue = {
+                label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                value: rec,
+                description: `${rec.internal_type.value}`,
+            };
+
+            if (rec.internal_type.value !== 'reference') {
+                groupByFields.push(qpItem);
+            }
+        });
+
+        let useGroupBySelection = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Group records into folder by field? (i.e. group by table name)` });
+
+        if (!useGroupBySelection) {
+            this.logger.info(this.type, func, `LEAVING`);
+            vscode.window.showWarningMessage('Table setup aborted.');
+            return;
+        }
+
+        if (useGroupBySelection.value == 'yes') {
+            let groupBySelection = await vscode.window.showQuickPick(groupByFields, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select fields for name` });
+            if (!groupBySelection) {
+                this.logger.debug(this.type, func, `Group by selection aborted. Moving on...`);
+                table.group_by = undefined;
+            } else {
+                let gbField: sys_dictionary = groupBySelection.value;
+                table.group_by = {
+                    extension: "",
+                    label: gbField.column_label.value,
+                    name: gbField.element.value
+                }
+            }
+        }
 
 
 
@@ -268,7 +317,7 @@ export class SNICHTableConfig {
      * Get the field names from the instance for the provided table.
      * @param tableName The table name and to get fields for (will get parent extension hierarchy too)
      */
-    async getInstanceTableFields(tableName: string) {
+    async getInstanceTableFields(tableName: string, fieldTypesExcl?: string[]) {
         let func = 'getInstanceTableFields';
         this.logger.info(this.type, func, `ENTERING`);
         this.logger.debug(this.type, func, `tableName: `, tableName);
@@ -281,8 +330,38 @@ export class SNICHTableConfig {
             await sConn.load(this.getInstanceId());
 
             let qParts = [];
-            /**TODO: Need to get the PAUtils call chris is using. */
-            qParts.push('nameINSTANCEOF' + tableName);
+            let includeParents = "javascript:new PAUtils().getTableAncestors('" + tableName + "')";
+            qParts.push('name=' + includeParents);
+            qParts.push('elementISNOTEMPTY');
+
+            if (fieldTypesExcl && fieldTypesExcl.length > 0) {
+                qParts.push('internal_typeNOT IN' + fieldTypesExcl.join(','));
+            }
+
+            qParts.push('ORDERBYcolumn_label');
+
+            let tableProgOpts = {
+                location: vscode.ProgressLocation.Notification,
+                cancellable: true,
+                title: `SNICH: Getting fields for table: ${tableName}`
+            };
+
+            let fields = ['internal_type', 'column_label', 'element', 'name'];
+
+            fieldsResult = await sConn.getAggregate<sys_dictionary>('sys_dictionary', qParts.join('^'), fields, 'all', tableProgOpts);
+
+            let deDupedFields: sys_dictionary[] = [];
+            fieldsResult.forEach((field) => {
+                let curElem = field.element.value;
+                let exists = deDupedFields.find((elem) => elem.element.value == curElem);
+                if (!exists) {
+                    deDupedFields.push(field);
+                }
+            })
+
+            fieldsResult = deDupedFields;
+
+            fieldsResult = fieldsResult.sort((a, b) => (a.column_label.value > b.column_label.value) ? 1 : -1);
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
@@ -294,9 +373,24 @@ export class SNICHTableConfig {
         return fieldsResult;
     }
 
+    private _iconMap(internalType: string) {
 
+        if (internalType.indexOf('date') > -1) {
+            return `$(calendar)`;
+        } else if (internalType.indexOf('script') > -1) {
+            return `$(symbol-object)`;
+        } else if (internalType.indexOf('decimal') > -1 || internalType.indexOf('integer') > -1) {
+            return `$(symbol-operator)`;
+        } else if (internalType.indexOf('html') > -1 || internalType.indexOf('xml') > -1) {
+            return `$(code)`;
+        } else if (internalType.indexOf('reference') > -1) {
+            return '$(references)';
+        }
 
+        return `$(symbol-string)`;
+    }
 }
+
 
 
 declare interface qpWithValue extends vscode.QuickPickItem {

@@ -42,7 +42,7 @@ export class SNICHInstance {
             this.setData(snInstances[0]);
             result = true;
 
-        } else if (count > 1) {
+        } else if (count && count > 1) {
             result = await this.selectInstance();
         } else {
             this.logger.error(this.type, func, `No instances configured. Cannot load!`);

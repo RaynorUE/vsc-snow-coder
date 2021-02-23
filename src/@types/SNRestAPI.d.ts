@@ -33,9 +33,10 @@ declare interface sys_db_object extends SNRecord {
 }
 
 declare interface sys_dictionary extends SNRecord {
+    name: SNAPIFieldDVAll,
     internal_type: SNAPIFieldDVAll,
     column_label: SNAPIFieldDVAll,
-    column_name: SNAPIFieldDVAll,
+    element: SNAPIFieldDVAll,
 }
 
 declare interface SNAPIFieldDVAll {

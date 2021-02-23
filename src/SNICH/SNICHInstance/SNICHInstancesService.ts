@@ -31,8 +31,19 @@ export class SNICHInstancesService {
         return dbPath;
     }
 
-    async count() {
-        return await this.DB.asyncCount({});
+    async count(): Promise<number> {
+
+        let result: number = 0;
+
+        try {
+            let dbCount = await this.DB.asyncCount({});
+            if (dbCount) {
+                result = dbCount;
+            }
+        } catch (e) {
+            result = 0;
+        }
+        return result
     }
 
     async insert(data: SNICHConfig.Instance) {

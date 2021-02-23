@@ -87,8 +87,8 @@ declare namespace SNICHConfig {
         label: string;
         display_field: string;
         fields: Field[];
-        super_class: string;
         additional_display_fields: string[];
+        group_by: undefined | Field;
     }
 
     interface Field {

@@ -170,9 +170,12 @@ export class WSFileMan {
         let filesExclude: WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
 
 
+        /**TODO: Only overwrite if "undefined" */
         filesExclude['**/.snich'] = true;
         filesExclude['**/.vscode'] = true;
         filesExclude['**/jsconfig.json'] = true;
+
+        /**TODO: Also configure the "search.exclude" */
 
         //update workspace .vscode settings
         return await settings.update('files.exclude', filesExclude, false);
