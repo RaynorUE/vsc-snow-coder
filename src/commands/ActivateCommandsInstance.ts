@@ -69,6 +69,7 @@ export class ActivateCommandsInstance {
         logger.info(this.lib, func, 'END', instanceList);
     }
     */
+
     async configureAppFileTable() {
         let func = 'configureTable';
         this.logger.info(this.type, func, `ENTERING`);

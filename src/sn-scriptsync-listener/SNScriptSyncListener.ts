@@ -20,6 +20,10 @@
 //     /*
 //         startServers(){
 
+/** MAKE SURE TO ADD AN ACTIVATION EVENT SPECIFICALLY FOR THIS
+ * AND ALSO CHECK A USER PREFERENCE SO THEY CAN OPTIONALLY ENABLE IT ALL THE TIME! (Or default to always on, but allow disabling? Yea...)
+ */
+
 //             if (typeof workspace.rootPath == 'undefined') {
 //                 vscode.window.showWarningMessage("Please open a folder, before running ScriptSync");
 //                 return;

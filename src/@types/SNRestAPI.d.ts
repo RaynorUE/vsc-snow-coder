@@ -32,6 +32,12 @@ declare interface sys_db_object extends SNRecord {
     sys_package: SNAPIFieldDVAll,
 }
 
+declare interface sys_dictionary extends SNRecord {
+    internal_type: SNAPIFieldDVAll,
+    column_label: SNAPIFieldDVAll,
+    column_name: SNAPIFieldDVAll,
+}
+
 declare interface SNAPIFieldDVAll {
     value: string,
     display_value?: string

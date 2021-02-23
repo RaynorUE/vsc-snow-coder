@@ -115,40 +115,20 @@ export class SNICHTableConfig {
      * 
      * @param appFile Are we configuring applicaation file table? Or should we load all non-app files?
      */
-    async setupTable(appFile?: Boolean) {
+    async setupTable(appFile?: boolean) {
         var func = 'setupTable';
         this.logger.info(this.type, func, `ENTERING`);
 
-        var sConn = new SNICHConnection(this.logger);
-        await sConn.load(this.data.instance_id);
+        let tableResult = await this.getInstanceTables(appFile);
 
-
-        let tableProgOpts: vscode.ProgressOptions = { location: vscode.ProgressLocation.Notification, cancellable: true, title: "SNICH: Getting tables." };
-
-        let tableResult = undefined;
-        let queryParts = [];
-
-        if (appFile) {
-            queryParts.push('super_class.name=sys_metadata');
-        } else {
-            queryParts.push('super_class.name!=sys_metadata');
-        }
-
-        this.logger.info(this.type, func, `ENTERING`);
-        queryParts.push('ORDERBYDESCsys_updated_on');
-        tableResult = await sConn.getAggregate<sys_db_object>('sys_db_object', queryParts.join('^'), ['name', 'label', 'sys_scope', 'sys_package', 'sys_scope.scope', 'sys_package.source'], 'all', tableProgOpts);
-        this.logger.debug(this.type, func, `tableResult`, tableResult);
-
-
-
-        if (!tableResult) {
+        if (!tableResult || tableResult.length === 0) {
             vscode.window.showErrorMessage('Failed attempting to get list of tables. Please review logs.');
             this.logger.info(this.type, func, `LEAVING`);
             return;
         }
 
-        var tableQPs: qpWithValue[] = tableResult.map((rec) => {
-            var qpItem: qpWithValue = {
+        let tableQPs: qpWithValue[] = tableResult.map((rec) => {
+            let qpItem: qpWithValue = {
                 label: `${rec.label.display_value}`,
                 value: rec,
                 description: `${rec.name.display_value}`,
@@ -157,7 +137,7 @@ export class SNICHTableConfig {
             return qpItem;
         })
 
-        var tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select a table.` });
+        let tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select a table.` });
 
         if (!tableSelection) {
             this.logger.info(this.type, func, `LEAVING`);
@@ -165,14 +145,16 @@ export class SNICHTableConfig {
             return;
         }
 
+
         let selectedTable = tableSelection.value;
         this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
-
+        let tableFields = await this.getInstanceTableFields();
 
         /**
          * @todo get all the fields for this table
          */
+
 
 
         /**
@@ -237,6 +219,81 @@ export class SNICHTableConfig {
     setData(data: SNICHConfig.TableConfig) {
         this.data = data;
     }
+
+    private getInstanceId() {
+        return this.data.instance_id;
+    }
+
+
+    async getInstanceTables(appFile?: boolean) {
+        var func = 'getInstanceTables';
+        this.logger.info(this.type, func, `ENTERING`);
+        this.logger.debug(this.type, func, `appFile: `, appFile);
+
+        let tablesResult: sys_db_object[] = [];
+
+        try {
+            var sConn = new SNICHConnection(this.logger);
+            await sConn.load(this.data.instance_id);
+
+            let queryParts = [];
+
+            if (appFile) {
+                queryParts.push('super_class.name=sys_metadata');
+            } else {
+                queryParts.push('super_class.name!=sys_metadata');
+            }
+
+            queryParts.push('ORDERBYDESCsys_updated_on');
+
+            let tableProgOpts: vscode.ProgressOptions = { location: vscode.ProgressLocation.Notification, cancellable: true, title: "SNICH: Getting tables." };
+            let fields = ['name', 'label', 'sys_scope', 'sys_package', 'sys_scope.scope', 'sys_package.source'];
+
+            tablesResult = await sConn.getAggregate<sys_db_object>('sys_db_object', queryParts.join('^'), fields, 'all', tableProgOpts);
+
+            this.logger.debug(this.type, func, `tablesResult`, tablesResult);
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            tablesResult = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return tablesResult;
+
+    }
+
+    /**
+     * Get the field names from the instance for the provided table.
+     * @param tableName The table name and to get fields for (will get parent extension hierarchy too)
+     */
+    async getInstanceTableFields(tableName: string) {
+        let func = 'getInstanceTableFields';
+        this.logger.info(this.type, func, `ENTERING`);
+        this.logger.debug(this.type, func, `tableName: `, tableName);
+
+        let fieldsResult: sys_dictionary[] = [];
+
+        try {
+
+            let sConn = new SNICHConnection(this.logger);
+            await sConn.load(this.getInstanceId());
+
+            let qParts = [];
+            /**TODO: Need to get the PAUtils call chris is using. */
+            qParts.push('nameINSTANCEOF' + tableName);
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            fieldsResult = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return fieldsResult;
+    }
+
 
 
 }
