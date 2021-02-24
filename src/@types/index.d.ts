@@ -10,7 +10,7 @@ interface SNApplication {
     name: string,
     sys_id: string,
     sys_scope: string,
-    fsPath: string
+    fsPath: string,
 }
 
 //========== SHARED ==============================

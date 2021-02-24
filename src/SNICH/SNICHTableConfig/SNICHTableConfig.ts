@@ -2,6 +2,8 @@ import { SystemLogHelper } from "../../classes/LogHelper";
 import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
+import { qpWithValue } from '../../extension';
+import { SNICHTableCfgAsker } from "./SNICHTableCfgAsker";
 
 
 export class SNICHTableConfig {
@@ -76,8 +78,44 @@ export class SNICHTableConfig {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    /**
+     * Func called to "select a table" includes the VSCode quick pick prompts
+     * will return selected table or undefined to be handled by calling func
+     */
     async selectTable() {
+        let func = 'selectTable';
+        this.logger.info(this.type, func, `ENTERING`);
 
+        let result = undefined;
+
+        try {
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
+    async getTables() {
+        let func = 'selectTable';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: SNICHConfig.Table[] = [];
+
+        try {
+            result = this.data.tables;
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
     }
 
     async getTable(tableName: string) {
@@ -119,8 +157,8 @@ export class SNICHTableConfig {
         var func = 'setupTable';
         this.logger.info(this.type, func, `ENTERING`);
 
-        let tableResult = await this.getInstanceTables(appFile);
-        let yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
+        const yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
+        const asker = new SNICHTableCfgAsker(this.logger);
 
         const table: SNICHConfig.Table = {
             name: "",
@@ -135,74 +173,44 @@ export class SNICHTableConfig {
             }
         }
 
+        let tableResult = await this.getInstanceTables(appFile);
+
         if (!tableResult || tableResult.length === 0) {
             vscode.window.showErrorMessage('Failed attempting to get list of tables. Please review logs.');
             this.logger.info(this.type, func, `LEAVING`);
             return;
         }
 
-        let tableQPs: qpWithValue[] = tableResult.map((rec) => {
-            let qpItem: qpWithValue = {
-                label: `${rec.label.display_value}`,
-                value: rec,
-                description: `${rec.name.display_value}`,
-                detail: `${rec.sys_package.display_value} (${rec.sys_scope.display_value})`
-            };
-            return qpItem;
-        })
+        let existingTables = await this.getTables();
 
-        let tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select a table.` });
+        let selectedTable = await asker.selectTable(tableResult, existingTables);
+        this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
-        if (!tableSelection) {
+        if (!selectedTable) {
+            vscode.window.showErrorMessage('No table selected. Aborting setup.');
             this.logger.info(this.type, func, `LEAVING`);
-            vscode.window.showWarningMessage('Table setup aborted.');
             return;
         }
-
-
-        let selectedTable: sys_db_object = tableSelection.value;
-        this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
         table.name = selectedTable.name.value;
 
         let tableFields = await this.getInstanceTableFields(selectedTable.name.value);
         this.logger.debug(this.type, func, `tableFields: `, tableFields);
 
-        let groupByFields: qpWithValue[] = []
-        tableFields.forEach((rec) => {
-            let qpItem: qpWithValue = {
-                label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
-                value: rec,
-                description: `${rec.internal_type.value}`,
-            };
+        let groupBy = await asker.selectGroupBy(tableFields);
 
-            if (rec.internal_type.value !== 'reference') {
-                groupByFields.push(qpItem);
-            }
-        });
 
-        let useGroupBySelection = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Group records into folder by field? (i.e. group by table name)` });
-
-        if (!useGroupBySelection) {
+        if (groupBy == undefined) {
             this.logger.info(this.type, func, `LEAVING`);
             vscode.window.showWarningMessage('Table setup aborted.');
             return;
         }
 
-        if (useGroupBySelection.value == 'yes') {
-            let groupBySelection = await vscode.window.showQuickPick(groupByFields, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select fields for name` });
-            if (!groupBySelection) {
-                this.logger.debug(this.type, func, `Group by selection aborted. Moving on...`);
-                table.group_by = undefined;
-            } else {
-                let gbField: sys_dictionary = groupBySelection.value;
-                table.group_by = {
-                    extension: "",
-                    label: gbField.column_label.value,
-                    name: gbField.element.value
-                }
-            }
+        if (groupBy) {
+            table.group_by = groupBy;
         }
+
+        let nameField = await asker.selectNameField(tableFields);
 
 
 
@@ -372,27 +380,4 @@ export class SNICHTableConfig {
 
         return fieldsResult;
     }
-
-    private _iconMap(internalType: string) {
-
-        if (internalType.indexOf('date') > -1) {
-            return `$(calendar)`;
-        } else if (internalType.indexOf('script') > -1) {
-            return `$(symbol-object)`;
-        } else if (internalType.indexOf('decimal') > -1 || internalType.indexOf('integer') > -1) {
-            return `$(symbol-operator)`;
-        } else if (internalType.indexOf('html') > -1 || internalType.indexOf('xml') > -1) {
-            return `$(code)`;
-        } else if (internalType.indexOf('reference') > -1) {
-            return '$(references)';
-        }
-
-        return `$(symbol-string)`;
-    }
-}
-
-
-
-declare interface qpWithValue extends vscode.QuickPickItem {
-    value: any;
 }

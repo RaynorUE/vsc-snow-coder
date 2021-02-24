@@ -57,3 +57,8 @@ export function deactivate() {
      * Cleanup? When does the extension deactivate? I don't think there is a cleanup scenario
      */
 }
+
+
+export interface qpWithValue extends vscode.QuickPickItem {
+    value: any;
+}
