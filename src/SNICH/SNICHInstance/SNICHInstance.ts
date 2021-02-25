@@ -4,6 +4,9 @@ import { InstanceFileMan } from '../../FileMan/InstanceFileMan';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
+import { qpWithValue } from '../../extension';
+import { SNICHInstanceAsker } from './SNICHInstanceAsker';
+
 
 export class SNICHInstance {
     private data: SNICHConfig.Instance = {
@@ -20,7 +23,7 @@ export class SNICHInstance {
     type = "SNICHInstance";
 
     constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
-        var func = 'constructor';
+        const func = 'constructor';
         this.logger = logger;
 
         this.logger.info(this.type, func, `ENTERING`);
@@ -30,7 +33,7 @@ export class SNICHInstance {
     }
 
     async load() {
-        var func = 'load';
+        const func = 'load';
         this.logger.info(this.type, func, "ENTERING");
 
         let result: boolean | undefined = false;
@@ -54,7 +57,7 @@ export class SNICHInstance {
     }
 
     async save() {
-        var func = 'save';
+        const func = 'save';
         this.logger.info(this.type, func, `ENTERING`);
         const iService = new SNICHInstancesService(this.logger);
         if (this.data._id) {
@@ -70,38 +73,23 @@ export class SNICHInstance {
 
 
     async selectInstance(): Promise<boolean | undefined> {
-        var func = 'selectInstance';
+        const func = 'selectInstance';
         this.logger.info(this.type, func, "ENTERING");
 
         var res = undefined;
 
         try {
 
-            let instanceQPs: qpWithValue[] = [];
-
             let iService = new SNICHInstancesService(this.logger);
             let instances = await iService.getMultiple({}, [['sort', { last_selected: -1 }]]);
-            if (instances && instances.length > 0) {
-                instanceQPs = instances.map((instance) => {
-                    let qp: qpWithValue = {
-                        value: instance,
-                        label: instance.name,
-                    }
-                    return qp;
-                })
-            } else {
-                throw new Error('Got here but no instances configured!');
-            }
 
-            let selectedQp = await vscode.window.showQuickPick(instanceQPs, { ignoreFocusOut: true, placeHolder: "Select instance" });
-            if (selectedQp) {
-                this.setData(selectedQp.value);
+            let selectedInstance = await new SNICHInstanceAsker(this.logger).askSelectInstance(instances);
+            if (selectedInstance) {
+                this.setData(selectedInstance);
                 res = true;
             } else {
                 res = false;
             }
-
-
         } catch (e) {
             this.logger.reportException(this.type, func, e);
             res = undefined;
@@ -116,10 +104,12 @@ export class SNICHInstance {
      * go through all the various setup questions and process for configuring a new SNICH Instance.
      */
     async setup(): Promise<boolean> {
-        var func = "setup";
+        const func = "setup";
         this.logger.info(this.type, func, "ENTERING");
 
         let result = false;
+
+        const asker = new SNICHInstanceAsker(this.logger);
 
         //to save as we go.
         const iService = new SNICHInstancesService(this.logger);
@@ -275,10 +265,4 @@ export class SNICHInstance {
             return null;
         }
     }
-}
-
-
-
-declare interface qpWithValue extends vscode.QuickPickItem {
-    value: any;
 }
