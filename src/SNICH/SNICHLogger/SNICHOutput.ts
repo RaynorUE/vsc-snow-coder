@@ -1,9 +1,10 @@
 import { SNICHLogger } from './SNICHLogger';
 import { snichOutput } from '../../extension';
+import { workspace } from 'vscode';
 
 export class SNICHOutput extends SNICHLogger {
 
-    output = snichOutput;
+    snichOut = snichOutput;
 
     super() { }
 
@@ -24,23 +25,55 @@ export class SNICHOutput extends SNICHLogger {
         var fullMsg = `[${entryNumPadded}] - {${library} : ${func}} - ${msg}`;
         */
         var logLevelLabel = this.getLogLevelLabel(level);
-        var fullMsg = `${logLevelLabel} {${library} : ${func}} - ${msg}`;
+        let prefix = `${logLevelLabel} {${library} : ${func}} - `;
+        var fullMsg = `${prefix}${msg}`;
         if (level <= this.logLevel) {
-            let log = console.log;
-
-            if (level === this._WARN) {
-                log = console.warn;
-            } else if (level === this._ERROR) {
-                log = console.error;
-            }
+            let log = this.snichOut.appendLine;
 
             if (arguments.length > 4) {
-                log(fullMsg, obj);
+
+                let objPadding: string[] = [];
+                objPadding.length = prefix.length;
+                objPadding.fill("");
+
+                log(fullMsg + `\n${objPadding.join(" ")}` + JSON.stringify(obj));
             } else {
                 log(fullMsg);
             }
         }
         //this.entry++;
+    }
+
+
+    setLogLevel() {
+        let settings = workspace.getConfiguration();
+        var level = settings.get('snich.output.logLevel') || 0;
+        if (level === 'Debug') {
+            this.logLevel = this._DEBUG;
+        }
+        else if (level === 'Info') {
+            this.logLevel = this._INFO;
+        }
+        else if (level === 'Warn') {
+            this.logLevel = this._WARN;
+        }
+        else if (level === 'Error') {
+            this.logLevel = this._ERROR;
+        } else {
+            this.logLevel = this._NONE;
+        }
+    }
+
+    clear() {
+        this.snichOut.clear();
+    }
+
+    show(preserveFocus?: boolean) {
+        this.snichOut.show(preserveFocus);
+    }
+
+    hide() {
+        this.snichOut.hide();
     }
 
 }

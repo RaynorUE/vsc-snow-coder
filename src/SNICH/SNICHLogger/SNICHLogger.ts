@@ -1,4 +1,5 @@
 import { workspace } from 'vscode';
+import { SNICHOutput } from './SNICHOutput';
 
 export class SNICHLogger {
 
@@ -14,6 +15,8 @@ export class SNICHLogger {
     //private padding:string;
     logLevel: number = this._NONE;
 
+    output = new SNICHOutput();
+
 
     constructor() {
         //this.entry = 0;
@@ -22,7 +25,7 @@ export class SNICHLogger {
         this.setLogLevel();
     }
 
-    private setLogLevel() {
+    setLogLevel() {
         let settings = workspace.getConfiguration();
         var level = settings.get('snich.logLevel') || 0;
         if (level === 'Debug') {
@@ -41,7 +44,7 @@ export class SNICHLogger {
         }
     }
 
-    private getLogLevelLabel(level: number) {
+    getLogLevelLabel(level: number) {
         if (level === 0) {
             return " NONE:";
         } else if (level === 1) {
