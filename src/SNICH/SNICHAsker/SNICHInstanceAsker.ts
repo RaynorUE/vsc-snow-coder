@@ -1,21 +1,14 @@
 import * as vscode from 'vscode';
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { qpWithValue } from '../../extension';
+import { SNICHAskerCore } from './SNICHAskerCore';
 
 
-export class SNICHInstanceAsker {
+export class SNICHInstanceAsker extends SNICHAskerCore {
 
-    logger: SystemLogHelper;
     type = "SNICHInstanceAsker";
-    yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
-    constructor(logger: SystemLogHelper) {
-        const func = 'constrcutor';
-        this.logger = logger;
-        this.logger.info(this.type, func, `ENTERING`);
-
-        this.logger.info(this.type, func, `LEAVING`);
-    }
+    super(logger: SNICHLogger) { }
 
     async askSelectInstance(instances: SNICHConfig.Instance[]) {
         const func = 'askSelectInstance';
@@ -64,6 +57,14 @@ export class SNICHInstanceAsker {
 
         try {
 
+            let enteredInstanceValue = await vscode.window.showInputBox({
+                ignoreFocusOut: true,
+                prompt: `Enter Instance Name or URL.`,
+                placeHolder: "https://dev00000.service-now.com",
+                validateInput: (value) => this.inputEntryMandatory(value)
+            });
+
+            result = enteredInstanceValue;
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);

@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { SystemLogHelper } from '../classes/LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 
 /**
  * Purpose is to handle read/writing files related to a given instance
  */
 
 export class InstanceFileMan {
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     type = 'InstanceFileMan';
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         this.logger = logger;
     }
 

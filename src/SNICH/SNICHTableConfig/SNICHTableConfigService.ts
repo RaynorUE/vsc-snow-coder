@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 
 
 export class SNICHTableConfigService {
     DB = new AsyncNedb();
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     type = "SNICHTableConfigService"
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, `ENTERING`);

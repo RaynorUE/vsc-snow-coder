@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import { BackFileMan } from './BackFileMan';
-import { SystemLogHelper } from '../classes/LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 
 
 /**
@@ -14,9 +14,9 @@ const fs = vscode.workspace.fs;
 export class WSFileMan {
 
     type = "WSFileMan";
-    private logger: SystemLogHelper;
+    private logger: SNICHLogger;
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         this.logger = logger;
     }
 

@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { InstanceFileMan } from '../../FileMan/InstanceFileMan';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
 import { qpWithValue } from '../../extension';
-import { SNICHInstanceAsker } from './SNICHInstanceAsker';
+import { SNICHInstanceAsker } from '../SNICHAsker/SNICHInstanceAsker';
 
 
 export class SNICHInstance {
@@ -19,10 +19,10 @@ export class SNICHInstance {
         last_selected: 0
     };
 
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     type = "SNICHInstance";
 
-    constructor(logger: SystemLogHelper, data?: SNICHConfig.Instance) {
+    constructor(logger: SNICHLogger, data?: SNICHConfig.Instance) {
         const func = 'constructor';
         this.logger = logger;
 
@@ -116,15 +116,10 @@ export class SNICHInstance {
 
         let yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
-        let enteredInstanceValue = await vscode.window.showInputBox({
-            ignoreFocusOut: true,
-            prompt: `Enter Instance Name or URL.`,
-            placeHolder: "https://dev00000.service-now.com",
-            validateInput: (value) => this.inputEntryMandatory(value)
-        });
+        let enteredInstanceValue = await asker.askForInstanceURL();
 
         if (!enteredInstanceValue) {
-            return this.abortSetup('No instance name or url entered.');
+            return this.abortSetup();
         }
 
         let instanceUrl = '';
@@ -258,11 +253,4 @@ export class SNICHInstance {
         return this.data
     }
 
-    inputEntryMandatory(value: any) {
-        if (!value) {
-            return 'Entry required.';
-        } else {
-            return null;
-        }
-    }
 }

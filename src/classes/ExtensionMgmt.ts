@@ -1,34 +1,34 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { SystemLogHelper } from './LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 
 export class ExtensionMgmt {
 
-    context:vscode.ExtensionContext
-    logger:SystemLogHelper;
-    lib:string = 'ExtensionMgmt';
+    context: vscode.ExtensionContext
+    logger: SNICHLogger;
+    lib: string = 'ExtensionMgmt';
 
-    constructor(context:vscode.ExtensionContext, logger?:SystemLogHelper){
+    constructor(context: vscode.ExtensionContext, logger?: SNICHLogger) {
         this.context = context;
 
-        if(logger){
+        if (logger) {
             this.logger = logger;
         } else {
-            this.logger = new SystemLogHelper();
+            this.logger = new SNICHLogger();
         }
     }
 
-    handleUpgrade(){
+    handleUpgrade() {
         let func = 'handleUpgrade';
         this.logger.info(this.lib, func, 'START');
 
         let newSinceLastLaunch = this.isNewSinceLastLaunch();
 
-        if(newSinceLastLaunch == false){
+        if (newSinceLastLaunch == false) {
             //do nothing
             return;
-        } else if(newSinceLastLaunch){
+        } else if (newSinceLastLaunch) {
             this.upgraded();
         } else {
             this.logger.debug(this.lib, func, 'Could not determine if new since last launch for some reason');
@@ -37,29 +37,29 @@ export class ExtensionMgmt {
         this.logger.info(this.lib, func, 'END');
     }
 
-    upgraded(){
+    upgraded() {
 
         //for now just open the ReadMe so people can see it... In the future we will give people an option in the info message...
 
         let baseURL = 'https://marketplace.visualstudio.com/items?itemName=';
-        if(this.context.extensionPath.indexOf('snich-canary') > -1){
+        if (this.context.extensionPath.indexOf('snich-canary') > -1) {
             baseURL += 'integrateNate.snich-canary';
-        } else if(this.context.extensionPath.indexOf('snich-insiders') > -1){
+        } else if (this.context.extensionPath.indexOf('snich-insiders') > -1) {
             baseURL += 'integrateNate.snich-insiders'
-        } else if(this.context.extensionPath.indexOf('snich') > -1){
+        } else if (this.context.extensionPath.indexOf('snich') > -1) {
             baseURL += 'integrateNate.snich';
         } else {
             //something odd or local dev..
         }
 
         vscode.window.showInformationMessage('SNICH Upgraded!', 'View Relase Notes').then((clicked) => {
-            if(clicked == 'View Relase Notes'){
+            if (clicked == 'View Relase Notes') {
                 vscode.env.openExternal(vscode.Uri.parse(baseURL));
             }
         })
     }
 
-    isNewSinceLastLaunch():boolean{
+    isNewSinceLastLaunch(): boolean {
         let func = 'isNewSinceLastLaunch';
         this.logger.info(this.lib, func, 'START');
         let res = false;
@@ -72,30 +72,30 @@ export class ExtensionMgmt {
 
         let packageJSONFile;
         let versionTagFile;
-        
-        if(fs.existsSync(packageJSONPath)){
+
+        if (fs.existsSync(packageJSONPath)) {
             packageJSONFile = fs.readFileSync(packageJSONPath);
         }
-        
-        if(fs.existsSync(lastInstalledVersionPath)){
+
+        if (fs.existsSync(lastInstalledVersionPath)) {
             versionTagFile = fs.readFileSync(lastInstalledVersionPath);
         }
 
 
-        if(versionTagFile && packageJSONFile){
+        if (versionTagFile && packageJSONFile) {
             let versionObj = JSON.parse(versionTagFile.toString());
             let packageObj = JSON.parse(packageJSONFile.toString());
 
             this.logger.debug(this.lib, func, 'versionObj:', versionObj);
             this.logger.debug(this.lib, func, 'packageObj:', packageObj);
 
-            if(versionObj.last_installed != packageObj.version){
+            if (versionObj.last_installed != packageObj.version) {
                 versionObj.last_installed = packageObj.version;
                 fs.writeFileSync(lastInstalledVersionPath, JSON.stringify(versionObj));
-                res = true;               
+                res = true;
             }
 
-        } else if (!versionTagFile && packageJSONFile){
+        } else if (!versionTagFile && packageJSONFile) {
             //file wasn't found... lets create it and set the version number. 
             this.logger.debug(this.lib, func, 'No version tag file, but had packageJSON File..');
 

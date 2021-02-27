@@ -1,5 +1,5 @@
 import { snRecord, SNApplication, SNQPItem } from "../@Types";
-import { SystemLogHelper } from "./LogHelper";
+import { SNICHLogger } from "../SNICH/SNICHLogger/SNICHLogger";
 import { InstanceMaster, InstancesList } from "./InstanceConfigManager";
 import { RESTClient } from "./RESTClient";
 import * as vscode from 'vscode';
@@ -10,12 +10,12 @@ import { snichOutput } from '../extension.old';
 export class SNFilePuller {
 
     instanceList: InstancesList;
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     appScope?: SNApplication;
     lib: string = "SNFilePuller";
 
-    constructor(instanceList: InstancesList, logger?: SystemLogHelper) {
-        this.logger = logger || new SystemLogHelper();
+    constructor(instanceList: InstancesList, logger?: SNICHLogger) {
+        this.logger = logger || new SNICHLogger();
         let func = 'constructor';
         this.logger.info(this.lib, func, 'START');
         this.instanceList = instanceList;

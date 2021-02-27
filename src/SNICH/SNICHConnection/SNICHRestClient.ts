@@ -1,13 +1,13 @@
 import { SNICHConnection } from './SNICHConnection';
 import * as rp from 'request-promise-native';
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 
 export class SNICHRestClient {
     connection: SNICHConnection;
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     client = rp;
     type = 'SNICHRestClient';
-    constructor(logger: SystemLogHelper, conn: SNICHConnection) {
+    constructor(logger: SNICHLogger, conn: SNICHConnection) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, "ENTERING");

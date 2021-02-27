@@ -1,59 +1,18 @@
-/************************************************************************* *
-* YANSA LABS - CONFIDENTIAL
-* __________________
-*
-*  [2016] - [2017] Yansa Labs, LLC
-*  All Rights Reserved.
-*
-* NOTICE:  All information contained herein is, and remains
-* the property of Yansa Labs, LLC and its suppliers,
-* if any.  The intellectual and technical concepts contained
-* herein are proprietary to Yansa Labs, LLC
-* and its suppliers and may be covered by U.S. and Foreign Patents,
-* patents in process, and are protected by trade secret or copyright law.
-* Dissemination of this information or reproduction of this material
-* is strictly forbidden unless prior written permission is obtained
-* from Yansa Labs, LLC.
-*/
-
-/*  SystemLogHelper
-*	Usage: new x_yala_kickstarter.SystemLogHelper();
-*
-* Use to log debug messages. Available logging methods are:
-*      .debug - Used for verbose debugging, use this to log values, or if having complex / large comment add debug logs in addition to an info log. 
-*      .info - Used for logging informational items, entering and exiting functions, places you might write a comment write an info log instead!
-*      .warn - Used for warning messages. Used when something noteable happened but we are able to keep processing.
-*      .error - Used for hard errors that would stop all further processing.
-*      .reportException - Used for try/catch blocks to log formatted errors of the "error object" in the catch.
-*
-* @example
-* //In your script include
-* this.logger = new x_yala_kickstarter.SystemLogHelper();
-* this.logger.debug(this.type, 'myFunc', 'my debug message');
-* this.logger.info(this.type, 'myFunc', 'my info message');
-* this.logger.warn(this.type, 'myFunc', 'my warning message');
-* this.logger.error(this.type, 'myFunc', 'my error message');
-* 
-* @return {void} Nothing is returned.
-*
-* @since 1.0.0
-*/
-
 import { workspace } from 'vscode';
 
-export class SystemLogHelper {
+export class SNICHLogger {
 
     //* Log Level Constants */
-    private _DEBUG: number = 4;
-    private _INFO: number = 3;
-    private _WARN: number = 2;
-    private _ERROR: number = 1;
-    private _NONE: number = 0;
+    _DEBUG: number = 4;
+    _INFO: number = 3;
+    _WARN: number = 2;
+    _ERROR: number = 1;
+    _NONE: number = 0;
 
     // entry we're on and padding to provide.
     //private entry:number;
     //private padding:string;
-    private logLevel: number = this._NONE;
+    logLevel: number = this._NONE;
 
 
     constructor() {

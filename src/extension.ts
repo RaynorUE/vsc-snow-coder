@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { WSFileMan } from './FileMan/WSFileMan';
 
 import { ActivateCommandsInstance } from './commands/ActivateCommandsInstance';
-import { SystemLogHelper } from './classes/LogHelper';
+import { SNICHLogger } from './SNICH/SNICHLogger/SNICHLogger';
 
 export const snichOutput = vscode.window.createOutputChannel('S.N.I.C.H.');
 export let extensionContext: vscode.ExtensionContext; //for imports into other classes.
@@ -13,7 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     extensionContext = context;
 
-    let logger = new SystemLogHelper();
+    let logger = new SNICHLogger();
     let lib = "extension.ts";
     let func = "activate";
     logger.info(lib, func, "ENTERING");

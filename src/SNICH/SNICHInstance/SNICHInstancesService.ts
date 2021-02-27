@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import AsyncNedb from 'nedb-async'
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 
 
 export class SNICHInstancesService {
     DB = new AsyncNedb();
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     type = "SNICHInstancesService";
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         this.logger = logger;
         const DBfilePath = this.getDBFilePath();
         if (!DBfilePath) {

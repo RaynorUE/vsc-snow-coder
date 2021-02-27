@@ -1,5 +1,5 @@
 import { RESTClient } from './RESTClient';
-import { SystemLogHelper } from './LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 import { SNApplication, InstanceConnectionData, SNQPItem, snTableField } from '../@Types';
 import { WorkspaceManager } from './WorkspaceManager';
 import * as vscode from 'vscode';
@@ -10,10 +10,10 @@ import { SNPreferencesManager } from './preferences/SNPreferencesManager';
 export class InstancesList {
     private instances: Array<InstanceMaster> = [];
     private lastSelected: InstanceMaster = new InstanceMaster();
-    private logger: SystemLogHelper = new SystemLogHelper();
+    private logger: SNICHLogger = new SNICHLogger();
     private lib = "InstancesList";
 
-    constructor(logger?: SystemLogHelper) {
+    constructor(logger?: SNICHLogger) {
         if (logger) {
             this.logger = logger;
         }
@@ -298,10 +298,10 @@ export class InstanceMaster {
             }
         }
     };
-    private logger: SystemLogHelper = new SystemLogHelper();
+    private logger: SNICHLogger = new SNICHLogger();
     private lib = "InstanceMaster";
 
-    constructor(logger?: SystemLogHelper) {
+    constructor(logger?: SNICHLogger) {
         if (logger) {
             this.logger = logger;
         }
@@ -697,10 +697,10 @@ export class SNSyncedFile {
 
 export class SyncedFiles {
     syncedFiles: Array<SNSyncedFile> = [];
-    private logger: SystemLogHelper = new SystemLogHelper();
+    private logger: SNICHLogger = new SNICHLogger();
     private lib: string = "SyncedFiles";
 
-    constructor(logger?: SystemLogHelper) {
+    constructor(logger?: SNICHLogger) {
         if (logger) {
             this.logger = logger;
         }

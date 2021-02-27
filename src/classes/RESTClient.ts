@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SystemLogHelper } from './LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 import { InstanceMaster, InstanceConfig } from './InstanceConfigManager';
 import { snRecord } from '../@Types';
 import * as request from 'request-promise-native';
@@ -22,7 +22,7 @@ export class RESTClient {
     };
     private instanceConfig: InstanceConfig;
     private instance: InstanceMaster;
-    private logger: SystemLogHelper;
+    private logger: SNICHLogger;
     private apiVersion: string = ''; //can be v1/, preparing for version ups when needed.
     private lib: string = 'RESTClient';
     private authType: String = "basic";
@@ -31,10 +31,10 @@ export class RESTClient {
     private useProgress: Boolean = true;
     private progressMessage: string = "";
 
-    constructor(instance: InstanceMaster, logger?: SystemLogHelper) {
+    constructor(instance: InstanceMaster, logger?: SNICHLogger) {
 
         let func = 'constructor';
-        this.logger = logger || new SystemLogHelper();
+        this.logger = logger || new SNICHLogger();
         this.instance = instance;
         this.logger.info(this.lib, func, 'START', { instance: instance });
 

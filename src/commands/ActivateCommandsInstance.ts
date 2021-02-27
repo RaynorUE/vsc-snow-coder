@@ -1,4 +1,4 @@
-import { SystemLogHelper } from '../classes/LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 import { SNICHInstance } from '../SNICH/SNICHInstance/SNICHInstance';
 import * as vscode from 'vscode';
 import { SNICHTableConfig } from '../SNICH/SNICHTableConfig/SNICHTableConfig';
@@ -7,11 +7,11 @@ import { SNICHConnection } from '../SNICH/SNICHConnection/SNICHConnection';
 export class ActivateCommandsInstance {
 
     type = `ActivateCommandsInstance`;
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
 
     constructor() {
         var func = 'constructor';
-        this.logger = new SystemLogHelper();
+        this.logger = new SNICHLogger();
         this.logger.info(this.type, func, `ENTERING`);
 
         this.logger.info(this.type, func, `LEAVING`);
@@ -57,7 +57,7 @@ export class ActivateCommandsInstance {
     /*
 
     async pullRecord() {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'pullRecord';
         logger.info(this.lib, func, 'START');
         if (!instanceList.atLeastOneConfigured()) {

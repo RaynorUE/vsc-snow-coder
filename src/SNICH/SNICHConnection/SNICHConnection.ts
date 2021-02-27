@@ -3,7 +3,7 @@ import { SNQPItem } from '../../@Types';
 import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
 import * as vscode from 'vscode';
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { SNICHWebServer } from '../SNICHWebServer/SNICHWebServer';
 import { SNICHConnectionsService } from './SNICHConnectionsService';
 
@@ -36,9 +36,9 @@ export class SNICHConnection {
     private redirectURL = `https://localhost:62000/snich_oauth_redirect`;
 
     type = "SNICHConnection";
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, "ENTERING");

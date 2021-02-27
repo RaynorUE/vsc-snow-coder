@@ -1,4 +1,4 @@
-import { SystemLogHelper } from "../../classes/LogHelper";
+import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
@@ -14,9 +14,9 @@ export class SNICHTableConfig {
         tables: []
     };
 
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     type = "SNICHTableConfig";
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         var func = 'constructor';
         this.logger = logger;
         this.logger.info(this.type, func, `ENTERING`);

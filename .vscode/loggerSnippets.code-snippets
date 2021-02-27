@@ -1,5 +1,5 @@
 {
-	"SystemLogHelper Debug Message (this.logger)" : {
+	"SNICHLogger Debug Message (this.logger)" : {
         "scope":"typescript",
         "prefix": "yalaDebug",
         "description": "(this.logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -7,7 +7,7 @@
             "this.logger.debug(this.type, func, `${1:Your Debug Message}`);"
         ]
     },
-    "SystemLogHelper Info Message (this.logger)" : {
+    "SNICHLogger Info Message (this.logger)" : {
         "scope":"typescript",
         "prefix": "yalaInfo",
         "description": "(this.logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -15,7 +15,7 @@
             "this.logger.info(this.type, func, `${1:Your Info Message}`);"
         ]
     },
-    "SystemLogHelper Warn Message (this.logger)" : {
+    "SNICHLogger Warn Message (this.logger)" : {
         "scope":"typescript",
         "prefix": "yalaWarn",
         "description": "(this.logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -23,7 +23,7 @@
             "this.logger.warn(this.type, func, `${1:Your Warning Message}`);"
         ]
     },
-    "SystemLogHelper Error Message (this.logger)" : {
+    "SNICHLogger Error Message (this.logger)" : {
         "scope":"typescript",
         "prefix": "yalaError",
         "description": "(this.logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -32,7 +32,7 @@
 
         ]
     },
-    "SystemLogHelper Report Exception Message (this.logger)" : {
+    "SNICHLogger Report Exception Message (this.logger)" : {
         "scope":"typescript",
         "prefix": "yalaReportException",
         "description": "(this.logger) Insert a Report Exception log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -41,7 +41,7 @@
         ]
     },
 
-	"SystemLogHelper Debug Message (logger)" : {
+	"SNICHLogger Debug Message (logger)" : {
         "scope":"typescript",
         "prefix": "yalaDebugGeneral",
         "description": "(logger) Insert a debug log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -49,7 +49,7 @@
             "logger.debug(lib, func, `${1:Your Debug Message}`);"
         ]
     },
-    "SystemLogHelper Info Message (logger)" : {
+    "SNICHLogger Info Message (logger)" : {
         "scope":"typescript",
         "prefix": "yalaInfoGeneral",
         "description": "(logger) Insert a info log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -57,7 +57,7 @@
             "logger.info(lib, func, `${1:Your Info Message}`);"
         ]
     },
-    "SystemLogHelper Warn Message (logger)" : {
+    "SNICHLogger Warn Message (logger)" : {
         "scope":"typescript",
         "prefix": "yalaWarnGeneral",
         "description": "(logger) Insert a Warning log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -65,7 +65,7 @@
             "logger.warn(lib, func, `${1:Your Warning Message}`);"
         ]
     },
-    "SystemLogHelper Error Message (logger)" : {
+    "SNICHLogger Error Message (logger)" : {
         "scope":"typescript",
         "prefix": "yalaErrorGeneral",
         "description": "(logger) Insert a Error log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -74,7 +74,7 @@
 
         ]
     },
-    "SystemLogHelper Report Exception Message (logger)" : {
+    "SNICHLogger Report Exception Message (logger)" : {
         "scope":"typescript",
         "prefix": "yalaReportExceptionGeneral",
         "description": "(logger) Insert a Report Exception log line pre-filled with this.type, func, etc. Assumes you have set these variables up.",
@@ -88,7 +88,7 @@
         "body": [
             "var lib = '${1:Business Rule}';",
             "var func = '${2:BrName}';",
-            "var logger = new SystemLogHelper(true);",
+            "var logger = new SNICHLogger(true);",
             "try{",
             "\tlogger.info(lib, func, 'ENTERING');",
             "\t$0",

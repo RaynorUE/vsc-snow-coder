@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { InstancesList, InstanceMaster } from './classes/InstanceConfigManager';
-import { SystemLogHelper } from './classes/LogHelper';
+import { SNICHLogger } from './SNICH/SNICHLogger/SNICHLogger';
 import { RESTClient } from './classes/RESTClient';
 import { SNFilePuller } from './classes/SNRecordPuller';
 import { WorkspaceManager } from './classes/WorkspaceManager';
@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
     extensionContext = context;
     let lib = 'extension.ts';
     let func = 'activate';
-    let logger: SystemLogHelper = new SystemLogHelper();
+    let logger: SNICHLogger = new SNICHLogger();
     logger.info(lib, func, 'START');
 
     let instanceList = new InstancesList();
@@ -62,7 +62,7 @@ export function activate(context: vscode.ExtensionContext) {
      * Setup New Instance
      */
     vscode.commands.registerCommand('snich.setup.new_instance', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'setup.new_instance';
         logger.info(lib, func, 'START');
         await instanceList.setupNew();
@@ -74,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
      * Table configuration
      */
     vscode.commands.registerCommand('snich.instance.setup.new_table', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'snich.instance.setup.new_table';
         logger.info(lib, func, 'START');
 
@@ -96,7 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
      * Test Instance Connection
      */
     vscode.commands.registerCommand('snich.setup.test_connection', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'setup.test_connection';
         logger.info(lib, func, 'START');
 
@@ -118,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
      * Pull a single record from an instance.
      */
     vscode.commands.registerCommand('snich.instance.pull_record', async (folder) => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'instance.pull_record';
         logger.info(lib, func, 'START');
         if (!instanceList.atLeastOneConfigured()) {
@@ -182,7 +182,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     vscode.commands.registerCommand('snich.application.open_file.in.service_now', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         var func = 'application.open_file.in.service_now';
         logger.info(lib, func, 'START');
         let activeEditor = vscode.window.activeTextEditor;
@@ -219,7 +219,7 @@ export function activate(context: vscode.ExtensionContext) {
     */
 
     vscode.commands.registerCommand('snich.application.run.background_script.global', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'snich.application.run.background_script';
         logger.info(lib, func, 'START');
 
@@ -309,7 +309,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     vscode.commands.registerCommand('snich.application.run.background_script.select_scope', async () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'snich.application.run.background_script';
         logger.info(lib, func, 'START');
 
@@ -430,7 +430,7 @@ export function activate(context: vscode.ExtensionContext) {
      * compare active editor with server
      */
     vscode.commands.registerCommand('snich.activeEditor.compare_with_server', () => {
-        let logger = new SystemLogHelper();
+        let logger = new SNICHLogger();
         let func = 'activeEditor.compare_with_server';
         let wsManager = new WorkspaceManager(logger);
         logger.info(lib, func, 'START');

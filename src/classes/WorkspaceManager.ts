@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as vscode from 'vscode';
-import { SystemLogHelper } from './LogHelper';
+import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
 import { InstanceMaster, InstanceConfig, InstancesList, SyncedFiles } from './InstanceConfigManager';
 import { RESTClient } from "./RESTClient";
 import * as path from 'path';
@@ -19,26 +19,26 @@ import { SNPreferencesManager } from './preferences/SNPreferencesManager';
 */
 
 export class WorkspaceManager {
-    
+
     readonly configFileName: string = "snich_config.json";
     readonly tableConfigFileName: string = "snich_table_config.json";
     readonly syncedFilesName: string = "snich_synced_files.json";
     readonly ignoreFiles: Array<string> = [this.configFileName, this.tableConfigFileName, this.syncedFilesName, 'jsconfig.json'];
     readonly ignoreFolders = ['@Types'];
 
-    logger: SystemLogHelper;
+    logger: SNICHLogger;
     lib: string = 'ConfigMgr';
 
-    constructor(logger?: SystemLogHelper) {
+    constructor(logger?: SNICHLogger) {
         let func = 'constructor';
-        this.logger = logger || new SystemLogHelper();
+        this.logger = logger || new SNICHLogger();
         this.logger.info(this.lib, func, 'START');
 
 
         this.logger.info(this.lib, func, 'END');
     }
 
-    workspaceValid(logger: SystemLogHelper, lib: string) {
+    workspaceValid(logger: SNICHLogger, lib: string) {
         let wsFolders = vscode.workspace.workspaceFolders || [];
         let func = "workspaceValid";
         logger.info(lib, func, 'Going hunting for SN Instances! Workspace Folders', wsFolders);
@@ -216,11 +216,11 @@ export class WorkspaceManager {
             openFile = true;
         }
 
-        if(!scopeNameField){
+        if (!scopeNameField) {
             scopeNameField = 'sys_scope.name';
         }
 
-        if(!scopeIdField){
+        if (!scopeIdField) {
             scopeIdField = 'sys_scope.scope';
         }
 

@@ -4,7 +4,7 @@ export class ActivateCommandsSysApp {
     constructor() { }
     /*
         async loadAllAppFiles() {
-            let logger = new SystemLogHelper();
+            let logger = new SNICHLogger();
             let func = 'setup.new_instance';
             logger.info(lib, func, 'START');
             await instanceList.setupNew();
@@ -12,7 +12,7 @@ export class ActivateCommandsSysApp {
         }
     
         async testConnection() {
-            let logger = new SystemLogHelper();
+            let logger = new SNICHLogger();
             let func = 'setup.test_connection';
             logger.info(lib, func, 'START');
     

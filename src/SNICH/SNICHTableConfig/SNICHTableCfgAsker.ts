@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SystemLogHelper } from '../../classes/LogHelper';
+import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { qpWithValue } from '../../extension';
 
 /**
@@ -8,11 +8,11 @@ import { qpWithValue } from '../../extension';
  */
 export class SNICHTableCfgAsker {
 
-    private logger: SystemLogHelper;
+    private logger: SNICHLogger;
     private type = "SNICHTableCfgAsker";
     private yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
-    constructor(logger: SystemLogHelper) {
+    constructor(logger: SNICHLogger) {
         this.logger = logger;
     }
 

@@ -202,7 +202,7 @@
 			"initialize: function(logger){",
 			"\tvar func = \"initialize\";",
 			"\tif(!logger){",
-			"\t\tthis.logger = new ${1:x_yala_kickstarter}.SystemLogHelper();",
+			"\t\tthis.logger = new ${1:x_yala_kickstarter}.SNICHLogger();",
 			"\t} else {",
 			"\t\tthis.logger = logger;",
 			"\t}",

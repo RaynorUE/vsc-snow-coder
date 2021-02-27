@@ -2,18 +2,18 @@ import { snTableField, SNQPItem, snRecord } from "../@Types";
 import { InstanceMaster } from "./InstanceConfigManager";
 import { RESTClient } from "./RESTClient";
 import * as vscode from "vscode";
-import { SystemLogHelper } from "./LogHelper";
+import { SNICHLogger } from "../SNICH/SNICHLogger/SNICHLogger";
 import { WorkspaceManager } from "./WorkspaceManager";
 
 
 export class ConfiguredTables {
     tables: Array<TableConfig> = [];
     tableNameList: Array<string> = [];
-    private logger: SystemLogHelper;
+    private logger: SNICHLogger;
     private lib: string = 'SyncedTableManager';
 
-    constructor(tableData?: ConfiguredTables, logger?: SystemLogHelper) {
-        this.logger = logger || new SystemLogHelper();
+    constructor(tableData?: ConfiguredTables, logger?: SNICHLogger) {
+        this.logger = logger || new SNICHLogger();
         let func = 'constructor';
         this.logger.info(this.lib, func, 'START');
 
