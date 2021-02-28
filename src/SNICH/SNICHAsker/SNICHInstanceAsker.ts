@@ -8,7 +8,9 @@ export class SNICHInstanceAsker extends SNICHAskerCore {
 
     type = "SNICHInstanceAsker";
 
-    super(logger: SNICHLogger) { }
+    super(logger: SNICHLogger) {
+        this.logger = logger;
+    }
 
     async askSelectInstance(instances: SNICHConfig.Instance[]) {
         const func = 'askSelectInstance';
@@ -75,5 +77,25 @@ export class SNICHInstanceAsker extends SNICHAskerCore {
         return result;
     }
 
+    async askFolderName(folderName: string) {
+        const func = 'askFolderName';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: undefined | string = undefined;
+        try {
+            let enteredFolder = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: folderName, validateInput: (value) => this.inputEntryMandatory(value) });
+            if (!enteredFolder) {
+                result = undefined;
+            } else {
+                result = enteredFolder;
+            }
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
 
 }

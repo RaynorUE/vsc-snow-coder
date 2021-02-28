@@ -119,6 +119,7 @@ export class SNICHInstance {
         let enteredInstanceValue = await asker.askForInstanceURL();
 
         if (!enteredInstanceValue) {
+            this.logger.info(this.type, func, `LEAVING`);
             return this.abortSetup();
         }
 
@@ -135,14 +136,13 @@ export class SNICHInstance {
             instanceUrl = `https://${enteredInstanceValue}.service-now.com`;
         }
 
-        let validateInstanceURL = await vscode.window.showQuickPick([...yesNo], { ignoreFocusOut: true, placeHolder: `Continue with instance url? ${instanceUrl}` });
-        if (!validateInstanceURL) {
-            return this.abortSetup();
-        }
-
-        if (validateInstanceURL.value == "no") {
+        let validateInstanceURL = await asker.askYesNo(`Continue with instance url? ${instanceUrl}`);
+        if (validateInstanceURL == undefined) {
             this.logger.info(this.type, func, "LEAVING");
-            return this.setup(); //exit and start setup over again.
+            return this.abortSetup();
+        } else if (validateInstanceURL == false) {
+            this.logger.info(this.type, func, `LEAVING`);
+            return await this.setup();
         }
 
         const connection = new SNICHConnection(this.logger);
@@ -151,8 +151,9 @@ export class SNICHInstance {
         // Validate folder name. Giving an opportunity to change.
         let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace(':', '_');
 
-        let instanceName = await vscode.window.showInputBox({ prompt: `Enter a folder name to use.`, ignoreFocusOut: true, value: fixedInstanceName, validateInput: (value) => this.inputEntryMandatory(value) });
+        let instanceName = await asker.askFolderName(fixedInstanceName);
         if (!instanceName) {
+            this.logger.info(this.type, func, `LEAVING`);
             return this.abortSetup('No folder name specified.');
         }
 
@@ -162,13 +163,13 @@ export class SNICHInstance {
 
         if (foundInstance) {
             this.logger.debug(this.type, func, "Found instance!", foundInstance);
-            let continueConfig = await vscode.window.showQuickPick(yesNo, { ignoreFocusOut: true, placeHolder: `Instance found by name [${this.getName()}]. Continue and reconfigure instance?` });
+            let continueConfig = await asker.askYesNo(`Instance found by name [${this.getName()}]. Continue and reconfigure instance?`);
             if (!continueConfig) {
                 this.logger.info(this.type, func, "LEAVING");
                 return this.abortSetup();
             }
 
-            if (continueConfig.value == 'yes') {
+            if (continueConfig == true) {
                 this.setData(foundInstance);
                 const dataSoFar = connection.getData();
                 await connection.load(foundInstance._id);

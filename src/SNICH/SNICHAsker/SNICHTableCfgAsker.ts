@@ -1,18 +1,17 @@
 import * as vscode from 'vscode';
 import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { qpWithValue } from '../../extension';
+import { SNICHAskerCore } from './SNICHAskerCore';
 
 /**
  * Class for handling various "Quick pick" and "Quick input" calls. 
  * Will be useful for looping and if we ever want to retrofit to more robust "Input" that vscode offers.
  */
-export class SNICHTableCfgAsker {
+export class SNICHTableCfgAsker extends SNICHAskerCore {
 
-    private logger: SNICHLogger;
-    private type = "SNICHTableCfgAsker";
-    private yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
+    type = "SNICHTableCfgAsker";
 
-    constructor(logger: SNICHLogger) {
+    super(logger: SNICHLogger) {
         this.logger = logger;
     }
 

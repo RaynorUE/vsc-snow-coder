@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { qpWithValue } from '../../extension';
-import { SNICHTableCfgAsker } from "./SNICHTableCfgAsker";
+import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
 
 
 export class SNICHTableConfig {
