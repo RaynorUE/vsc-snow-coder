@@ -157,7 +157,6 @@ export class SNICHTableConfig {
         var func = 'setupTable';
         this.logger.info(this.type, func, `ENTERING`);
 
-        const yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
         const asker = new SNICHTableCfgAsker(this.logger);
 
         const table: SNICHConfig.Table = {
@@ -189,7 +188,7 @@ export class SNICHTableConfig {
         if (!selectedTable) {
             vscode.window.showErrorMessage('No table selected. Aborting setup.');
             this.logger.info(this.type, func, `LEAVING`);
-            return;
+            return undefined;
         }
 
         table.name = selectedTable.name.value;
@@ -203,7 +202,7 @@ export class SNICHTableConfig {
         if (groupBy == undefined) {
             this.logger.info(this.type, func, `LEAVING`);
             vscode.window.showWarningMessage('Table setup aborted.');
-            return;
+            return undefined;
         }
 
         if (groupBy) {
@@ -212,16 +211,13 @@ export class SNICHTableConfig {
 
         let nameField = await asker.selectNameField(tableFields);
 
+        if (!nameField) {
+            this.logger.info(this.type, func, `LEAVING`);
+            vscode.window.showWarningMessage('Table setup aborted.');
+            return undefined;
+        }
 
 
-        /**
-         * @todo if "Name" field detected, prompt to use it, else or if no, provide QP To select name field.
-         */
-
-        /**
-         * @todo Then ask if they wish to "Group by" a particular field (such as table for UI Actions).
-         * Indicate that this will create sub-folders grouped by this field value.
-         */
 
         /**
          * @todo then ask if to select additional name fields yes/no

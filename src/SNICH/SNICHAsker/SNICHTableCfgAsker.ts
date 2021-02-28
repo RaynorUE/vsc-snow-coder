@@ -160,6 +160,67 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
 
     }
 
+    /**
+     * 
+     * @param fields Array of dictionary items for selection
+     * @param nameField The name field already selected, will be filtered out of list.
+     */
+    async selectAdditionalNameFields(fields: sys_dictionary[], nameField?: string) {
+        const func = `selectAdditionalNameFields`;
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: sys_dictionary[] = [];
+
+        try {
+
+            let nameFields: qpWithValue[] = [];
+            const fieldSep = vscode.workspace.getConfiguration().get('snich.syncedRecordNameSeparator') || "^";
+
+            fields.forEach((rec) => {
+                if (rec.name.value == nameField) {
+                    //do nothing
+                } else {
+                    let qpItem: qpWithValue = {
+                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                        value: rec,
+                        description: `${rec.internal_type.value}`,
+                    };
+                    nameFields.push(qpItem);
+                }
+
+            });
+
+            let qpOpts: vscode.QuickPickOptions = {
+                canPickMany: true,
+                ignoreFocusOut: true,
+                placeHolder: `Please select additional fields to use for the file name. Seperator from settings [ ${fieldSep} ]`,
+                matchOnDescription: true,
+                matchOnDetail: true
+            }
+
+            //using any operator so we typescript won't complain about .length and .foreach
+            let selectedFields = await vscode.window.showQuickPick<any>(nameFields, qpOpts);
+
+            if (selectedFields) {
+                selectedFields.forEach((qp: qpWithValue) => {
+                    let dicRec: sys_dictionary = qp.value;
+                    result.push(dicRec);
+                })
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = [];
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result
+
+    }
+
+
+
     private _iconMap(internalType: string) {
 
         if (internalType.indexOf('date') > -1) {
