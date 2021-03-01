@@ -165,16 +165,16 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
      * @param fields Array of dictionary items for selection
      * @param nameField The name field already selected, will be filtered out of list.
      */
-    async selectAdditionalNameFields(fields: sys_dictionary[], nameField?: string) {
+    async selectAdditionalNameFields(fields: sys_dictionary[], nameField?: string): Promise<sys_dictionary[] | undefined> {
         const func = `selectAdditionalNameFields`;
         this.logger.info(this.type, func, `ENTERING`);
 
-        let result: sys_dictionary[] = [];
+        let result: sys_dictionary[] | undefined = undefined;
 
         try {
 
-            let nameFields: qpWithValue[] = [];
-            const fieldSep = vscode.workspace.getConfiguration().get('snich.syncedRecordNameSeparator') || "^";
+            let nameFieldsQP: qpWithValue[] = [];
+            const fieldSep: string = vscode.workspace.getConfiguration().get('snich.syncedRecordNameSeparator') || "^";
 
             fields.forEach((rec) => {
                 if (rec.name.value == nameField) {
@@ -185,9 +185,8 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                         value: rec,
                         description: `${rec.internal_type.value}`,
                     };
-                    nameFields.push(qpItem);
+                    nameFieldsQP.push(qpItem);
                 }
-
             });
 
             let qpOpts: vscode.QuickPickOptions = {
@@ -199,14 +198,29 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
             }
 
             //using any operator so we typescript won't complain about .length and .foreach
-            let selectedFields = await vscode.window.showQuickPick<any>(nameFields, qpOpts);
+            let selectedFields = await vscode.window.showQuickPick<any>(nameFieldsQP, qpOpts);
 
             if (selectedFields) {
+                let nameFields: sys_dictionary[] = [];
+                let fullFileNameParts = [nameField];
                 selectedFields.forEach((qp: qpWithValue) => {
                     let dicRec: sys_dictionary = qp.value;
-                    result.push(dicRec);
+                    nameFields.push(dicRec);
+                    fullFileNameParts.push(dicRec.element.value);
                 })
+
+                let msg = `File names will be built with pattern: ${fullFileNameParts.join(fieldSep)}`;
+                let confirmFileName = await this.askYesNo(msg);
+
+                if (confirmFileName == undefined) {
+                    result = undefined;
+                } else if (confirmFileName == false) {
+                    this.logger.info(this.type, func, `LEAVING`);
+                    return await this.selectAdditionalNameFields(fields);
+                }
+
             }
+
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
@@ -216,6 +230,95 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
         }
 
         return result
+
+    }
+
+    async selectSyncedFiles(fields: sys_dictionary[]) {
+        const func = 'selectSyncedFiles';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: sys_dictionary[] | undefined;
+
+        try {
+
+            let fieldsQp = fields.map((rec) => {
+                let selected = false;
+                let intrnlType = rec.internal_type.value;
+                if (intrnlType.includes('html') || intrnlType.includes('xml') || intrnlType.includes('script')) {
+                    selected = true;
+                }
+                let qpItem: qpWithValue = {
+                    label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                    value: rec,
+                    description: `${rec.internal_type.value}`,
+                };
+                return qpItem;
+            });
+
+            let selectOpts: vscode.QuickPickOptions = {
+                canPickMany: true,
+                placeHolder: "Select fields to sync. Note: We've preselected typical fields.",
+                matchOnDescription: true,
+                ignoreFocusOut: true
+            }
+
+            let selectedSyncFields: any = await vscode.window.showQuickPick(fieldsQp, selectOpts);
+
+            if (selectedSyncFields && selectedSyncFields.length && selectedSyncFields.length > 0) {
+                let syncedFields: sys_dictionary[] = [];
+
+                selectedSyncFields.forEach((item: qpWithValue) => {
+                    let sysDic: sys_dictionary = item.value;
+                    syncedFields.push(sysDic);
+                });
+
+                result = syncedFields;
+            }
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
+    async selectExtension(field: sys_dictionary) {
+        const func = "selectExtension";
+        this.logger.debug(this.type, func, `ENTERING`);
+
+        let result: string | undefined = undefined;
+
+        try {
+
+            let preFilledExtension = this._extensionMap(field.internal_type.value);
+
+            let inpOpts: vscode.InputBoxOptions = {
+                ignoreFocusOut: true,
+                value: preFilledExtension,
+                prompt: `Enter the file extension to use for ${field.column_label.display_value} (${field.element.value}). If it is a known field type, a suggestion will be pre-filled for you.`,
+                placeHolder: `.js, .html, .xml, .d.ts`,
+                validateInput: (value) => this.inputEntryMandatory(value)
+            }
+
+            let enteredExt = await vscode.window.showInputBox(inpOpts);
+
+            if (enteredExt) {
+                result = enteredExt;
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+
+        } finally {
+            this.logger.debug(this.type, func, `LEAVING`);
+        }
+
+        return result;
 
     }
 
@@ -236,6 +339,12 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
         }
 
         return `$(symbol-string)`;
+    }
+
+    private _extensionMap(internalType: string): string {
+
+
+        return '';
     }
 
 }

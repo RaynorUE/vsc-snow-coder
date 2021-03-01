@@ -163,7 +163,7 @@ export class SNICHTableConfig {
             name: "",
             additional_display_fields: [],
             display_field: "",
-            fields: [],
+            synced_fields: [],
             label: "",
             group_by: {
                 extension: "",
@@ -186,7 +186,6 @@ export class SNICHTableConfig {
         this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
         if (!selectedTable) {
-            vscode.window.showErrorMessage('No table selected. Aborting setup.');
             this.logger.info(this.type, func, `LEAVING`);
             return undefined;
         }
@@ -201,7 +200,6 @@ export class SNICHTableConfig {
 
         if (groupBy == undefined) {
             this.logger.info(this.type, func, `LEAVING`);
-            vscode.window.showWarningMessage('Table setup aborted.');
             return undefined;
         }
 
@@ -213,27 +211,62 @@ export class SNICHTableConfig {
 
         if (!nameField) {
             this.logger.info(this.type, func, `LEAVING`);
-            vscode.window.showWarningMessage('Table setup aborted.');
+            return undefined;
+        }
+
+        const addNameFieldsMsg = `Add additional fields to use for file name?`;
+        let addNameFields = await asker.askYesNo(addNameFieldsMsg);
+
+        if (addNameFields == undefined) {
+            this.logger.info(this.type, func, `LEAVING`);
+            return undefined;
+        }
+
+        if (addNameFields == true) {
+            let nameFields = await asker.selectAdditionalNameFields(tableFields);
+
+            if (nameFields == undefined) {
+                this.logger.info(this.type, func, `LEAVING`);
+                return undefined;
+            }
+
+            nameFields.forEach((sysDic) => {
+                table.additional_display_fields.push(sysDic.element.value);
+            });
+        }
+
+
+        let syncedFields = await asker.selectSyncedFiles(tableFields);
+
+        if (syncedFields == undefined) {
+            this.logger.info(this.type, func, `LEAVING`);
             return undefined;
         }
 
 
+        //doing a normal for loop so we can break out if aborted.
+        for (let i = 0; i < syncedFields.length; i++) {
+            let sysDic = syncedFields[i];
 
-        /**
-         * @todo then ask if to select additional name fields yes/no
-         */
+            let extension = await asker.selectExtension(sysDic);
 
-        /**
-         * @todo If additional name fields, show list, allow pick many.
-         */
+            if (extension == undefined) {
+                this.logger.debug(this.type, func, `Abort on extension selection.`);
+                this.logger.info(this.type, func, `LEAVING`);
+                return undefined;
+            }
 
-        /**
-         * @todo detect all script/xml fields and build QP of pre-selected items
-         */
+            let fixedExt = extension.replace(/^\./g, ''); //remove starting periods from string, since we will be adding that.
 
-        /**
-         * @todo then prompt use to confirm fields and select any additional to sync data from.
-         */
+            let snichField: SNICHConfig.Field = {
+                extension: fixedExt,
+                label: sysDic.column_label.value,
+                name: sysDic.element.value
+            }
+            table.synced_fields.push(snichField);
+        }
+
+
 
         /**
          * @todo next, step through all "sync fields" prompting for file extension to use. Should pre-set value based on field type detected

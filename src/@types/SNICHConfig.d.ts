@@ -8,7 +8,6 @@ declare namespace SNICHConfig {
 
     }
 
-
     interface PreferenceMap {
         instance_id: string;
         _id: string | undefined;
@@ -86,7 +85,7 @@ declare namespace SNICHConfig {
         name: string;
         label: string;
         display_field: string;
-        fields: Field[];
+        synced_fields: Field[];
         additional_display_fields: string[];
         group_by: undefined | Field;
     }
