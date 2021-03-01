@@ -4,7 +4,6 @@ import { InstanceFileMan } from '../../FileMan/InstanceFileMan';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
-import { qpWithValue } from '../../extension';
 import { SNICHInstanceAsker } from '../SNICHAsker/SNICHInstanceAsker';
 
 
@@ -113,8 +112,6 @@ export class SNICHInstance {
 
         //to save as we go.
         const iService = new SNICHInstancesService(this.logger);
-
-        let yesNo: qpWithValue[] = [{ label: "$(thumbsup) Yes", value: "yes" }, { label: "$(thumbsdown) No", value: "no" }];
 
         let enteredInstanceValue = await asker.askForInstanceURL();
 

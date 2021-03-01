@@ -92,13 +92,15 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                         name: gbField.element.value
                     }
                 }
+            } else if (useGroupBySelection && useGroupBySelection.value == 'no') {
+                result = null;
             }
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = undefined;
         } finally {
-            this.logger.info(this.type, func, `LEAVING`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
 
         return result
@@ -165,7 +167,7 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
      * @param fields Array of dictionary items for selection
      * @param nameField The name field already selected, will be filtered out of list.
      */
-    async selectAdditionalNameFields(fields: sys_dictionary[], nameField?: string): Promise<sys_dictionary[] | undefined> {
+    async selectAdditionalNameFields(fields: sys_dictionary[], nameField: string): Promise<sys_dictionary[] | undefined> {
         const func = `selectAdditionalNameFields`;
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -177,7 +179,7 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
             const fieldSep: string = vscode.workspace.getConfiguration().get('snich.syncedRecordNameSeparator') || "^";
 
             fields.forEach((rec) => {
-                if (rec.name.value == nameField) {
+                if (rec.element.value == nameField) {
                     //do nothing
                 } else {
                     let qpItem: qpWithValue = {
@@ -200,9 +202,10 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
             //using any operator so we typescript won't complain about .length and .foreach
             let selectedFields = await vscode.window.showQuickPick<any>(nameFieldsQP, qpOpts);
 
-            if (selectedFields) {
+            if (selectedFields && selectedFields.length && selectedFields.length > 0) {
                 let nameFields: sys_dictionary[] = [];
-                let fullFileNameParts = [nameField];
+                let fullFileNameParts: string[] = [];
+                fullFileNameParts.push(nameField);
                 selectedFields.forEach((qp: qpWithValue) => {
                     let dicRec: sys_dictionary = qp.value;
                     nameFields.push(dicRec);
@@ -216,9 +219,10 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                     result = undefined;
                 } else if (confirmFileName == false) {
                     this.logger.info(this.type, func, `LEAVING`);
-                    return await this.selectAdditionalNameFields(fields);
+                    return await this.selectAdditionalNameFields(fields, nameField);
+                } else if (confirmFileName == true) {
+                    result = selectedFields;
                 }
-
             }
 
 
@@ -251,6 +255,7 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                     label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
                     value: rec,
                     description: `${rec.internal_type.value}`,
+                    picked: selected
                 };
                 return qpItem;
             });

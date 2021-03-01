@@ -2,7 +2,6 @@ import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
-import { qpWithValue } from '../../extension';
 import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
 
 
@@ -197,8 +196,8 @@ export class SNICHTableConfig {
 
         let groupBy = await asker.selectGroupBy(tableFields);
 
-
-        if (groupBy == undefined) {
+        if (groupBy === undefined) {
+            this.logger.debug(this.type, func, `Groupby selection aborted. Aborting setup!`);
             this.logger.info(this.type, func, `LEAVING`);
             return undefined;
         }
@@ -206,6 +205,7 @@ export class SNICHTableConfig {
         if (groupBy) {
             table.group_by = groupBy;
         }
+        this.logger.debug(this.type, func, `Group by selection complete. Moving on to asking for nameField`);
 
         let nameField = await asker.selectNameField(tableFields);
 
@@ -223,7 +223,7 @@ export class SNICHTableConfig {
         }
 
         if (addNameFields == true) {
-            let nameFields = await asker.selectAdditionalNameFields(tableFields);
+            let nameFields = await asker.selectAdditionalNameFields(tableFields, nameField);
 
             if (nameFields == undefined) {
                 this.logger.info(this.type, func, `LEAVING`);

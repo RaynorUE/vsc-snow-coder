@@ -1,5 +1,4 @@
 import { workspace } from 'vscode';
-import { SNICHOutput } from './SNICHOutput';
 
 export class SNICHLogger {
 
@@ -15,7 +14,6 @@ export class SNICHLogger {
     //private padding:string;
     logLevel: number = this._NONE;
 
-    output = new SNICHOutput();
 
 
     constructor() {

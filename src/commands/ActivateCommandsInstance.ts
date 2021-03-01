@@ -95,7 +95,12 @@ export class ActivateCommandsInstance {
             vscode.window.showWarningMessage('Failed to load table config.');
         }
 
-        await tConfig.setupTable(true);
+        let setupResult = await tConfig.setupTable(true);
+        if (setupResult == undefined) {
+            vscode.window.showWarningMessage('Table configuration and setup aborted!');
+        } else {
+            vscode.window.showInformationMessage('Added table to instance configuration!');
+        }
         this.logger.info(this.type, func, `LEAVING`);
     }
 
