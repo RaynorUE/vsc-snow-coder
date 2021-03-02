@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
+import { TableConfig } from "../../classes/SNDefaultTables";
 
 
 export class SNICHTableConfig {
@@ -236,7 +237,7 @@ export class SNICHTableConfig {
         }
 
 
-        let syncedFields = await asker.selectSyncedFiles(tableFields);
+        let syncedFields = await asker.selectSyncedFields(tableFields);
 
         if (syncedFields == undefined) {
             this.logger.info(this.type, func, `LEAVING`);
@@ -267,22 +268,13 @@ export class SNICHTableConfig {
         }
 
 
-
-        /**
-         * @todo next, step through all "sync fields" prompting for file extension to use. Should pre-set value based on field type detected
-         * Basic map: "Script" = js, "XML" = html (this is better for UI Pages), "css" = css, all else leave blank
-         * @todo create a "VSCode PReference / Setting" where they can use an array of object to define the maps (We will intialize the defaults there);
-         * @todo add the VSCode preference as part of instance setup (detect if it's there, and do not overwrite any existing config).
-         */
-
         /**
          * @todo once we have all our stuff selected, store the table, and save the new config.
          * @todo present an info message that it's completed, and offer "Sync New Record" and "Sync All New App Files" (NEW Action!);
          */
 
-
-
-
+        this.addTable(table);
+        let saveResult = await this.save();
 
         this.logger.info(this.type, func, `LEAVING`);
 
@@ -292,8 +284,12 @@ export class SNICHTableConfig {
         var func = 'addTaable';
         this.logger.info(this.type, func, `ENTERING`);
 
-        this.data.tables.push(tConfig);
-        await this.save();
+        let foundIndex = this.data.tables.findIndex((table) => table.name == tConfig.name);
+        if (foundIndex > -1) {
+            this.data.tables[foundIndex] = tConfig;
+        } else {
+            this.data.tables.push(tConfig);
+        }
 
         this.logger.info(this.type, func, `LEAVING`);
     }
@@ -408,5 +404,14 @@ export class SNICHTableConfig {
         }
 
         return fieldsResult;
+    }
+
+    async addDefaultTables() {
+        const func = 'addDefaultTables';
+        this.logger.info(this.type, func, `ENTERING`);
+
+
+
+        this.logger.info(this.type, func, `LEAVING`);
     }
 }

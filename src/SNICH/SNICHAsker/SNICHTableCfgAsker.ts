@@ -15,7 +15,7 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
         this.logger = logger;
     }
 
-    async selectTable(tables: sys_db_object[], existingTables?: SNICHConfig.Table[]) {
+    async selectTable(tables: sys_db_object[], existingTables: SNICHConfig.Table[]) {
         var func = 'selectTable';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -25,11 +25,13 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
 
 
             let tableQPs: qpWithValue[] = tables.map((rec) => {
+                let tableExists = existingTables.findIndex((eixsting) => eixsting.name == rec.name.value) > -1;
+
                 let qpItem: qpWithValue = {
                     label: `${rec.label.display_value}`,
                     value: rec,
-                    description: `${rec.name.display_value}`,
-                    detail: `${rec.sys_package.display_value} (${rec.sys_scope.display_value})`
+                    description: tableExists ? `Table already configured. Select to reconfigure.` : ``,
+                    detail: `${rec.name.display_value} - ${rec.sys_package.display_value} [${rec.sys_scope.display_value}]`
                 };
                 return qpItem;
             })
@@ -216,12 +218,15 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                 let confirmFileName = await this.askYesNo(msg);
 
                 if (confirmFileName == undefined) {
+                    this.logger.debug(this.type, func, `confirmFileName aborted!`);
                     result = undefined;
                 } else if (confirmFileName == false) {
+                    this.logger.debug(this.type, func, `File name not confirmed. Asking for file name fields again!`);
                     this.logger.info(this.type, func, `LEAVING`);
                     return await this.selectAdditionalNameFields(fields, nameField);
                 } else if (confirmFileName == true) {
-                    result = selectedFields;
+                    this.logger.debug(this.type, func, `File name confirmed!`);
+                    result = nameFields;
                 }
             }
 
@@ -230,14 +235,14 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = [];
         } finally {
-            this.logger.info(this.type, func, `LEAVING`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
 
         return result
 
     }
 
-    async selectSyncedFiles(fields: sys_dictionary[]) {
+    async selectSyncedFields(fields: sys_dictionary[]) {
         const func = 'selectSyncedFiles';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -348,7 +353,13 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
 
     private _extensionMap(internalType: string): string {
 
-
+        if (internalType.includes('json')) {
+            return '.json';
+        } else if (internalType.includes('html')) {
+            return '.html';
+        } else if (internalType.includes('script')) {
+            return '.js';
+        }
         return '';
     }
 
