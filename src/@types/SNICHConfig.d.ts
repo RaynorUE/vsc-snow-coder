@@ -78,6 +78,7 @@ declare namespace SNICHConfig {
     interface TableConfig {
         _id: string | undefined,
         instance_id: string;
+        version: "1.0.0" | "2.0.0"
         tables: Table[];
     }
 

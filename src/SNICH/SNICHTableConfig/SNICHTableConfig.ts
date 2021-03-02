@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
-import { TableConfig } from "../../classes/SNDefaultTables";
+import { tablePreferencesV1 } from "../../@types/v1_deprecated";
 
 
 export class SNICHTableConfig {
@@ -11,6 +11,7 @@ export class SNICHTableConfig {
     private data: SNICHConfig.TableConfig = {
         _id: undefined,
         instance_id: "",
+        version: "2.0.0",
         tables: []
     };
 
@@ -24,10 +25,11 @@ export class SNICHTableConfig {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
-    async load(instanceId?: string) {
+    async load(instanceId?: string, loadFromInstance?: boolean) {
         var func = 'load';
         this.logger.info(this.type, func, `ENTERING`);
         this.logger.debug(this.type, func, `instanceId: `, instanceId);
+        this.logger.debug(this.type, func, `loadFromInstance: `, loadFromInstance);
 
         let result = false;
 
@@ -38,13 +40,24 @@ export class SNICHTableConfig {
             } else {
                 const tConfigSrv = new SNICHTableConfigService(this.logger);
                 let foundTConfig = await tConfigSrv.getByInstanceId(instanceId);
+
+
+                //if load from instance, always make that call to get that data...
+
+                //check to see if whaht was loaded from instance was "O.G. version" (lacking a version property)
+
+
                 if (foundTConfig) {
                     this.setData(foundTConfig);
                     result = true;
                 } else {
                     this.logger.debug(this.type, func, `Cannot find TableConfig by instance_id, but instance_id provided.`);
 
-                    /** @todo load tables using preferences. */
+                    /** 
+                     * @todo load tables using preferences. 
+                     * @todo need to make sure we only do this when needed.. Maybe we just check on "Activation"? And then again during setup?
+                     * @todo also need to run this.upgradeData() on it.
+                    */
 
                     this.data.instance_id = instanceId;
                     await this.save();
@@ -64,8 +77,10 @@ export class SNICHTableConfig {
         var func = 'save';
         this.logger.info(this.type, func, `ENTERING`);
         const tConfigSrv = new SNICHTableConfigService(this.logger);
+
+        let result = false;
         if (this.data._id) {
-            await tConfigSrv.update(this.data._id, this.getData());
+            result = await tConfigSrv.update(this.data._id, this.getData());
         } else {
             let insertResult = await tConfigSrv.insert(this.getData());
             if (insertResult) {
@@ -118,28 +133,60 @@ export class SNICHTableConfig {
         return result;
     }
 
-    async getTable(tableName: string) {
-
-    }
-
     /**
      * Make a call to the 
      */
-    async loadFromInstance() {
-        //Always grabs the tableConfig JSON array from the instance, and loads them into the DB
-        /** 
-         * @todo Call SNICHPreferences here, which will have a method to load table config. Which will handle preference id, username, connection
-         * This method is to handle writing to back to the DB once pulled. 
-         */
+    async loadFromInstance(): Promise<SNICHConfig.TableConfig | undefined> {
+
+        const func = 'loadFromInstance';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = undefined;
+
+        try {
+
+            //Always grabs the tableConfig JSON array from the instance, and loads them into the DB
+            /** 
+             * @todo Call SNICHPreferences here, which will have a method to load table config. Which will handle preference id, username, connection
+             * This method is to handle writing to back to the DB once pulled. 
+             */
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+
 
     }
 
-    async saveToInstance() {
-        //always save all tableConfigs in a JSON Array system preference.
-        /** 
-         * @todo call SNICHPreferences here, which will have a method to save tableConfig, which will handle preference id, username, all the things...
-         * This method is really just to gather up the tables and save them to the user preferences on SN.
-         */
+    async saveToInstance(): Promise<boolean> {
+        const func = 'saveToInstance';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = false;
+
+        try {
+
+            //always save all tableConfigs in a JSON Array system preference.
+            /** 
+             * @todo call SNICHPreferences here, which will have a method to save tableConfig, which will handle preference id, username, all the things...
+             * This method is really just to gather up the tables and save them to the user preferences on SN.
+             */
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+
+
     }
 
     /**
@@ -413,5 +460,89 @@ export class SNICHTableConfig {
 
 
         this.logger.info(this.type, func, `LEAVING`);
+    }
+
+    upgradeData(oldData: any): SNICHConfig.TableConfig | undefined {
+        const func = 'upgradeData';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        if (oldData) {
+            this.logger.debug(this.type, func, `oldData.version: `, oldData.version);
+        }
+
+        let result: SNICHConfig.TableConfig | undefined = undefined;
+        try {
+
+            let newData = { ...oldData }; //spreading into a new object so we can be overwriting it as we check "upgrading forward to the latest version"
+
+            if (!newData || !newData.version || newData.version == '1.0.0') {
+                this.logger.debug(this.type, func, `Data from instance was older than version 2.0.0. Assuming version only version we ever stored prior to this code existing. Converting to v2.`);
+                newData = this.convertV1toV2(newData);
+            }
+
+            if (newData && newData.version === '2.0.0') {
+                this.logger.debug(this.type, func, `Data is on Version 2.0.0, no further upgrading of data needed! Returning!`);
+            }
+
+            result = newData;
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVINg`);
+        }
+
+        return result;
+    }
+
+    convertV1toV2(v1Data: tablePreferencesV1): SNICHConfig.TableConfig | undefined {
+        const func = 'convertV1toV2';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = undefined;
+
+        try {
+
+
+            let newTableConfig: SNICHConfig.TableConfig = {
+                _id: undefined,
+                instance_id: "",
+                tables: [],
+                version: "2.0.0"
+            }
+
+            v1Data.tables.forEach((oldTable) => {
+                let newTable: SNICHConfig.Table = {
+                    name: oldTable.name,
+                    label: oldTable.label,
+                    additional_display_fields: oldTable.additional_display_fields,
+                    display_field: oldTable.display_field,
+                    group_by: undefined,
+                    synced_fields: []
+                }
+
+                oldTable.fields.forEach((oldField) => {
+                    let newField: SNICHConfig.Field = {
+                        extension: oldField.extention,
+                        label: oldField.label,
+                        name: oldField.name
+                    }
+                    newTable.synced_fields.push(newField);
+                });
+
+                newTableConfig.tables.push(newTable);
+            });
+
+            result = newTableConfig;
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+
     }
 }
