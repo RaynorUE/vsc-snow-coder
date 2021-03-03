@@ -658,14 +658,48 @@ export class SNICHConnection {
      * @param name the name of the user preference to get
      * @param username The username to get the preference for. If not supplied will grab "global"
      */
-    async getPreference(name: string, username?: string) {
+    async getPreference(name: string): Promise<string | undefined> {
+        const func = 'getPreference';
+        this.logger.info(this.type, func, `ENTERING`);
 
-        let encQuery = `name=${name}^system=true^user=NULL`;
-        if (username) {
-            encQuery = `name=${name}^user.user_name=${username}`;
+        let result = undefined;
+
+        try {
+
+            const sConn = this;
+            let rClient = new SNICHRestClient(this.logger, sConn);
+
+            let prefResult = await rClient.get('/api/now/ui/user/current/preferences');
+            this.logger.debug(this.type, func, `prefResult: `, prefResult);
+            if (prefResult && prefResult.result) {
+                result = prefResult[name];
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
         }
+        return result;
+    }
 
-        let result = await this.getRecords('sys_user_preference', encQuery, ['value', 'name']);
+    async savePreference(name: string, value: string) {
+        const func = 'savePreference';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = false;
+
+        try {
+
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
 
         return result;
     }
