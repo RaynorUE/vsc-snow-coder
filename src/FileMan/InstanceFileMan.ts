@@ -45,4 +45,9 @@ export class InstanceFileMan {
         return res;
     }
 
+    writeFile() {
+        //TODO: Make sure to handle "Group by" so that if the value is "falsey" we put it in the "root folder"
+        //I.e. if group by "table" on business rule and table is blank, we put it in the "business rule" folder instead of business rule/tableName
+    }
+
 }

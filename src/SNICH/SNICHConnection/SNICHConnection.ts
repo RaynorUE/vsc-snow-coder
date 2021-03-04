@@ -669,9 +669,9 @@ export class SNICHConnection {
             const sConn = this;
             let rClient = new SNICHRestClient(this.logger, sConn);
 
-            let prefResult = await rClient.get('/api/now/ui/user/current/preferences');
+            let prefResult = await rClient.get<any>('/api/now/ui/user/current/preferences');
             this.logger.debug(this.type, func, `prefResult: `, prefResult);
-            if (prefResult && prefResult.result) {
+            if (prefResult) {
                 result = prefResult[name];
             }
 
@@ -801,4 +801,10 @@ export class SNICHConnection {
 
 declare interface qpWithValue extends vscode.QuickPickItem {
     value: any;
+}
+
+declare interface preferenceResult {
+    result: {
+        [prefName: string]: string
+    }
 }

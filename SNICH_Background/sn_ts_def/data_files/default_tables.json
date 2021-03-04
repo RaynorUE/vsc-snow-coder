@@ -1,0 +1,213 @@
+[{
+        "name": "sys_script",
+        "label": "Business Rule",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": ["when"],
+        "group_by": "collection"
+    },
+    {
+        "name": "sp_widget",
+        "label": "Widget",
+        "display_field": "name",
+        "synced_fields": [{
+                "name": "template",
+                "label": "Body HTML template",
+                "extension": "html"
+            },
+            {
+                "name": "css",
+                "label": "CSS",
+                "extension": "scss"
+            },
+            {
+                "name": "script",
+                "label": "Server script",
+                "extension": "js"
+            },
+            {
+                "name": "client_script",
+                "label": "Client controller",
+                "extension": "js"
+            },
+            {
+                "name": "link",
+                "label": "Link",
+                "extension": "js"
+            },
+            {
+                "name": "demo_data",
+                "label": "Demo data",
+                "extension": "json"
+            },
+            {
+                "name": "option_schema",
+                "label": "Option schema",
+                "extension": "json"
+            }
+        ],
+        "additional_display_fields": [],
+        "group_by": ""
+    },
+
+    {
+        "name": "sp_angular_provider",
+        "label": "Widget Angular Provider",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Client Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": [],
+        "group_by": "type"
+    },
+    {
+        "name": "sp_ng_template",
+        "label": "Angular ng-templates",
+        "display_field": "id",
+        "synced_fields": [{
+            "name": "template",
+            "label": "Template",
+            "extension": "html"
+        }],
+        "additional_display_fields": [],
+        "group_by": "widget"
+    },
+
+    {
+        "name": "sys_ui_action",
+        "label": "UI Policy",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": ["sys_id"],
+        "group_by": "table"
+    },
+    {
+        "name": "sys_script_include",
+        "label": "Script Include",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": [],
+        "group_by": ""
+    },
+    {
+        "name": "sys_ui_page",
+        "label": "UI Page",
+        "display_field": "name",
+        "synced_fields": [{
+                "name": "html",
+                "label": "HTML",
+                "extension": "html"
+            },
+            {
+                "name": "client_script",
+                "label": "Client Script",
+                "extension": "js"
+            },
+            {
+                "name": "processing_script",
+                "label": "Processing Script",
+                "extension": "js"
+            }
+        ],
+        "additional_display_fields": [],
+        "group_by": ""
+    },
+    {
+        "name": "sys_ui_script",
+        "label": "UI Script",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": [],
+        "group_by": "ui_type"
+    },
+    {
+        "name": "sys_script_client",
+        "label": "Client Script",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": ["type"],
+        "group_by": "table"
+    },
+    {
+        "name": "sys_ws_operation",
+        "label": "Scripted REST Resource",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "operation_script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": ["http_method"],
+        "group_by": "web_service_definition"
+    },
+    {
+        "name": "sys_script_fix",
+        "label": "Fix Script",
+        "display_field": "name",
+        "synced_fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": [],
+        "group_by": "web_service_definition"
+    },
+    {
+        "name": "sysauto_script",
+        "label": "Scheduled Script Execution",
+        "display_field": "name",
+        "fields": [{
+            "name": "script",
+            "label": "Script",
+            "extension": "js"
+        }],
+        "additional_display_fields": [],
+        "group_by": ""
+    },
+    {
+        "name": "sys_ui_macro",
+        "label": "UI Macro",
+        "display_field": "name",
+        "fields": [{
+            "name": "xml",
+            "label": "Xml",
+            "extension": "html"
+        }],
+        "additional_display_fields": []
+    },
+    {
+        "name": "sys_ui_macro",
+        "label": "UI Macro",
+        "display_field": "name",
+        "fields": [{
+            "name": "xml",
+            "label": "Xml",
+            "extension": "html"
+        }],
+        "additional_display_fields": []
+    }
+
+
+]

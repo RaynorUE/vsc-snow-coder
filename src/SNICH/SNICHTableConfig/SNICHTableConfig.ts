@@ -4,9 +4,14 @@ import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
 import { tablePreferencesV1 } from "../../@types/v1_deprecated";
+import { BackFileMan } from "../../FileMan/BackFileMan";
 
 
 export class SNICHTableConfig {
+
+    private snPreferenceNames = {
+        tConfig: 'vscode.extension.snich.table_config'
+    };
 
     private data: SNICHConfig.TableConfig = {
         _id: undefined,
@@ -40,25 +45,38 @@ export class SNICHTableConfig {
             } else {
                 const tConfigSrv = new SNICHTableConfigService(this.logger);
                 let foundTConfig = await tConfigSrv.getByInstanceId(instanceId);
+                let instanceTConfig: SNICHConfig.TableConfig | undefined = undefined;
 
 
                 //if load from instance, always make that call to get that data...
 
-                //check to see if whaht was loaded from instance was "O.G. version" (lacking a version property)
-
+                if (loadFromInstance) {
+                    var sConn = new SNICHConnection(this.logger);
+                    await sConn.load(this.data.instance_id);
+                    let tablesPref = await sConn.getPreference(this.snPreferenceNames.tConfig);
+                    if (tablesPref) {
+                        instanceTConfig = this.upgradeData(JSON.parse(tablesPref));
+                    }
+                }
 
                 if (foundTConfig) {
-                    this.setData(foundTConfig);
+                    //we found an existing tableConfig, so we assume existing instance config, and we'll merge over from instance
+                    const mergedData = { ...foundTConfig, ...instanceTConfig }; //first set to foundTConfig, then overlay instanceTConfig;
+
+                    //what do we do about instance_id? For example, if the tConfig stored on Instance was from one computer
+                    //and we're on a seperate computer, they'll have different instance_ids.. so we always overwrite with incoming... yea
+                    mergedData.instance_id = instanceId;
+                    this.setData(mergedData);
                     result = true;
+                } else if (instanceTConfig) {
+                    //use what was found on the instance if we do not have a local config stored already
+                    this.setData(instanceTConfig);
+                    this.data.instance_id = instanceId;
+                    await this.save();
                 } else {
-                    this.logger.debug(this.type, func, `Cannot find TableConfig by instance_id, but instance_id provided.`);
-
-                    /** 
-                     * @todo load tables using preferences. 
-                     * @todo need to make sure we only do this when needed.. Maybe we just check on "Activation"? And then again during setup?
-                     * @todo also need to run this.upgradeData() on it.
-                    */
-
+                    //else we did not find a tConfig so we need to setup default tables and store!
+                    this.logger.debug(this.type, func, `No existing table config found either locally or on instance. Setting up default!`);
+                    await this.addDefaultTables();
                     this.data.instance_id = instanceId;
                     await this.save();
                     result = true;
@@ -327,7 +345,7 @@ export class SNICHTableConfig {
 
     }
 
-    async addTable(tConfig: SNICHConfig.Table) {
+    addTable(tConfig: SNICHConfig.Table) {
         var func = 'addTaable';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -457,9 +475,29 @@ export class SNICHTableConfig {
         const func = 'addDefaultTables';
         this.logger.info(this.type, func, `ENTERING`);
 
+        let result = false;
 
+        try {
 
-        this.logger.info(this.type, func, `LEAVING`);
+            let bsMan = new BackFileMan();
+            let defaultTableText = await bsMan.readFile("SNICH_Background", "data_files", "default_tables.json");
+            if (defaultTableText) {
+                let defaultTableData: SNICHConfig.Table[] = JSON.parse(defaultTableText.toString());
+                defaultTableData.forEach((defaultTable) => {
+                    this.addTable(defaultTable)
+                });
+
+                await this.save();
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result
     }
 
     upgradeData(oldData: any): SNICHConfig.TableConfig | undefined {
