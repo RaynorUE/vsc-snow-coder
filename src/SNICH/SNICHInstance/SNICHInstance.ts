@@ -5,6 +5,7 @@ import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
 import { SNICHInstanceAsker } from '../SNICHAsker/SNICHInstanceAsker';
+import { SNICHTableConfig } from '../SNICHTableConfig/SNICHTableConfig';
 
 
 export class SNICHInstance {
@@ -189,12 +190,25 @@ export class SNICHInstance {
 
         }
 
+        /** ==== SETUP AUTH! ==== */
         let authResult = await connection.setupAuth();
         if (!authResult) {
             this.logger.info(this.type, func, "LEAVING");
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
         }
 
+
+
+        this.logger.debug(this.type, func, "Saving instance and connection data!");
+        await this.save();
+        await connection.save();
+
+
+        /** ==== Seutp Table config, including loading config from instance! ==== */
+        let tConfig = new SNICHTableConfig(this.logger);
+        await tConfig.load(this.getId(), true);
+
+        /** ==== Setup workspace folders ==== */
         let wsFileman = new WSFileMan(this.logger);
         const wsRoot = wsFileman.getWSRootUri();
         if (!wsRoot) {
@@ -203,14 +217,8 @@ export class SNICHInstance {
         }
 
         this.setRootPath(vscode.Uri.joinPath(wsRoot, this.getName()));
-
-
         let iFileMan = new InstanceFileMan(this.logger);
         await iFileMan.createInstanceRoot(this.getRootPath());
-
-        this.logger.debug(this.type, func, "All done. Saving instance and connection data!");
-        await this.save();
-        await connection.save();
 
         this.logger.info(this.type, func, "LEAVING");
         vscode.window.showInformationMessage('Instance setup success! Time to start syncing files!');

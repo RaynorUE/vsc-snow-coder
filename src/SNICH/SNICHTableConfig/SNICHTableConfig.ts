@@ -43,16 +43,18 @@ export class SNICHTableConfig {
                 this.logger.info(this.type, func, `LEAVING`);
                 throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
             } else {
+
+                this.setInstanceId(instanceId);
                 const tConfigSrv = new SNICHTableConfigService(this.logger);
-                let foundTConfig = await tConfigSrv.getByInstanceId(instanceId);
+                let foundTConfig = await tConfigSrv.getByInstanceId(this.getInstanceId());
                 let instanceTConfig: SNICHConfig.TableConfig | undefined = undefined;
 
 
                 //if load from instance, always make that call to get that data...
 
-                if (loadFromInstance) {
+                if (loadFromInstance || !foundTConfig || (foundTConfig && foundTConfig.tables.length == 0)) {
                     var sConn = new SNICHConnection(this.logger);
-                    await sConn.load(this.data.instance_id);
+                    await sConn.load(this.getInstanceId());
                     let tablesPref = await sConn.getPreference(this.snPreferenceNames.tConfig);
                     if (tablesPref) {
                         instanceTConfig = this.upgradeData(JSON.parse(tablesPref));
@@ -94,21 +96,34 @@ export class SNICHTableConfig {
     async save() {
         var func = 'save';
         this.logger.info(this.type, func, `ENTERING`);
-        const tConfigSrv = new SNICHTableConfigService(this.logger);
 
         let result = false;
-        if (this.data._id) {
-            result = await tConfigSrv.update(this.data._id, this.getData());
-        } else {
-            let insertResult = await tConfigSrv.insert(this.getData());
-            if (insertResult) {
-                this.setData(insertResult); //so we store _id in class/memory
+
+        try {
+            const tConfigSrv = new SNICHTableConfigService(this.logger);
+
+
+            if (this.data._id) {
+                result = await tConfigSrv.update(this.data._id, this.getData());
+            } else {
+                let insertResult = await tConfigSrv.insert(this.getData());
+                if (insertResult) {
+                    this.setData(insertResult); //so we store _id in class/memory
+                }
             }
+
+            let saveResult = await this.saveToInstance(); //always save to instance if we're saving.
+
+            result = saveResult;
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
         }
 
-        await this.saveToInstance(); //always save to instance if we're saving.
+        return result;
 
-        this.logger.info(this.type, func, `LEAVING`);
+
     }
 
     /**
@@ -222,127 +237,136 @@ export class SNICHTableConfig {
         var func = 'setupTable';
         this.logger.info(this.type, func, `ENTERING`);
 
-        const asker = new SNICHTableCfgAsker(this.logger);
+        let result = false;
 
-        const table: SNICHConfig.Table = {
-            name: "",
-            additional_display_fields: [],
-            display_field: "",
-            synced_fields: [],
-            label: "",
-            group_by: {
-                extension: "",
+        try {
+
+            const asker = new SNICHTableCfgAsker(this.logger);
+
+            const table: SNICHConfig.Table = {
+                name: "",
+                additional_display_fields: [],
+                display_field: "",
+                synced_fields: [],
                 label: "",
-                name: ""
+                group_by: {
+                    extension: "",
+                    label: "",
+                    name: ""
+                }
             }
-        }
 
-        let tableResult = await this.getInstanceTables(appFile);
+            let tableResult = await this.getInstanceTables(appFile);
 
-        if (!tableResult || tableResult.length === 0) {
-            vscode.window.showErrorMessage('Failed attempting to get list of tables. Please review logs.');
-            this.logger.info(this.type, func, `LEAVING`);
-            return;
-        }
+            if (!tableResult || tableResult.length === 0) {
+                vscode.window.showErrorMessage('Failed attempting to get list of tables. Please review logs.');
+                this.logger.info(this.type, func, `LEAVING`);
+                return;
+            }
 
-        let existingTables = await this.getTables();
+            let existingTables = await this.getTables();
 
-        let selectedTable = await asker.selectTable(tableResult, existingTables);
-        this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
+            let selectedTable = await asker.selectTable(tableResult, existingTables);
+            this.logger.debug(this.type, func, `selectedTable: `, selectedTable);
 
-        if (!selectedTable) {
-            this.logger.info(this.type, func, `LEAVING`);
-            return undefined;
-        }
-
-        table.name = selectedTable.name.value;
-
-        let tableFields = await this.getInstanceTableFields(selectedTable.name.value);
-        this.logger.debug(this.type, func, `tableFields: `, tableFields);
-
-        let groupBy = await asker.selectGroupBy(tableFields);
-
-        if (groupBy === undefined) {
-            this.logger.debug(this.type, func, `Groupby selection aborted. Aborting setup!`);
-            this.logger.info(this.type, func, `LEAVING`);
-            return undefined;
-        }
-
-        if (groupBy) {
-            table.group_by = groupBy;
-        }
-        this.logger.debug(this.type, func, `Group by selection complete. Moving on to asking for nameField`);
-
-        let nameField = await asker.selectNameField(tableFields);
-
-        if (!nameField) {
-            this.logger.info(this.type, func, `LEAVING`);
-            return undefined;
-        }
-
-        const addNameFieldsMsg = `Add additional fields to use for file name?`;
-        let addNameFields = await asker.askYesNo(addNameFieldsMsg);
-
-        if (addNameFields == undefined) {
-            this.logger.info(this.type, func, `LEAVING`);
-            return undefined;
-        }
-
-        if (addNameFields == true) {
-            let nameFields = await asker.selectAdditionalNameFields(tableFields, nameField);
-
-            if (nameFields == undefined) {
+            if (!selectedTable) {
                 this.logger.info(this.type, func, `LEAVING`);
                 return undefined;
             }
 
-            nameFields.forEach((sysDic) => {
-                table.additional_display_fields.push(sysDic.element.value);
-            });
-        }
+            table.name = selectedTable.name.value;
 
+            let tableFields = await this.getInstanceTableFields(selectedTable.name.value);
+            this.logger.debug(this.type, func, `tableFields: `, tableFields);
 
-        let syncedFields = await asker.selectSyncedFields(tableFields);
+            let groupBy = await asker.selectGroupBy(tableFields);
 
-        if (syncedFields == undefined) {
-            this.logger.info(this.type, func, `LEAVING`);
-            return undefined;
-        }
-
-
-        //doing a normal for loop so we can break out if aborted.
-        for (let i = 0; i < syncedFields.length; i++) {
-            let sysDic = syncedFields[i];
-
-            let extension = await asker.selectExtension(sysDic);
-
-            if (extension == undefined) {
-                this.logger.debug(this.type, func, `Abort on extension selection.`);
+            if (groupBy === undefined) {
+                this.logger.debug(this.type, func, `Groupby selection aborted. Aborting setup!`);
                 this.logger.info(this.type, func, `LEAVING`);
                 return undefined;
             }
 
-            let fixedExt = extension.replace(/^\./g, ''); //remove starting periods from string, since we will be adding that.
-
-            let snichField: SNICHConfig.Field = {
-                extension: fixedExt,
-                label: sysDic.column_label.value,
-                name: sysDic.element.value
+            if (groupBy) {
+                table.group_by = groupBy;
             }
-            table.synced_fields.push(snichField);
+            this.logger.debug(this.type, func, `Group by selection complete. Moving on to asking for nameField`);
+
+            let nameField = await asker.selectNameField(tableFields);
+
+            if (!nameField) {
+                this.logger.info(this.type, func, `LEAVING`);
+                return undefined;
+            }
+
+            const addNameFieldsMsg = `Add additional fields to use for file name?`;
+            let addNameFields = await asker.askYesNo(addNameFieldsMsg);
+
+            if (addNameFields == undefined) {
+                this.logger.info(this.type, func, `LEAVING`);
+                return undefined;
+            }
+
+            if (addNameFields == true) {
+                let nameFields = await asker.selectAdditionalNameFields(tableFields, nameField);
+
+                if (nameFields == undefined) {
+                    this.logger.info(this.type, func, `LEAVING`);
+                    return undefined;
+                }
+
+                nameFields.forEach((sysDic) => {
+                    table.additional_display_fields.push(sysDic.element.value);
+                });
+            }
+
+
+            let syncedFields = await asker.selectSyncedFields(tableFields);
+
+            if (syncedFields == undefined) {
+                this.logger.info(this.type, func, `LEAVING`);
+                return undefined;
+            }
+
+
+            //doing a normal for loop so we can break out if aborted.
+            for (let i = 0; i < syncedFields.length; i++) {
+                let sysDic = syncedFields[i];
+
+                let extension = await asker.selectExtension(sysDic);
+
+                if (extension == undefined) {
+                    this.logger.debug(this.type, func, `Abort on extension selection.`);
+                    this.logger.info(this.type, func, `LEAVING`);
+                    return undefined;
+                }
+
+                let fixedExt = extension.replace(/^\./g, ''); //remove starting periods from string, since we will be adding that.
+
+                let snichField: SNICHConfig.Field = {
+                    extension: fixedExt,
+                    label: sysDic.column_label.value,
+                    name: sysDic.element.value
+                }
+                table.synced_fields.push(snichField);
+            }
+
+
+            /**
+             * @todo once we have all our stuff selected, store the table, and save the new config.
+             * @todo present an info message that it's completed, and offer "Sync New Record" and "Sync All New App Files" (NEW Action!);
+             */
+
+            this.addTable(table);
+            let saveResult = await this.save();
+            result = saveResult;
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
         }
 
-
-        /**
-         * @todo once we have all our stuff selected, store the table, and save the new config.
-         * @todo present an info message that it's completed, and offer "Sync New Record" and "Sync All New App Files" (NEW Action!);
-         */
-
-        this.addTable(table);
-        let saveResult = await this.save();
-
-        this.logger.info(this.type, func, `LEAVING`);
-
+        return result
     }
 
     addTable(tConfig: SNICHConfig.Table) {
@@ -367,10 +391,13 @@ export class SNICHTableConfig {
         this.data = data;
     }
 
-    private getInstanceId() {
-        return this.data.instance_id;
+    private setInstanceId(id: string) {
+        this.data.instance_id = id;
     }
 
+    private getInstanceId(): string {
+        return this.data.instance_id;
+    }
 
     async getInstanceTables(appFile?: boolean) {
         var func = 'getInstanceTables';

@@ -95,7 +95,7 @@ export class SNICHConnection {
             { label: "$(lock) OAuth", description: "Use OAuth to authenticate. SNICH never sees your username or password.", value: "OAuth" },
         ];
 
-        let authSelect = await vscode.window.showQuickPick(authOptions, { placeHolder: "Select an authentcation option", ignoreFocusOut: false });
+        let authSelect = await vscode.window.showQuickPick(authOptions, { placeHolder: "Select an authentication option", ignoreFocusOut: true });
 
         if (!authSelect) {
             this.logger.info(this.type, func, "LEAVING");

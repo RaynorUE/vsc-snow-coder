@@ -31,12 +31,12 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                     label: `${rec.label.display_value}`,
                     value: rec,
                     description: tableExists ? `Table already configured. Select to reconfigure.` : ``,
-                    detail: `${rec.name.display_value} - ${rec.sys_package.display_value} [${rec.sys_scope.display_value}]`
+                    detail: `${rec.name.display_value} - ${rec.sys_package.display_value} [${rec.sys_scope.display_value}]`,
                 };
                 return qpItem;
             })
 
-            let tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select a table.` });
+            let tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDetail: true, placeHolder: `Select a table.` });
 
             if (tableSelection) {
                 result = tableSelection.value;
@@ -72,9 +72,10 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                 let groupByFields: qpWithValue[] = []
                 fields.forEach((rec) => {
                     let qpItem: qpWithValue = {
-                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value}`,
                         value: rec,
                         description: `${rec.internal_type.value}`,
+                        detail: `${rec.element.display_value}`
                     };
 
                     if (rec.internal_type.value !== 'reference') {
@@ -82,7 +83,7 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                     }
                 });
 
-                let groupBySelection = await vscode.window.showQuickPick(groupByFields, { ignoreFocusOut: true, matchOnDescription: true, placeHolder: `Select fields for name` });
+                let groupBySelection = await vscode.window.showQuickPick(groupByFields, { ignoreFocusOut: true, matchOnDetail: true, placeHolder: `Select fields for name` });
                 if (!groupBySelection) {
                     this.logger.debug(this.type, func, `Group by selection aborted. Moving on...`);
                     result = undefined;
@@ -134,15 +135,17 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
             } else {
                 let nameFields = fields.map((rec) => {
                     let qpItem: qpWithValue = {
-                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value}`,
                         value: rec,
                         description: `${rec.internal_type.value}`,
+                        detail: `${rec.element.display_value}`
                     };
                     return qpItem;
                 });
 
                 let nameFieldAnswer = await vscode.window.showQuickPick(nameFields, {
                     ignoreFocusOut: true,
+                    matchOnDetail: true,
                     placeHolder: "Select field to use for file name. You will be asked for additional fields to make up name next."
                 });
 
@@ -185,9 +188,10 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                     //do nothing
                 } else {
                     let qpItem: qpWithValue = {
-                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value} [${rec.element.display_value}]`,
+                        label: `${this._iconMap(rec.internal_type.value)} ${rec.column_label.display_value}`,
                         value: rec,
                         description: `${rec.internal_type.value}`,
+                        detail: `${rec.element.display_value}`
                     };
                     nameFieldsQP.push(qpItem);
                 }
@@ -197,7 +201,6 @@ export class SNICHTableCfgAsker extends SNICHAskerCore {
                 canPickMany: true,
                 ignoreFocusOut: true,
                 placeHolder: `Please select additional fields to use for the file name. Seperator from settings [ ${fieldSep} ]`,
-                matchOnDescription: true,
                 matchOnDetail: true
             }
 
