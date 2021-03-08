@@ -7,6 +7,8 @@ export class SNICHRestClient {
     logger: SNICHLogger;
     client = rp;
     type = 'SNICHRestClient';
+    authDisabled = true;
+
     constructor(logger: SNICHLogger, conn: SNICHConnection) {
         var func = 'constructor';
         this.logger = logger;
@@ -35,28 +37,35 @@ export class SNICHRestClient {
      * Must be called after every request, or we will re-enable auth.
      */
     disableAuth() {
+        this.authDisabled = true;
         const basicOptions = { ...this.getClientDefaults(), auth: undefined };
         this.client = rp.defaults(basicOptions);
     }
 
     enableAuth() {
-        var func = 'enableAuth';
-        this.logger.info(this.type, func, "ENTERING");
-        const authType = this.connection.getAuthType();
-        if (authType == "Basic") {
-            this.logger.debug(this.type, func, "BAsic auth! setting it up!");
-            const basicOptions = { ...this.getClientDefaults(), auth: { user: this.connection.getUserName(), pass: this.connection.getPassword() } };
-            this.client = rp.defaults(basicOptions);
-        } else if (authType == "OAuth") {
-            this.logger.debug(this.type, func, "OAuth! setting it up!");
-            const oAuthToken = this.connection.getOAuthToken();
-            const OAuthOptions = { ...this.getClientDefaults(), auth: { bearer: `${oAuthToken.access_token}` } }
-            this.logger.debug(this.type, func, 'basic options: ', OAuthOptions);
-            this.client = rp.defaults(OAuthOptions);
-        } else {
-            throw new Error("Auth type not defined. Unable to create SNICHRestClient");
+        if (this.authDisabled) {
+            var func = 'enableAuth';
+            this.logger.info(this.type, func, "ENTERING");
+            this.logger.debug(this.type, func, `this.authDisabled: `, this.authDisabled);
+
+            this.authDisabled = false;
+
+            const authType = this.connection.getAuthType();
+            if (authType == "Basic") {
+                this.logger.debug(this.type, func, "BAsic auth! setting it up!");
+                const basicOptions = { ...this.getClientDefaults(), auth: { user: this.connection.getUserName(), pass: this.connection.getPassword() } };
+                this.client = rp.defaults(basicOptions);
+            } else if (authType == "OAuth") {
+                this.logger.debug(this.type, func, "OAuth! setting it up!");
+                const oAuthToken = this.connection.getOAuthToken();
+                const OAuthOptions = { ...this.getClientDefaults(), auth: { bearer: `${oAuthToken.access_token}` } }
+                this.logger.debug(this.type, func, 'basic options: ', OAuthOptions);
+                this.client = rp.defaults(OAuthOptions);
+            } else {
+                throw new Error("Auth type not defined. Unable to create SNICHRestClient");
+            }
+            this.logger.info(this.type, func, "LEAVING");
         }
-        this.logger.info(this.type, func, "LEAVING");
     }
 
 

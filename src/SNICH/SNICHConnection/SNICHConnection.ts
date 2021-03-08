@@ -661,6 +661,7 @@ export class SNICHConnection {
     async getPreference(name: string): Promise<string | undefined> {
         const func = 'getPreference';
         this.logger.info(this.type, func, `ENTERING`);
+        this.logger.debug(this.type, func, `name: `, name);
 
         let result = undefined;
 
@@ -669,7 +670,13 @@ export class SNICHConnection {
             const sConn = this;
             let rClient = new SNICHRestClient(this.logger, sConn);
 
-            let prefResult = await rClient.get<any>('/api/now/ui/user/current/preferences');
+            var qConfig: requestPromise.RequestPromiseOptions = {
+                qs: {
+                    sysparm_pref_name: name
+                }
+            }
+
+            let prefResult = await rClient.get<any>('/api/now/ui/user/current/preferences', qConfig);
             this.logger.debug(this.type, func, `prefResult: `, prefResult);
             if (prefResult) {
                 result = prefResult[name];
@@ -679,7 +686,7 @@ export class SNICHConnection {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = undefined;
         } finally {
-            this.logger.info(this.type, func, `LEAVING`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
         return result;
     }

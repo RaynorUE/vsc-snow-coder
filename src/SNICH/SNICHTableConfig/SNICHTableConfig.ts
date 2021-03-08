@@ -47,12 +47,14 @@ export class SNICHTableConfig {
                 this.setInstanceId(instanceId);
                 const tConfigSrv = new SNICHTableConfigService(this.logger);
                 let foundTConfig = await tConfigSrv.getByInstanceId(this.getInstanceId());
+                this.logger.debug(this.type, func, `foundTConfig: `, foundTConfig);
                 let instanceTConfig: SNICHConfig.TableConfig | undefined = undefined;
 
 
                 //if load from instance, always make that call to get that data...
 
                 if (loadFromInstance || !foundTConfig || (foundTConfig && foundTConfig.tables.length == 0)) {
+                    this.logger.debug(this.type, func, `Loading from instance == true, or existing table config not found. Seing if there is a table config on the instance...`);
                     var sConn = new SNICHConnection(this.logger);
                     await sConn.load(this.getInstanceId());
                     let tablesPref = await sConn.getPreference(this.snPreferenceNames.tConfig);
@@ -61,26 +63,25 @@ export class SNICHTableConfig {
                     }
                 }
 
-                if (foundTConfig) {
+                if (foundTConfig && foundTConfig.tables.length > 0) {
+                    this.logger.debug(this.type, func, `Found an existing table config. Means this is unlikely first time setup, merging instance data on top of local config.`);
                     //we found an existing tableConfig, so we assume existing instance config, and we'll merge over from instance
                     const mergedData = { ...foundTConfig, ...instanceTConfig }; //first set to foundTConfig, then overlay instanceTConfig;
 
                     //what do we do about instance_id? For example, if the tConfig stored on Instance was from one computer
                     //and we're on a seperate computer, they'll have different instance_ids.. so we always overwrite with incoming... yea
-                    mergedData.instance_id = instanceId;
+                    mergedData.instance_id = this.getInstanceId();
                     this.setData(mergedData);
                     result = true;
                 } else if (instanceTConfig) {
+                    this.logger.debug(this.type, func, `Did not find a local table config, but did find one on the SN Instance. Using that...`);
                     //use what was found on the instance if we do not have a local config stored already
                     this.setData(instanceTConfig);
-                    this.data.instance_id = instanceId;
-                    await this.save();
+                    //await this.save(); /** NOTE: saving should be called by calling functions. This will help reduce whacky looping in the event someone does call externally */
                 } else {
-                    //else we did not find a tConfig so we need to setup default tables and store!
-                    this.logger.debug(this.type, func, `No existing table config found either locally or on instance. Setting up default!`);
+                    this.logger.debug(this.type, func, `Did not find a local table config, or one on the instance. Adding in default tables and saving.`);
                     await this.addDefaultTables();
-                    this.data.instance_id = instanceId;
-                    await this.save();
+                    //await this.save(); /** NOTE: saving should be called by calling functions. This will help reduce whacky looping in the event someone does call externally */
                     result = true;
                 }
             }
@@ -164,36 +165,6 @@ export class SNICHTableConfig {
         }
 
         return result;
-    }
-
-    /**
-     * Make a call to the 
-     */
-    async loadFromInstance(): Promise<SNICHConfig.TableConfig | undefined> {
-
-        const func = 'loadFromInstance';
-        this.logger.info(this.type, func, `ENTERING`);
-
-        let result = undefined;
-
-        try {
-
-            //Always grabs the tableConfig JSON array from the instance, and loads them into the DB
-            /** 
-             * @todo Call SNICHPreferences here, which will have a method to load table config. Which will handle preference id, username, connection
-             * This method is to handle writing to back to the DB once pulled. 
-             */
-
-        } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = undefined;
-        } finally {
-            this.logger.info(this.type, func, `LEAVING`);
-        }
-
-        return result;
-
-
     }
 
     async saveToInstance(): Promise<boolean> {
@@ -370,7 +341,7 @@ export class SNICHTableConfig {
     }
 
     addTable(tConfig: SNICHConfig.Table) {
-        var func = 'addTaable';
+        var func = 'addTable';
         this.logger.info(this.type, func, `ENTERING`);
 
         let foundIndex = this.data.tables.findIndex((table) => table.name == tConfig.name);
@@ -507,7 +478,7 @@ export class SNICHTableConfig {
         try {
 
             let bsMan = new BackFileMan();
-            let defaultTableText = await bsMan.readFile("SNICH_Background", "data_files", "default_tables.json");
+            let defaultTableText = await bsMan.readFile("data_files", "defaults", "default_tables.json");
             if (defaultTableText) {
                 let defaultTableData: SNICHConfig.Table[] = JSON.parse(defaultTableText.toString());
                 defaultTableData.forEach((defaultTable) => {

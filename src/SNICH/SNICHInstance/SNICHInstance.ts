@@ -199,14 +199,20 @@ export class SNICHInstance {
 
 
 
-        this.logger.debug(this.type, func, "Saving instance and connection data!");
+        this.logger.debug(this.type, func, "Saving instance!");
         await this.save();
+
+        this.logger.debug(this.type, func, `Saving connection!`);
         await connection.save();
 
 
         /** ==== Seutp Table config, including loading config from instance! ==== */
+        this.logger.debug(this.type, func, `About to setup table config!`);
         let tConfig = new SNICHTableConfig(this.logger);
         await tConfig.load(this.getId(), true);
+
+        this.logger.debug(this.type, func, `Saving table!`);
+        await tConfig.save();
 
         /** ==== Setup workspace folders ==== */
         let wsFileman = new WSFileMan(this.logger);
