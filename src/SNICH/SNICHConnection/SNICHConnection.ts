@@ -679,7 +679,7 @@ export class SNICHConnection {
             let prefResult = await rClient.get<any>('/api/now/ui/user/current/preferences', qConfig);
             this.logger.debug(this.type, func, `prefResult: `, prefResult);
             if (prefResult) {
-                result = prefResult[name];
+                result = prefResult.result[name];
             }
 
         } catch (e) {
@@ -695,17 +695,30 @@ export class SNICHConnection {
         const func = 'savePreference';
         this.logger.info(this.type, func, `ENTERING`);
 
-        let result = false;
+        let result = undefined;
 
         try {
 
+            const sConn = this;
+            let rClient = new SNICHRestClient(this.logger, sConn);
+
+            const prefBody: any = {};
+            prefBody[name] = value;
+            var rpConfig: requestPromise.RequestPromiseOptions = {
+                body: prefBody
+            }
+            let prefResult = await rClient.post('/api/now/ui/user/current/preferences', rpConfig);
+
+            if (prefResult) {
+                result = prefResult;
+            }
 
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = false;
+            result = undefined;
         } finally {
-            this.logger.info(this.type, func, `LEAVING`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
 
         return result;

@@ -71,12 +71,15 @@ export class SNICHTableConfig {
                     //what do we do about instance_id? For example, if the tConfig stored on Instance was from one computer
                     //and we're on a seperate computer, they'll have different instance_ids.. so we always overwrite with incoming... yea
                     mergedData.instance_id = this.getInstanceId();
+                    this.logger.debug(this.type, func, `mergedData: `, mergedData);
                     this.setData(mergedData);
                     result = true;
                 } else if (instanceTConfig) {
                     this.logger.debug(this.type, func, `Did not find a local table config, but did find one on the SN Instance. Using that...`);
                     //use what was found on the instance if we do not have a local config stored already
+                    instanceTConfig.instance_id = this.getInstanceId();
                     this.setData(instanceTConfig);
+                    result = true;
                     //await this.save(); /** NOTE: saving should be called by calling functions. This will help reduce whacky looping in the event someone does call externally */
                 } else {
                     this.logger.debug(this.type, func, `Did not find a local table config, or one on the instance. Adding in default tables and saving.`);
@@ -175,11 +178,15 @@ export class SNICHTableConfig {
 
         try {
 
-            //always save all tableConfigs in a JSON Array system preference.
-            /** 
-             * @todo call SNICHPreferences here, which will have a method to save tableConfig, which will handle preference id, username, all the things...
-             * This method is really just to gather up the tables and save them to the user preferences on SN.
-             */
+            var sConn = new SNICHConnection(this.logger);
+            await sConn.load(this.getInstanceId());
+
+            let saveResult = await sConn.savePreference(this.snPreferenceNames.tConfig, JSON.stringify(this.getData()));
+            this.logger.debug(this.type, func, `saveResult: `, saveResult);
+
+            if (saveResult) {
+                result = true;
+            }
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
@@ -526,7 +533,7 @@ export class SNICHTableConfig {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = undefined;
         } finally {
-            this.logger.info(this.type, func, `LEAVINg`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
 
         return result;
