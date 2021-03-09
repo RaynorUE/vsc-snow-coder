@@ -165,20 +165,40 @@ export class WSFileMan {
     }
 
     async configureDotVScodeSettings() {
+        const func = 'configureDotVScodeSettings';
+        this.logger.info(this.type, func, `ENTERING`);
 
-        let settings = vscode.workspace.getConfiguration();
-        let filesExclude: WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
+        let result = false;
 
+        try {
 
-        /**TODO: Only overwrite if "undefined" */
-        filesExclude['**/.snich'] == undefined ? true : filesExclude['**/.snich'];
-        filesExclude['**/.vscode'] == undefined ? true : filesExclude['**/.vscode'];
-        filesExclude['**/jsconfig.json'] == undefined ? true : filesExclude['**/jsconfig.json'];
+            let settings = vscode.workspace.getConfiguration();
+            let filesExclude: WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
 
-        /**TODO: Also configure the "search.exclude" */
+            filesExclude['**/.snich'] = filesExclude['**/.snich'] == undefined ? true : filesExclude['**/.snich'];
+            filesExclude['**/.vscode'] = filesExclude['**/.vscode'] == undefined ? true : filesExclude['**/.vscode'];
+            filesExclude['**/jsconfig.json'] = filesExclude['**/jsconfig.json'] == undefined ? true : filesExclude['**/jsconfig.json'];
 
-        //update workspace .vscode settings
-        return await settings.update('files.exclude', filesExclude, false);
+            let searchExclude: WSDotVscodeSettings.SearchExclude = settings.get('search.exclude') || {};
+
+            searchExclude['**/.snich'] = searchExclude['**/.snich'] == undefined ? true : searchExclude['**/.snich'];
+            searchExclude['**/.vscode'] = searchExclude['**/.vscode'] == undefined ? true : searchExclude['**/.vscode'];
+            searchExclude['**/jsconfig.json'] = searchExclude['**/jsconfig.json'] == undefined ? true : searchExclude['**/jsconfig.json'];
+
+            //update workspace .vscode settings
+            await settings.update('files.exclude', filesExclude, false);
+            await settings.update('search.exclude', searchExclude, false);
+            this.logger.debug(this.type, func, `Finished settings updates`);
+            result = true;
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`, result);
+        }
+
+        return result;
+
     }
 
     async configureJSConfigJSON(wsRoot: vscode.Uri) {
@@ -213,32 +233,12 @@ export class WSFileMan {
             let settings = vscode.workspace.getConfiguration();
             let filesExclude: WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
 
-            /**TODO: Only overwrite if "undefined" */
             filesExclude['**/.snich'] = !flag;
             filesExclude['**/.vscode'] = !flag;
             filesExclude['**/jsconfig.json'] = !flag;
 
             await settings.update('files.exclude', filesExclude, false);
             result = true;
-
-
-        } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = false;
-        } finally {
-            this.logger.info(this.type, func, `LEAVING`);
-        }
-        return result;
-    }
-
-    async disableDebugMode() {
-        const func = 'disableDebugMode';
-        this.logger.info(this.type, func, `ENTERING`);
-
-        let result = false;
-
-        try {
-
 
 
         } catch (e) {
