@@ -98,4 +98,43 @@ export class SNICHInstanceAsker extends SNICHAskerCore {
         return result;
     }
 
+    async confirmDelete(instanceName: string, instanceUrl?: string) {
+        const func = 'confirmDelete';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: undefined | boolean = undefined;
+
+        try {
+
+            let msg = `Type DELETE to confirm deleting ${instanceName}`;
+            if (instanceUrl) {
+                msg += ` [${instanceUrl}]`;
+            }
+
+            let askDelete = await vscode.window.showInputBox({
+                ignoreFocusOut: true, prompt: msg, validateInput: (value) => {
+                    if (value === 'DELETE') {
+                        return '';
+                    } else {
+                        return 'Invalid. Type DELETE in all upper case.';
+                    }
+                }
+            });
+
+            if (askDelete && askDelete === 'DELETE') {
+                result = true;
+            } else {
+                result = undefined; //aborted
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
 }

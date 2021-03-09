@@ -83,6 +83,27 @@ export class SNICHConnection {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    async delete(): Promise<undefined | boolean> {
+        const func = 'delete';
+        this.logger.info(this.type, func, `ENTERINg`);
+        let result = undefined;
+
+        try {
+
+            let connService = new SNICHConnectionsService(this.logger);
+            let deleteResult = connService.delete(this.getId());
+            result = deleteResult;
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
     async setupAuth(): Promise<boolean> {
         var func = "setupAuth";
         this.logger.info(this.type, func, "ENTERING");
@@ -812,6 +833,14 @@ export class SNICHConnection {
 
     getId() {
         return this.data._id;
+    }
+
+    getInstanceId() {
+        return this.data.instance_id;
+    }
+
+    setInstanceId(id: string) {
+        this.data.instance_id = id;
     }
 
     calcExpiresOn(durSecs: number) {

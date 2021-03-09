@@ -104,4 +104,32 @@ export class ActivateCommandsInstance {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    async deleteInstance() {
+        let func = 'deleteInstance';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let sInstance = new SNICHInstance(this.logger);
+        let instanceLoaded = await sInstance.load();
+
+        if (!instanceLoaded) {
+            if (instanceLoaded == false) {
+                vscode.window.showWarningMessage('No instances configured.');
+            }
+            else if (instanceLoaded == undefined) {
+                vscode.window.showWarningMessage('Table config aborted. No Instance selected.');
+            }
+            return undefined;
+        }
+
+        let deleteResult = await sInstance.delete();
+        if (deleteResult) {
+            vscode.window.showInformationMessage(`Instance ${sInstance.getName()} and all related files have been deleted.`);
+        } else if (deleteResult === undefined) {
+            vscode.window.showInformationMessage(`Instance deletion aborted. Nothing has been deleted.`);
+        } else {
+            vscode.window.showErrorMessage('An error occured attempting to delete an instance. Please review logs!');
+        }
+        this.logger.info(this.type, func, `LEAVING`);
+    }
+
 }

@@ -71,6 +71,82 @@ export class SNICHInstance {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    async delete(): Promise<undefined | boolean> {
+        const func = 'delete';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = undefined;
+
+        try {
+
+            const asker = new SNICHInstanceAsker(this.logger);
+            const sConn = new SNICHConnection(this.logger);
+            await sConn.load(this.getId());
+            const confirmDelete = asker.confirmDelete(this.getName(), sConn.getURL());
+
+            if (confirmDelete) {
+                let inService = new SNICHInstancesService(this.logger);
+                let delResult = await inService.delete(this.getId());
+                if (delResult) {
+                    let cascadeResult = await this.cascadeDelete();
+                    if (cascadeResult && cascadeResult.length) {
+                        this.logger.info(this.type, func, `Deleted following`);
+                    } else {
+                        result = undefined;
+                    }
+                } else {
+                    result = delResult;
+                }
+            }
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
+    private async cascadeDelete(): Promise<cascadeDeleteResult[] | undefined> {
+        const func = 'cascadeDelete';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = undefined;
+
+        try {
+
+            let deletedItems: cascadeDeleteResult[] = [];
+
+            /** ==== Deleting SNICHConnectin ==== */
+            let sConn = new SNICHConnection(this.logger);
+            await sConn.load(this.getId());
+            let sConnResult = await sConn.delete();
+            if (sConnResult) {
+                deletedItems.push({ _id: sConn.getId(), instance_id: sConn.getInstanceId(), type: "SNICHConnection" });
+            }
+
+            /** ==== Delete SNICHTableConfig ==== */
+
+            let tConfig = new SNICHTableConfig(this.logger);
+            await tConfig.load(this.getId());
+            let tConfigResult = await tConfig.delete();
+            if (tConfigResult) {
+                deletedItems.push({ _id: tConfig.getId(), instance_id: tConfig.getInstanceId(), type: "SNICHTableConfig" });
+            }
+
+            result = deletedItems;
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
 
     async selectInstance(): Promise<boolean | undefined> {
         const func = 'selectInstance';
@@ -233,16 +309,12 @@ export class SNICHInstance {
 
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }
-
-
     abortSetup(msg?: string) {
         vscode.window.showWarningMessage('Instance setup aborted. ' + (msg || ""));
         return false;
     }
-
     setId(id: string) { this.data._id = id }
     getId() { return this.data._id }
-
     setRootPath(uri: vscode.Uri) {
         this.data.rootPath.fspath = uri.fsPath || "";
         this.data.rootPath.path = uri.path || "";
@@ -250,7 +322,6 @@ export class SNICHInstance {
     getRootPath(): vscode.Uri {
         return vscode.Uri.parse(this.data.rootPath.path);
     }
-
     /**
      * Set the internal data object from some source DB, JSON file, etc.
      * @param data Data loaded from somewhere
@@ -260,7 +331,6 @@ export class SNICHInstance {
         const newData = { ...data };
         this.data = newData;
     }
-
     getData() {
         return this.data
     }

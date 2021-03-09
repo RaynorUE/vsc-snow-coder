@@ -130,6 +130,27 @@ export class SNICHTableConfig {
 
     }
 
+    async delete() {
+        const func = 'delete';
+        this.logger.info(this.type, func, `ENTERINg`);
+        let result = undefined;
+
+        try {
+
+            let tConfigService = new SNICHTableConfigService(this.logger);
+            let deleteResult = await tConfigService.delete(this.getId());
+            result = deleteResult;
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
+    }
+
     /**
      * Func called to "select a table" includes the VSCode quick pick prompts
      * will return selected table or undefined to be handled by calling func
@@ -369,11 +390,11 @@ export class SNICHTableConfig {
         this.data = data;
     }
 
-    private setInstanceId(id: string) {
+    setInstanceId(id: string) {
         this.data.instance_id = id;
     }
 
-    private getInstanceId(): string {
+    getInstanceId(): string {
         return this.data.instance_id;
     }
 
@@ -503,6 +524,10 @@ export class SNICHTableConfig {
         }
 
         return result
+    }
+
+    getId() {
+        return this.data._id;
     }
 
     upgradeData(oldData: any): SNICHConfig.TableConfig | undefined {

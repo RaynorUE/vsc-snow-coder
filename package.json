@@ -4,9 +4,9 @@
     "displayName": "S.N.I.C.H. Canary",
     "description": "ServiceNow Integrated Code Helper - Canary. Get the latest as I build stuff ready to be tested! Provide feedback to integratenate@gmail.com",
     "icon": "images/icon-canary.png",
-    "version": "1.40.143",
+    "version": "1.40.145",
     "liveVersion": "1.1.0",
-    "canaryVersion": "1.40.143",
+    "canaryVersion": "1.40.145",
     "betaVersion": "1.0.6",
     "keywords": [
         "SNICH",
@@ -79,12 +79,17 @@
             },
             {
                 "command": "snich.instance.setup",
-                "title": "Setup New Instance",
+                "title": "$(gist-new) Setup New ServiceNow Instance",
+                "category": "SNICH"
+            },
+            {
+                "command": "snich.instance.delete",
+                "title": "$(trashcan) Delete an ServiceNow Instance Configuration",
                 "category": "SNICH"
             },
             {
                 "command": "snich.instance.test_connection",
-                "title": "Test Connection",
+                "title": "$(debug-disconnect) Test Connection",
                 "category": "SNICH"
             },
             {

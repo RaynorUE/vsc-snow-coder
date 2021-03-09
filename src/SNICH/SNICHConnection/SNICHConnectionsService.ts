@@ -138,8 +138,35 @@ export class SNICHConnectionsService {
         return records;
     }
 
-    async delete(id: string) {
-        const deleteCount = await <Promise<number>>this.DB.asyncRemove({ _id: id });
-        return deleteCount;
+    async delete(id?: string) {
+        const func = 'delete';
+        this.logger.info(this.type, func, `ENTERING`);
+        this.logger.debug(this.type, func, `id: `, id);
+
+        let result = false;
+
+        try {
+            if (id) {
+                this.logger.info(this.type, func, `Id provided, deleting instance record.`);
+                const deleteCount = await <Promise<number>>this.DB.asyncRemove({ _id: id });
+                if (deleteCount > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                this.logger.info(this.type, func, `Odd... no Id provied. Not deleting anything returning false!`);
+                result = false;
+            }
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
     }
 }
