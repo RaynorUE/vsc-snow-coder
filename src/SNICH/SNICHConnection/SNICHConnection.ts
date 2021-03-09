@@ -62,7 +62,6 @@ export class SNICHConnection {
             } else {
                 this.logger.debug(this.type, func, `Cannot find connection by id, but id provided, creating new connection.`);
                 this.data.instance_id = instanceId;
-                await this.save();
             }
         }
         this.logger.info(this.type, func, `LEAVING`);

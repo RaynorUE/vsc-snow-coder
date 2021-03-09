@@ -82,7 +82,7 @@ export class SNICHInstance {
             const asker = new SNICHInstanceAsker(this.logger);
             const sConn = new SNICHConnection(this.logger);
             await sConn.load(this.getId());
-            const confirmDelete = asker.confirmDelete(this.getName(), sConn.getURL());
+            const confirmDelete = await asker.confirmDelete(this.getName(), sConn.getURL());
 
             if (confirmDelete) {
                 let inService = new SNICHInstancesService(this.logger);
@@ -90,7 +90,8 @@ export class SNICHInstance {
                 if (delResult) {
                     let cascadeResult = await this.cascadeDelete();
                     if (cascadeResult && cascadeResult.length) {
-                        this.logger.info(this.type, func, `Deleted following`);
+                        this.logger.info(this.type, func, `Deleted following: `, cascadeResult);
+                        result = true;
                     } else {
                         result = undefined;
                     }

@@ -71,6 +71,7 @@ export class SNICHTableConfig {
                     //what do we do about instance_id? For example, if the tConfig stored on Instance was from one computer
                     //and we're on a seperate computer, they'll have different instance_ids.. so we always overwrite with incoming... yea
                     mergedData.instance_id = this.getInstanceId();
+                    mergedData._id = foundTConfig._id;
                     this.logger.debug(this.type, func, `mergedData: `, mergedData);
                     this.setData(mergedData);
                     result = true;
@@ -78,6 +79,7 @@ export class SNICHTableConfig {
                     this.logger.debug(this.type, func, `Did not find a local table config, but did find one on the SN Instance. Using that...`);
                     //use what was found on the instance if we do not have a local config stored already
                     instanceTConfig.instance_id = this.getInstanceId();
+                    instanceTConfig._id = this.getId();
                     this.setData(instanceTConfig);
                     result = true;
                     //await this.save(); /** NOTE: saving should be called by calling functions. This will help reduce whacky looping in the event someone does call externally */
