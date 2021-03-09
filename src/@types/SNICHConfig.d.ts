@@ -51,28 +51,29 @@ declare namespace SNICHConfig {
 
     }
 
-    interface Application {
+    interface Package {
         _id: string | undefined;
         instance_id: string;
         name: string;
         sys_id: string;
-        sys_scope: string;
-        sys_package: string;
-        folderName: string;
+        sys_class: {
+            name: "sys_scope" | "sys_app" | "sys_package" | "v_plugin" | "sys_store_app",
+            label: "Application" | "Custom Application" | "Package" | "Sys Plugin" | "StoreApplication"
+        };
+        source: string; //if no underscores, make it global, since these will be "global" apps otherwise it will accurately reflect the "Scope prefix"
+        scope: string;
         fsPath: string;
     }
 
     interface File {
         _id: string | undefined;
         instance_id: string;
+        name: string; //name of the file, handy for re-naming?
         application_id: string;
         fsPath: string;
         table: string;
         sys_id: string;
         content_field: string;
-        sys_scope: string;
-        sys_package: string;
-        sys_app: string;
     }
 
     interface TableConfig {

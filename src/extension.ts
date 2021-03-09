@@ -36,6 +36,12 @@ export async function activate(context: vscode.ExtensionContext) {
     } else if (validWorkspace == false) {
         //we have a workspace folder open. Set it up!
         await wsFileMan.setupWorkspace();
+    } else if (validWorkspace == true) {
+        if (logger.logLevel === logger._DEBUG) {
+            await wsFileMan.setupDebugMode();
+        } else {
+            await wsFileMan.disableDebugMode();
+        }
     }
 
 

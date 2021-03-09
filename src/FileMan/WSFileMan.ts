@@ -171,9 +171,9 @@ export class WSFileMan {
 
 
         /**TODO: Only overwrite if "undefined" */
-        filesExclude['**/.snich'] = true;
-        filesExclude['**/.vscode'] = true;
-        filesExclude['**/jsconfig.json'] = true;
+        filesExclude['**/.snich'] == undefined ? true : filesExclude['**/.snich'];
+        filesExclude['**/.vscode'] == undefined ? true : filesExclude['**/.vscode'];
+        filesExclude['**/jsconfig.json'] == undefined ? true : filesExclude['**/jsconfig.json'];
 
         /**TODO: Also configure the "search.exclude" */
 
@@ -200,5 +200,53 @@ export class WSFileMan {
             fileResult = await fs.writeFile(JSConfigFilePath, Buffer.from(JSON.stringify(JSConfigFileData, null, '\t')));
         }
         return fileResult;
+    }
+
+    async setDebugMode(flag: boolean) {
+        const func = 'setupDebugMode';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = false;
+
+        try {
+
+            let settings = vscode.workspace.getConfiguration();
+            let filesExclude: WSDotVscodeSettings.FilesExclude = settings.get('files.exclude') || {};
+
+            /**TODO: Only overwrite if "undefined" */
+            filesExclude['**/.snich'] = !flag;
+            filesExclude['**/.vscode'] = !flag;
+            filesExclude['**/jsconfig.json'] = !flag;
+
+            await settings.update('files.exclude', filesExclude, false);
+            result = true;
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+        return result;
+    }
+
+    async disableDebugMode() {
+        const func = 'disableDebugMode';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result = false;
+
+        try {
+
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+        return result;
     }
 }
