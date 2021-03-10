@@ -2,7 +2,7 @@ import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
 import { SNICHTableConfigService } from "./SNICHTableConfigService";
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
-import { SNICHTableCfgAsker } from "../SNICHAsker/SNICHTableCfgAsker";
+import { SNICHTableCfgAsker } from "./SNICHTableCfgAsker";
 import { tablePreferencesV1 } from "../../@types/v1_deprecated";
 import { BackFileMan } from "../../FileMan/BackFileMan";
 

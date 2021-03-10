@@ -214,5 +214,28 @@
 			"\tthis.logger.info(this.type, func, \"LEAVING\");",
 			"},"
 		]
+	},
+	"Try/Catch Func": {
+		"scope": "typescript",
+		"prefix": "yalaTryCatch",
+		"description": "try/catch block setup",
+		"body": [
+			"const func = '$1';",
+			"this.logger.info(this.type, func, `ENTERING`);",
+			"",
+			"let result: $2 = $3;",
+			"",
+			"try {",
+				"\t",
+				"\t$0",
+				"\t",
+			"} catch (e) {",
+				"\tthis.logger.error(this.type, func, `Onos an error has occured!`, e);",
+				"\tresult = $3;",
+			"} finally {",
+				"\tthis.logger.info(this.type, func, `LEAVING`);",
+			"}",
+			"return result;"
+		]
 	}
 }

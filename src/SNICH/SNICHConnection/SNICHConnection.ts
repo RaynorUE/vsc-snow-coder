@@ -1,6 +1,6 @@
 import requestPromise = require('request-promise-native');
 import { SNQPItem } from '../../@Types';
-import { SNICHCrypto } from '../SNICHCrypto/SNICHCrypto';
+import { SNICHCrypto } from '../SNICHCore/SNICHCrypto';
 import { SNICHRestClient } from './SNICHRestClient';
 import * as vscode from 'vscode';
 import { SNICHLogger } from '../SNICHLogger/SNICHLogger';

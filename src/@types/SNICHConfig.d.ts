@@ -68,8 +68,8 @@ declare namespace SNICHConfig {
     interface File {
         _id: string | undefined;
         instance_id: string;
+        package_id: string;
         name: string; //name of the file, handy for re-naming?
-        application_id: string;
         fsPath: string;
         table: string;
         sys_id: string;

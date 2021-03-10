@@ -4,7 +4,7 @@ import { InstanceFileMan } from '../../FileMan/InstanceFileMan';
 import { WSFileMan } from '../../FileMan/WSFileMan';
 import { SNICHConnection } from '../SNICHConnection/SNICHConnection';
 import { SNICHInstancesService } from './SNICHInstancesService';
-import { SNICHInstanceAsker } from '../SNICHAsker/SNICHInstanceAsker';
+import { SNICHInstanceAsker } from './SNICHInstanceAsker';
 import { SNICHTableConfig } from '../SNICHTableConfig/SNICHTableConfig';
 
 

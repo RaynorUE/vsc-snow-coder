@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { qpWithValue } from '../../extension';
-import { SNICHAskerCore } from './SNICHAskerCore';
+import { SNICHAskerCore } from '../SNICHCore/SNICHAskerCore';
 
 
 export class SNICHInstanceAsker extends SNICHAskerCore {
