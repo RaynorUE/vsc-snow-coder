@@ -7,21 +7,18 @@ import { WSFileMan } from "../../FileMan/WSFileMan";
 
 export class SNICHPackageFile {
 
-    data: SNICHConfig.File = {
+    data: SNICHConfig.PackageFiles = {
         _id: undefined,
-        content_field: "",
-        fsPath: "",
-        instance_id: "",
-        name: "",
         package_id: "",
-        sys_id: "",
-        table: ""
+        instance_id: "",
+        files: []
     };
 
     fields = ["sys_scope", "sys_scope.source", "sys_scope.sys_class_name", "sys_id"];
 
     logger: SNICHLogger;
     type = "SNICHPackageFile";
+    snInstance: undefined | SNICHInstance;
 
 
     constructor(logger: SNICHLogger) {
@@ -32,7 +29,38 @@ export class SNICHPackageFile {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    setSNInstance(snInstance: SNICHInstance) {
+        this.snInstance = snInstance;
+    }
+
     async pullNewFile() {
+        const func = 'pullNewFile';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        if (!this.snInstance) {
+            throw new Error('snInstance not set. Please setSNInstance before calling this method.');
+        }
+
+        let result: boolean | undefined = undefined;
+
+        try {
+
+
+
+            const sConn = new SNICHConnection(this.logger);
+            sConn.load(this.snInstance.getId());
+
+
+
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+        return result;
 
     }
 

@@ -65,6 +65,13 @@ declare namespace SNICHConfig {
         fsPath: string;
     }
 
+    interface PackageFiles {
+        _id: string | undefined;
+        instance_id: string;
+        package_id: string;
+        files: File[]
+    }
+
     interface File {
         _id: string | undefined;
         instance_id: string;

@@ -165,6 +165,9 @@ export class SNICHTableConfig {
 
         try {
 
+            let tableSrvc = new SNICHTableConfigService(this.logger);
+
+
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = undefined;
