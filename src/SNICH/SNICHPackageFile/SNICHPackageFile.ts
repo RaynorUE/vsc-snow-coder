@@ -7,12 +7,7 @@ import { WSFileMan } from "../../FileMan/WSFileMan";
 
 export class SNICHPackageFile {
 
-    data: SNICHConfig.PackageFiles = {
-        _id: undefined,
-        package_id: "",
-        instance_id: "",
-        files: []
-    };
+    data: SNICHConfig.File | undefined;
 
     fields = ["sys_scope", "sys_scope.source", "sys_scope.sys_class_name", "sys_id"];
 
@@ -29,64 +24,9 @@ export class SNICHPackageFile {
         this.logger.info(this.type, func, `LEAVING`);
     }
 
-    setSNInstance(snInstance: SNICHInstance) {
-        this.snInstance = snInstance;
-    }
+    /** will call WSFileman?  */
+    async saveFile(file: SNICHConfig.File) {
 
-    async pullNewFile() {
-        const func = 'pullNewFile';
-        this.logger.info(this.type, func, `ENTERING`);
-
-        if (!this.snInstance) {
-            throw new Error('snInstance not set. Please setSNInstance before calling this method.');
-        }
-
-        let result: boolean | undefined = undefined;
-
-        try {
-
-
-
-            const sConn = new SNICHConnection(this.logger);
-            sConn.load(this.snInstance.getId());
-
-
-
-
-
-        } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = undefined;
-        } finally {
-            this.logger.info(this.type, func, `LEAVING`);
-        }
-        return result;
-
-    }
-
-
-    async pullFile(fileURI: vscode.Uri) {
-        const func = 'pullFile';
-        this.logger.info(this.type, func, `ENTERING`);
-
-        let result: boolean | undefined = undefined;
-
-        try {
-
-
-
-        } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = undefined;
-        } finally {
-            this.logger.info(this.type, func, `LEAVING`);
-        }
-        return result;
-    }
-
-    async pushFile(fileURI: vscode.Uri, value: any) {
-        const func = 'pushFile';
-        this.logger.info(this.type, func, `ENTERING`);
     }
 
     async findFileByURI(fileURI: vscode.Uri) {
