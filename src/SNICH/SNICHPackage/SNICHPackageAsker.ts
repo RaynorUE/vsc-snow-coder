@@ -23,8 +23,32 @@ export class SNICHPackageAsker extends SNICHAskerCore {
 
         try {
 
+            let packagesQps = packagesList.map((snPackage) => {
+                let qpItem: qpWithValue = {
+                    label: `${snPackage.name.display_value}`,
+                    value: snPackage,
+                    description: `${snPackage.source.length == 32 ? `global` : ``}`,
+                    detail: `${rec.name.display_value} - ${rec.sys_package.display_value} [${rec.sys_scope.display_value}]`,
+                };
+            });
 
+            let tableQPs: qpWithValue[] = tables.map((rec) => {
+                let tableExists = existingTables.findIndex((eixsting) => eixsting.name == rec.name.value) > -1;
 
+                let qpItem: qpWithValue = {
+                    label: `${rec.label.display_value}`,
+                    value: rec,
+                    description: tableExists ? `Table already configured. Select to reconfigure.` : ``,
+                    detail: `${rec.name.display_value} - ${rec.sys_package.display_value} [${rec.sys_scope.display_value}]`,
+                };
+                return qpItem;
+            })
+
+            let tableSelection = await vscode.window.showQuickPick(tableQPs, { ignoreFocusOut: true, matchOnDetail: true, placeHolder: `Select a table.` });
+
+            if (tableSelection) {
+                result = tableSelection.value;
+            }
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = undefined;
@@ -35,4 +59,29 @@ export class SNICHPackageAsker extends SNICHAskerCore {
     }
 
 
+    /**
+     * TODO: May not need this, since we can get display value from SN... 
+     * @param className 
+     * @returns 
+     */
+    private mapClassNameLabel(className: string): string {
+
+        if (className == SNICHConfig.sys_package_sys_class_names.Application) {
+            return SNICHConfig.sys_package_sys_class_labels.Application;
+        }
+
+        if (className == SNICHConfig.sys_package_sys_class_names.CustomApplication) {
+            return SNICHConfig.sys_package_sys_class_labels.CustomApplication;
+        }
+
+        if (className == SNICHConfig.sys_package_sys_class_names.StoreApplication) {
+            return SNICHConfig.sys_package_sys_class_labels.StoreApplication;
+        }
+
+        if (className == SNICHConfig.sys_package_sys_class_names.SysPlugins) {
+            return SNICHConfig.sys_package_sys_class_labels.SysPlugins;
+        }
+
+        return "";
+    }
 }
