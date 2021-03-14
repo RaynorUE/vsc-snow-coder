@@ -57,8 +57,8 @@ declare namespace SNICHConfig {
         name: string;
         sys_id: string;
         sys_class: {
-            name: "sys_scope" | "sys_app" | "sys_package" | "v_plugin" | "sys_store_app",
-            label: "Application" | "Custom Application" | "Package" | "Sys Plugin" | "StoreApplication"
+            name: "" | "sys_scope" | "sys_app" | "sys_package" | "v_plugin" | "sys_store_app",
+            label: "" | "Application" | "Custom Application" | "Package" | "Sys Plugin" | "StoreApplication"
         };
         source: string; //if no underscores, make it global, since these will be "global" apps otherwise it will accurately reflect the "Scope prefix"
         scope: string;
