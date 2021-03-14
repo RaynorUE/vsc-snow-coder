@@ -72,8 +72,19 @@ export class SNICHPackage {
 
 
             /** Calling sys_db_object for this data since sys_package is unavailable for web service calls..?? 
-             * TODO: this is assuming every package has a table.. oh wait, crap they don't */
-            const packagesResult = await sConn.getAggregate<sys_package>('sys_package', 'active=true', this.pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` });
+             * TODO: this is assuming every package has a table.. oh wait, crap they don't 
+             * Oh wait, we can call sys_metadata directly..? YES!
+             * 
+             * query: sys_package.sys_class_name!=NULL
+             * fields: just add sys_package in front of all our fields we are getting
+             * looks like this gets us 662 unique packages instead of sys_package 813..
+             * since the whole point is to pull app files (hence package) then this is fine, since if there are no app files
+             * there would be no point in showing it in the list...
+             */
+
+            const pullFields = this.pullFields.map((fieldName) => 'sys_package.' + fieldName);
+            pullFields.push('sys_package'); //to help with unique groupings.
+            const packagesResult = await sConn.getAggregate<sys_package>('sys_package', 'sys_package.active=true', pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` });
 
             if (!packagesResult || packagesResult.length === 0) {
                 throw new Error(`Unable to get packages from instance ${this.snInstance.getName()}`);
