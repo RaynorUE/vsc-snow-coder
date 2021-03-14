@@ -23,6 +23,13 @@ declare interface SNAppFile extends SNRecord {
 
 }
 
+declare interface sys_package extends SNRecord {
+    name: SNAPIFieldDVAll,
+    version: SNAPIFieldDVAll,
+    source: SNAPIFieldDVAll,
+    sys_class_name: SNAPIFieldDVAll
+}
+
 declare interface sys_db_object extends SNRecord {
     name: SNAPIFieldDVAll,
     label: SNAPIFieldDVAll,

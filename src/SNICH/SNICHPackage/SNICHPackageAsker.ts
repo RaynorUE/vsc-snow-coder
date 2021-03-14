@@ -15,5 +15,24 @@ export class SNICHPackageAsker extends SNICHAskerCore {
         this.logger = logger;
     }
 
+    async askForPackage(packagesList: sys_package[]) {
+        const func = 'askForPackage';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: undefined | sys_package = undefined;
+
+        try {
+
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+        return result;
+    }
+
 
 }

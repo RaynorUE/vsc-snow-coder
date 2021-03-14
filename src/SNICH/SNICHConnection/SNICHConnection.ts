@@ -51,20 +51,32 @@ export class SNICHConnection {
     async load(instanceId?: string) {
         var func = 'load';
         this.logger.info(this.type, func, `ENTERING`);
-        if (!instanceId) {
-            this.logger.info(this.type, func, `LEAVING`);
-            throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
-        } else {
-            const connService = new SNICHConnectionsService(this.logger);
-            let foundConnection = await connService.getByInstanceId(instanceId);
-            if (foundConnection) {
-                this.setData(foundConnection);
+
+        let result = false;
+        try {
+            if (!instanceId) {
+                this.logger.info(this.type, func, `LEAVING`);
+                throw new Error('Attempted to load an SNICHConnection without an instance ID. This would be fruitless.');
             } else {
-                this.logger.debug(this.type, func, `Cannot find connection by id, but id provided, creating new connection.`);
-                this.data.instance_id = instanceId;
+                const connService = new SNICHConnectionsService(this.logger);
+                let foundConnection = await connService.getByInstanceId(instanceId);
+                if (foundConnection) {
+                    this.setData(foundConnection);
+                } else {
+                    this.logger.debug(this.type, func, `Cannot find connection by id, but id provided, creating new connection.`);
+                    this.data.instance_id = instanceId;
+                }
             }
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = false;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
         }
-        this.logger.info(this.type, func, `LEAVING`);
+
+        return result;
+
+
     }
 
     async save() {
