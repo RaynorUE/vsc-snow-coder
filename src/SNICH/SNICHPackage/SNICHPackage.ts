@@ -2,6 +2,7 @@ import { SNICHConnection } from "../SNICHConnection/SNICHConnection";
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
+import { SNICHPackageAsker } from "./SNICHPackageAsker";
 
 
 export class SNICHPackage {
@@ -33,6 +34,10 @@ export class SNICHPackage {
 
 
             let packages = await this.getSysPackages();
+            if (packages.length > 0) {
+                const asker = new SNICHPackageAsker(this.logger);
+                let packageAsk = await asker.askForPackage(packages);
+            }
 
 
 
@@ -84,18 +89,27 @@ export class SNICHPackage {
 
             const pullFields = this.pullFields.map((fieldName) => 'sys_package.' + fieldName);
             pullFields.push('sys_package'); //to help with unique groupings.
-            const packagesResult = await sConn.getAggregate<sys_package>('sys_package', 'sys_package.active=true', pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` });
+            const packagesResult = await sConn.getAggregate<any>('sys_package', 'sys_package.active=true', pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` });
 
             if (!packagesResult || packagesResult.length === 0) {
                 throw new Error(`Unable to get packages from instance ${this.snInstance.getName()}`);
             }
 
+            const finalPackages: sys_package[] = packagesResult.map((packRec) => {
+                let tempObj: any = {}
+                pullFields.forEach((field) => {
+                    tempObj[field.replace('sys_package.', '')] = packRec.value
+                })
 
+                return tempObj;
+            });
+
+            result = finalPackages;
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
             result = [];
         } finally {
-            this.logger.info(this.type, func, `LEAVING`);
+            this.logger.info(this.type, func, `LEAVING`, result);
         }
         return result;
     }

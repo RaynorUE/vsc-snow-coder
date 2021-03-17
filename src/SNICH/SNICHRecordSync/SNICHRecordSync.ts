@@ -24,6 +24,13 @@ export class SNICHRecordSync {
 
         try {
 
+            /**
+            * TODO: Consider adding a setting to "call this on activation"... And then in both cases, called on demand or on activation
+            * Do we skip any files that are "Dirty"? Yea, let's do that so we do not inadvertenly wipe their code..
+            * So this should handle that? Calling WSFileMan etc? and add a method to WSFileman for "get dirty workspace files"
+            * Oh wait if this is just NEW app files we never would touch a dirty file..
+            */
+
             let sInstance = new SNICHInstance(this.logger);
             let instanceSelected = await sInstance.selectInstance();
 
