@@ -4,9 +4,9 @@
     "displayName": "S.N.I.C.H. Canary",
     "description": "ServiceNow Integrated Code Helper - Canary. Get the latest as I build stuff ready to be tested! Provide feedback to integratenate@gmail.com",
     "icon": "images/icon-canary.png",
-    "version": "1.40.161",
+    "version": "1.40.171",
     "liveVersion": "1.1.0",
-    "canaryVersion": "1.40.161",
+    "canaryVersion": "1.40.171",
     "betaVersion": "1.0.6",
     "keywords": [
         "SNICH",
@@ -103,8 +103,8 @@
                 "category": "SNICH"
             },
             {
-                "command": "snich.application.load.all",
-                "title": "Load all Application Files (Pull)",
+                "command": "snich.instance.packages.load.all",
+                "title": "Load all Application/Package Files (Pull)",
                 "category": "SNICH"
             },
             {

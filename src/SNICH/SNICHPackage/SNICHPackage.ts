@@ -36,7 +36,12 @@ export class SNICHPackage {
             let packages = await this.getSysPackages();
             if (packages.length > 0) {
                 const asker = new SNICHPackageAsker(this.logger);
-                let packageAsk = await asker.askForPackage(packages);
+                let selectedPackage = await asker.askForPackage(packages);
+                if (selectedPackage == undefined) {
+                    result = undefined;
+                } else if (selectedPackage) {
+                    this.logger.debug(this.type, func, `selected package:`, selectedPackage);
+                }
             }
 
 
@@ -89,7 +94,7 @@ export class SNICHPackage {
 
             const pullFields = this.pullFields.map((fieldName) => 'sys_package.' + fieldName);
             pullFields.push('sys_package'); //to help with unique groupings.
-            const packagesResult = await sConn.getAggregate<any>('sys_package', 'sys_package.active=true', pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` });
+            const packagesResult = await sConn.getAggregate<any>('sys_metadata', 'sys_package.active=true', pullFields, "all", { location: vscode.ProgressLocation.Notification, cancellable: true, title: `Acquiring package list from ${this.snInstance.getName()}` }, "DESC", 'sys_package.sys_updated_on', true);
 
             if (!packagesResult || packagesResult.length === 0) {
                 throw new Error(`Unable to get packages from instance ${this.snInstance.getName()}`);
@@ -98,7 +103,7 @@ export class SNICHPackage {
             const finalPackages: sys_package[] = packagesResult.map((packRec) => {
                 let tempObj: any = {}
                 pullFields.forEach((field) => {
-                    tempObj[field.replace('sys_package.', '')] = packRec.value
+                    tempObj[field.replace('sys_package.', '')] = packRec[field];
                 })
 
                 return tempObj;

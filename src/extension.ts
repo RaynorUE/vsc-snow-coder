@@ -52,6 +52,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('snich.instance.test_connection', () => new ActivateCommandsInstance().testConnection());
     vscode.commands.registerCommand('snich.instance.setup.new_app_file_table', () => new ActivateCommandsInstance().configureAppFileTable());
     vscode.commands.registerCommand('snich.instance.delete', () => new ActivateCommandsInstance().deleteInstance());
+    vscode.commands.registerCommand('snich.instance.packages.load.all', () => new ActivateCommandsInstance().pullAllPackageFiles());
 
     /* vscode.commands.registerCommand('snich.instance.pull_record', new ActivateCommandsInstance().pullRecord);*/
 

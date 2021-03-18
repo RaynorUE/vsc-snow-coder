@@ -3,6 +3,7 @@ import { SNICHInstance } from '../SNICH/SNICHInstance/SNICHInstance';
 import * as vscode from 'vscode';
 import { SNICHTableConfig } from '../SNICH/SNICHTableConfig/SNICHTableConfig';
 import { SNICHConnection } from '../SNICH/SNICHConnection/SNICHConnection';
+import { SNICHRecordSync } from '../SNICH/SNICHRecordSync/SNICHRecordSync';
 
 export class ActivateCommandsInstance {
 
@@ -54,21 +55,28 @@ export class ActivateCommandsInstance {
 
         this.logger.info(this.type, func, 'LEAVING');
     }
-    /*
 
-    async pullRecord() {
-        let logger = new SNICHLogger();
-        let func = 'pullRecord';
-        logger.info(this.lib, func, 'START');
-        if (!instanceList.atLeastOneConfigured()) {
-            return;
+    async pullAllPackageFiles() {
+        const func = 'pullAllPackageFiles';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result: undefined | boolean = undefined;
+
+        try {
+
+            const syncer = new SNICHRecordSync(this.logger);
+            let pullAppFilesReuslt = await syncer.pullApplicationFiles();
+            this.logger.debug(this.type, func, `Pull app files result: `, pullAppFilesReuslt);
+
+
+        } catch (e) {
+            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
         }
-        let filePuller = new SNFilePuller(instanceList, logger);
-
-        await filePuller.syncRecord();
-        logger.info(this.lib, func, 'END', instanceList);
+        return result;
     }
-    */
 
     async configureAppFileTable() {
         let func = 'configureTable';

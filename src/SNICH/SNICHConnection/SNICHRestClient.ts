@@ -76,7 +76,7 @@ export class SNICHRestClient {
         let restResponse = undefined;
         try {
             if (config) {
-                this.logger.debug(this.type, func, `Have config. Using.`);
+                this.logger.debug(this.type, func, `Have config. Using.`, config);
                 restResponse = await this.client.get(url, config);
             } else {
                 restResponse = await this.client.get(url);

@@ -166,6 +166,8 @@ export class SNICHTableConfig {
         try {
 
             let tableSrvc = new SNICHTableConfigService(this.logger);
+            let tableConfig = await tableSrvc.getByInstanceId(this.getInstanceId());
+            this.logger.debug(this.type, func, `tableConfig`, tableConfig);
 
 
         } catch (e) {

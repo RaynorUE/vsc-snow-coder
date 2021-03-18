@@ -1,5 +1,6 @@
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
+import { SNICHPackage } from "../SNICHPackage/SNICHPackage";
 
 
 export class SNICHRecordSync {
@@ -32,11 +33,26 @@ export class SNICHRecordSync {
             */
 
             let sInstance = new SNICHInstance(this.logger);
-            let instanceSelected = await sInstance.selectInstance();
+            let instanceSelected = await sInstance.load();
 
-            if (!instanceSelected) {
+            if (instanceSelected == undefined) {
                 throw new Error('No instance selected. Aborting file sync.');
+            } else if (instanceSelected == false) {
+                this.logger.debug(this.type, func, `No instance fpund!`);
+                result = false;
+            } else if (instanceSelected == true) {
+                const packMan = new SNICHPackage(this.logger, sInstance);
+                let selectedPack = await packMan.selectPackage();
+                this.logger.debug(this.type, func, `selectedPackage: `, selectedPack);
+                if (selectedPack === undefined) {
+                    result = undefined
+                } else if (selectedPack) {
+                    result = true
+
+                }
+
             }
+
 
 
 

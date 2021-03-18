@@ -61,6 +61,7 @@ export class SNICHConnection {
                 const connService = new SNICHConnectionsService(this.logger);
                 let foundConnection = await connService.getByInstanceId(instanceId);
                 if (foundConnection) {
+                    result = true;
                     this.setData(foundConnection);
                 } else {
                     this.logger.debug(this.type, func, `Cannot find connection by id, but id provided, creating new connection.`);
@@ -589,7 +590,7 @@ export class SNICHConnection {
 
     }
 
-    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC"): Promise<T[]> {
+    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC", sortByField?: string, excludeSysId?: boolean): Promise<T[]> {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -608,12 +609,17 @@ export class SNICHConnection {
                 displayValue = false;
             }
 
-            if (!fields.includes('sys_id')) {
+            if (!excludeSysId && !fields.includes('sys_id')) {
                 fields.push('sys_id');
             }
 
-            if (sortUpdated && !fields.includes('sys_updated_on')) {
-                fields.push('sys_updated_on');
+            if (sortUpdated) {
+                if (!sortByField && !fields.includes('sys_updated_on')) {
+                    sortByField = 'sys_updated_on';
+                    fields.push('sys_updated_on');
+                } else if (sortByField) {
+                    fields.push(sortByField);
+                }
             }
 
             const config: requestPromise.RequestPromiseOptions = {
@@ -639,7 +645,7 @@ export class SNICHConnection {
                             var newObj: any = {};
                             recRes.groupby_fields.forEach((field: any) => {
                                 let value = field.value;
-                                if (field.field == 'sys_updated_on') {
+                                if (field.field == sortByField) {
                                     value = Date.parse(value);
                                 }
                                 newObj[field.field] = value;
@@ -656,11 +662,11 @@ export class SNICHConnection {
                             return newObj;
                         });
 
-                        if (sortUpdated) {
+                        if (sortUpdated && sortByField != undefined) {
                             if (sortUpdated == 'ASC') {
-                                mappedResults = mappedResults.sort((a, b) => a.sys_updated_on - b.sys_updated_on);
+                                mappedResults = mappedResults.sort((a, b) => a[sortByField + ''].value - b[sortByField + ''].value);
                             } else if (sortUpdated == 'DESC') {
-                                mappedResults = mappedResults.sort((a, b) => b.sys_updated_on - a.sys_updated_on);
+                                mappedResults = mappedResults.sort((a, b) => b[sortByField + ''].value - a[sortByField + ''].value);
                             }
                         }
 

@@ -125,6 +125,5 @@ declare namespace SNICHConfig {
         StoreApplication = "Store Application"
     }
 
-    type sys_packageSysClassNames = keyof typeof sys_package_sys_class_names;
-    type sys_packageSysClassLabels = keyof typeof sys_package_sys_class_labels;
+
 }

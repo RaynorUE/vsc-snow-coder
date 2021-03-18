@@ -1,4 +1,3 @@
-import { SNICHConnection } from "../SNICHConnection/SNICHConnection";
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
@@ -49,9 +48,11 @@ export class SNICHPackageFile {
                 //something to this effect. Not a fan of joining with a comma
                 //but I guess all that really matters is that we are storing the same way
                 //as we are trying to find it...
-                let relativeFilePathFlattend = relativeFilePath.split('/').join(',');
+                let relativeFilePathFlattened = relativeFilePath.split('/').join(',');
+                this.logger.debug(this.type, func, `relativeFilePathFlattened: `, relativeFilePathFlattened);
 
                 let fileService = new SNICHPackageFileService(this.logger);
+                fileService.getMultiple();
 
             }
 
