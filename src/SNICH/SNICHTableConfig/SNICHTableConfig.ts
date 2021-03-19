@@ -180,7 +180,7 @@ export class SNICHTableConfig {
         return result;
     }
 
-    async getTables() {
+    getTables() {
         let func = 'selectTable';
         this.logger.info(this.type, func, `ENTERING`);
 

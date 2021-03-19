@@ -1,6 +1,8 @@
+import { SNICHConnection } from "../SNICHConnection/SNICHConnection";
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import { SNICHPackage } from "../SNICHPackage/SNICHPackage";
+import { SNICHTableConfig } from "../SNICHTableConfig/SNICHTableConfig";
 
 
 export class SNICHRecordSync {
@@ -47,10 +49,60 @@ export class SNICHRecordSync {
                 if (selectedPack === undefined) {
                     result = undefined
                 } else if (selectedPack) {
-                    result = true
 
+                    const tConfig = new SNICHTableConfig(this.logger);
+                    let tConfigLoaded = await tConfig.load(sInstance.getId());
+
+                    if (!tConfigLoaded) {
+                        throw new Error('Unable to load table config for instance.');
+                    }
+
+                    const tables = tConfig.getTables();
+                    const sConn = new SNICHConnection(this.logger);
+                    const sConLoaded = sConn.load(sInstance.getId());
+                    if (!sConLoaded) {
+                        throw new Error('Unable to load snich connection for instance!');
+                    }
+
+                    const fileRequests = tables.map(async (tableConfig) => {
+                        const currentConfig = { ...tableConfig };
+                        const func = 'fileRequest';
+                        this.logger.info(this.type, func, `ENTERING`);
+                        this.logger.debug(this.type, func, `tableConfig: `, currentConfig);
+                        //we will ultimately return an array of the data and table config, so we do not have to go finding tables again..
+                        const asyncResponseObj = {
+                            recordsResult: [],
+                            tableConfig: currentConfig
+                        }
+
+                        try {
+                            this.logger.debug(this.type, func, `sConn: `, sConn);
+                            const tableName = currentConfig.name;
+                            const query = "sys_package=" + selectedPack?.sys_id;
+                            const fields: string[] = currentConfig.synced_fields.map((field) => {
+                                return field.name;
+                            });
+                            fields.push(currentConfig.display_field);
+
+                            let recordsResult = await sConn.getRecords<any>(tableName, query, fields, false);
+                            this.logger.debug(this.type, func, `reordsResult`);
+                            if (recordsResult && recordsResult.length > 0) {
+                                this.logger.debug(this.type, func, `Records recieved!`);
+                            } else {
+                                this.logger.debug(this.type, func, `For some reason, no records recieved!`);
+                            }
+                        } catch (e) {
+                            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+                        } finally {
+                            this.logger.info(this.type, func, `LEAVING`, asyncResponseObj);
+                        }
+                        return asyncResponseObj;
+
+                    });
+
+                    let promResult = await Promise.all(fileRequests);
+                    this.logger.debug(this.type, func, `promResult:`, promResult);
                 }
-
             }
 
 
@@ -58,7 +110,7 @@ export class SNICHRecordSync {
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
-            result = undefined;
+            result = false;
         } finally {
             this.logger.info(this.type, func, `LEAVING`);
         }

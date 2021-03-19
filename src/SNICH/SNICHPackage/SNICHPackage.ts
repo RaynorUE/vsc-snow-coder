@@ -26,7 +26,7 @@ export class SNICHPackage {
         const func = 'selectPackage';
         this.logger.info(this.type, func, `ENTERING`);
 
-        let result: boolean | undefined = undefined;
+        let result: SNICHConfig.Package | undefined = undefined;
 
         try {
 
@@ -41,6 +41,20 @@ export class SNICHPackage {
                     result = undefined;
                 } else if (selectedPackage) {
                     this.logger.debug(this.type, func, `selected package:`, selectedPackage);
+                    const pack: SNICHConfig.Package = {
+                        _id: undefined,
+                        fsPath: "",
+                        instance_id: this.getInstance().getId() || "",
+                        name: selectedPackage.name.display_value || "",
+                        scope: "",
+                        source: selectedPackage.source.display_value || "",
+                        sys_class: {
+                            label: selectedPackage.sys_class_name.display_value || "",
+                            name: selectedPackage.sys_class_name.value
+                        },
+                        sys_id: selectedPackage.sys_id
+                    }
+                    result = pack;
                 }
             }
 
