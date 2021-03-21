@@ -7,12 +7,15 @@ declare interface SNTableStatsResponse {
         stats: {
             count: number
         },
-        groupby_fields: [SNStatsGroupByField]
+        groupby_fields: SNRecordAggregateField[]
     }]
 }
 
 declare interface SNRecord {
     sys_id: string,
+}
+declare interface SNRecordAggregate {
+    sys_id: SNRecordAggregateField,
 }
 
 declare interface SNAppFile extends SNRecord {
@@ -23,27 +26,27 @@ declare interface SNAppFile extends SNRecord {
 
 }
 
-declare interface sys_package extends SNRecord {
-    name: SNAPIFieldDVAll,
-    version: SNAPIFieldDVAll,
-    source: SNAPIFieldDVAll,
-    sys_class_name: SNAPIFieldDVAll
+declare interface sys_package extends SNRecordAggregate {
+    name: SNRecordAggregateField,
+    version: SNRecordAggregateField,
+    source: SNRecordAggregateField,
+    sys_class_name: SNRecordAggregateField
 }
 
-declare interface sys_db_object extends SNRecord {
-    name: SNAPIFieldDVAll,
-    label: SNAPIFieldDVAll,
-    sys_scope: SNAPIFieldDVAll,
-    "sys_scope.scope": SNAPIFieldDVAll,
-    "sys_package.source": SNAPIFieldDVAll,
-    sys_package: SNAPIFieldDVAll,
+declare interface sys_db_object extends SNRecordAggregate {
+    name: SNRecordAggregateField,
+    label: SNRecordAggregateField,
+    sys_scope: SNRecordAggregateField,
+    "sys_scope.scope": SNRecordAggregateField,
+    "sys_package.source": SNRecordAggregateField,
+    sys_package: SNRecordAggregateField,
 }
 
-declare interface sys_dictionary extends SNRecord {
-    name: SNAPIFieldDVAll,
-    internal_type: SNAPIFieldDVAll,
-    column_label: SNAPIFieldDVAll,
-    element: SNAPIFieldDVAll,
+declare interface sys_dictionary extends SNRecordAggregate {
+    name: SNRecordAggregateField,
+    internal_type: SNRecordAggregateField,
+    column_label: SNRecordAggregateField,
+    element: SNRecordAggregateField,
 }
 
 declare interface SNAPIFieldDVAll {
@@ -51,6 +54,6 @@ declare interface SNAPIFieldDVAll {
     display_value?: string
 }
 
-declare interface SNStatsGroupByField extends SNAPIFieldDVAll {
+declare interface SNRecordAggregateField extends SNAPIFieldDVAll {
     field: string,
 }

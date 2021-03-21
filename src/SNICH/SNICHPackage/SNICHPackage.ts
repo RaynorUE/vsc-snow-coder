@@ -12,7 +12,7 @@ export class SNICHPackage {
     type = "SNICHPackage";
     snInstance: SNICHInstance;
 
-    pullFields = ["name", "source", "sys_class_name", "version"];
+    pullFields = ["name", "source", "sys_class_name", "version", "sys_id"];
 
     constructor(logger: SNICHLogger, snInstance: SNICHInstance) {
         this.logger = logger;
@@ -52,7 +52,7 @@ export class SNICHPackage {
                             label: selectedPackage.sys_class_name.display_value || "",
                             name: selectedPackage.sys_class_name.value
                         },
-                        sys_id: selectedPackage.sys_id
+                        sys_id: selectedPackage.sys_id.value
                     }
                     result = pack;
                 }

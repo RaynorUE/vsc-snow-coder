@@ -48,7 +48,7 @@ export class SNICHConnection {
         this.logger.info(this.type, func, "LEAVING");
     }
 
-    async load(instanceId?: string) {
+    async load(instanceId?: string, useCache?: boolean) {
         var func = 'load';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -573,9 +573,11 @@ export class SNICHConnection {
         }
 
         let restResponse = undefined;
-
+        this.logger.debug(this.type, func, `About to try with config: `, config);
         try {
+            this.logger.debug(this.type, func, `Trying request!`);
             restResponse = await rClient.get<SNTableAPIResponse<T[]>>(`/api/now/table/${tableName}`, config);
+            this.logger.debug(this.type, func, `restResponse: `, restResponse);
 
             if (restResponse) {
                 result = restResponse.result;
