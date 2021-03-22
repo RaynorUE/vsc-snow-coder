@@ -4,6 +4,7 @@ import { RESTClient } from "./RESTClient";
 import * as vscode from "vscode";
 import { SNICHLogger } from "../SNICH/SNICHLogger/SNICHLogger";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { VSCODEPrefs } from "../SNICH/SNICHUtils/VSCODEPrefs";
 
 
 export class ConfiguredTables {
@@ -389,8 +390,9 @@ export class TableConfig {
 
         if (this.additional_display_fields && this.additional_display_fields.length && this.additional_display_fields.length > 0) {
 
-            let settings = vscode.workspace.getConfiguration();
-            let multiFieldNameSep = settings.get('snich.syncedRecordNameSeparator') || "^";
+            //TODO: Remove this after testing
+            //let settings = vscode.workspace.getConfiguration();
+            let multiFieldNameSep = new VSCODEPrefs().getMultiFieldSep();//settings.get('snich.syncedRecordNameSeparator') || "^";
             this.additional_display_fields.forEach((fieldName) => {
                 dv += multiFieldNameSep + record[fieldName];
             });

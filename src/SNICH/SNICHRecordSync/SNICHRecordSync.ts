@@ -1,9 +1,11 @@
+import { WSFileMan } from "../../FileMan/WSFileMan";
 import { SNICHConnection } from "../SNICHConnection/SNICHConnection";
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import { SNICHPackage } from "../SNICHPackage/SNICHPackage";
 import { SNICHTableConfig } from "../SNICHTableConfig/SNICHTableConfig";
-
+import * as vscode from 'vscode';
+import { VSCODEPrefs } from "../SNICHUtils/VSCODEPrefs";
 
 export class SNICHRecordSync {
 
@@ -105,6 +107,57 @@ export class SNICHRecordSync {
 
                     let promResult = await Promise.all(fileRequests);
                     this.logger.debug(this.type, func, `promResult:`, promResult);
+
+                    if (promResult) {
+                        const wsFMan = new WSFileMan(this.logger);
+                        const instanceRoot = sInstance.getRootPath();
+                        const writeFiles: Promise<any>[] = [];
+
+                        const packRoot = vscode.Uri.joinPath(instanceRoot, `${selectedPack.name} (${selectedPack.source})`);
+                        let multiFieldSep = new VSCODEPrefs().getMultiFieldSep();
+
+                        //lets start with block one in case things go absolutely whacky..
+                        const firstResult = promResult[0];
+
+                        const tConfig = firstResult.tableConfig;
+                        const recs = firstResult.recordsResult;
+                        const tableRoot = vscode.Uri.joinPath(packRoot, `${tConfig.label} [${tConfig.name}]`);
+
+                        //process first rec
+                        const rec = recs[0];
+
+                        let fileNameParts = [`${rec[tConfig.display_field]}`];
+                        if (tConfig.additional_display_fields.length > 0) {
+                            this.logger.debug(this.type, func, `Had additional display fields.`);
+
+                            tConfig.additional_display_fields.forEach((field) => {
+                                fileNameParts.push(`${rec[field]}`);
+                            });
+
+                        }
+
+                        //just the one field..
+                        if (tConfig.synced_fields.length == 1) {
+                            let fileName = `${fileNameParts.join(multiFieldSep)}`;
+                            let fullFilePath = vscode.Uri.joinPath(tableRoot, fileName);
+                            this.logger.debug(this.type, func, `fullFilePath: `, fullFilePath);
+
+                            let syncedField = tConfig.synced_fields[0];
+                            let content = Buffer.from(rec[syncedField.name]);
+
+                            writeFiles.push(new Promise((resolve, reject) => resolve(vscode.workspace.fs.writeFile(fullFilePath, content))));
+
+                        } else if (tConfig.synced_fields.length > 1) {
+                            //gotta add the display name/s to the folder name, then the file names by label of field after..
+
+                        }
+
+
+
+
+                    }
+
+
                 }
             }
 
