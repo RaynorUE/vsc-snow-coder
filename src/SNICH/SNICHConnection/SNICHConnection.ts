@@ -592,7 +592,7 @@ export class SNICHConnection {
 
     }
 
-    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC", sortByField?: string, excludeSysId?: boolean): Promise<T[]> {
+    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean, progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC", sortByField?: string, excludeSysId?: boolean): Promise<T[]> {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -604,6 +604,8 @@ export class SNICHConnection {
 
             const sConn = this;
             const rClient = new SNICHRestClient(this.logger, sConn);
+
+
 
             let result: T[] = [];
 
@@ -622,6 +624,13 @@ export class SNICHConnection {
                 } else if (sortByField) {
                     fields.push(sortByField);
                 }
+            }
+
+            const graphVars = {
+                tableName: tableName,
+                queryConditions: query,
+                groupBy: fields,
+                includeDv: displayValue
             }
 
             const config: requestPromise.RequestPromiseOptions = {
