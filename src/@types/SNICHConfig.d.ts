@@ -57,8 +57,8 @@ declare namespace SNICHConfig {
         name: string;
         sys_id: string;
         sys_class: {
-            name: sys_packageSysClassNames,
-            label: sys_packageSysClassLabels
+            name: sys_package_sys_class_names,
+            label: sys_package_sys_class_labels
         };
         source: string; //if no underscores, make it global, since these will be "global" apps otherwise it will accurately reflect the "Scope prefix"
         scope: string;

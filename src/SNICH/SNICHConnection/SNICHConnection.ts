@@ -592,7 +592,7 @@ export class SNICHConnection {
 
     }
 
-    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean, progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC", sortByField?: string, excludeSysId?: boolean): Promise<T[]> {
+    async getAggregate<T>(tableName: string, query: string, fields: string[], displayValue?: boolean | "all", progressOpts?: vscode.ProgressOptions, sortUpdated?: "ASC" | "DESC", sortByField?: string, excludeSysId?: boolean): Promise<T[]> {
         var func = 'getAggregate';
         this.logger.info(this.type, func, `ENTERING`);
 
