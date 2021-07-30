@@ -1,4 +1,4 @@
-import { WSFileMan } from "../../FileMan/WSFileMan";
+//import { WSFileMan } from "../../FileMan/WSFileMan";
 import { SNICHConnection } from "../SNICHConnection/SNICHConnection";
 import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
@@ -109,7 +109,7 @@ export class SNICHRecordSync {
                     this.logger.debug(this.type, func, `promResult:`, promResult);
 
                     if (promResult) {
-                        const wsFMan = new WSFileMan(this.logger);
+                        //const wsFMan = new WSFileMan(this.logger);
                         const instanceRoot = sInstance.getRootPath();
                         const writeFiles: Promise<any>[] = [];
 

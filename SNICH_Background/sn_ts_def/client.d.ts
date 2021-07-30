@@ -359,7 +359,7 @@ declare class GlideDocumentV3 {
      * @context (Optional) A DOM Element, document, or JQuery object to be searched.
      * @returns The node that matches the selector.
      */
-    getElement(selector: StringorObject, context: StringorObject): node;
+    getElement(selector: string, context: any): any;
 
     /**
      * Returns a node list found in the specified DOM based context or created if an HTML context is specified.
@@ -368,7 +368,7 @@ declare class GlideDocumentV3 {
      * @context (Optional) A DOM Element, document, or JQuery object to be searched.
      * @returns A list of nodes that matches the selector.
      */
-    getElements(selector: StringorObject, context: StringorObject): nodelist;
+    getElements(selector: string, context: any): any;
 
 }
 

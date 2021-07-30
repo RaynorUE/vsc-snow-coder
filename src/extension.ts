@@ -7,6 +7,8 @@ import { SNICHLogger } from './SNICH/SNICHLogger/SNICHLogger';
 export const snichOutput = vscode.window.createOutputChannel('S.N.I.C.H.');
 export let extensionContext: vscode.ExtensionContext; //for imports into other classes.
 
+export const currentSNRelease = 'rome';
+
 
 
 export async function activate(context: vscode.ExtensionContext) {

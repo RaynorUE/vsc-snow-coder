@@ -3,8 +3,6 @@ import { SNICHLogger } from '../SNICHLogger/SNICHLogger';
 import { qpWithValue } from '../../extension';
 import { SNICHAskerCore } from '../SNICHCore/SNICHAskerCore';
 
-declare type sys_packageSysClassNames = keyof typeof SNICHConfig.sys_package_sys_class_names;
-
 /**
  * Class for handling various "Quick pick" and "Quick input" calls. 
  * Will be useful for looping and if we ever want to retrofit to more robust "Input" that vscode offers.

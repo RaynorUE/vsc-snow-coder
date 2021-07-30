@@ -13,7 +13,7 @@ export class SNICHPreferenceDB {
         if (!DBfilePath) {
             throw new Error('Unable to get preferences! Somehow this got called without valid workspace!');
         }
-        this.DB = new AsyncNedb(this.getDBFilePath())
+        this.DB = new AsyncNedb({autoload: true, filename: this.getDBFilePath()?.fsPath})
     }
 
     getDBFilePath(): vscode.Uri | undefined {

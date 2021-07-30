@@ -626,12 +626,13 @@ export class SNICHConnection {
                 }
             }
 
+            /*
             const graphVars = {
                 tableName: tableName,
                 queryConditions: query,
                 groupBy: fields,
                 includeDv: displayValue
-            }
+            }*/
 
             const config: requestPromise.RequestPromiseOptions = {
                 qs: {

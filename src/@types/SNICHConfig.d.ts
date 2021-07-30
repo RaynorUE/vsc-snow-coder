@@ -57,8 +57,8 @@ declare namespace SNICHConfig {
         name: string;
         sys_id: string;
         sys_class: {
-            name: sys_package_sys_class_names,
-            label: sys_package_sys_class_labels
+            name: string | "sys_app" | "sys_scope" | "sys_plugins" | "sys_store_app" | ""
+            label: string | "Custom Application" | "Global" | "System Plugin" | "Store Application" | ""
         };
         source: string; //if no underscores, make it global, since these will be "global" apps otherwise it will accurately reflect the "Scope prefix"
         scope: string;
@@ -108,22 +108,5 @@ declare namespace SNICHConfig {
         OAuth = "oauth-authorization_code",
         None = ""
     }
-
-    enum sys_package_sys_class_names {
-        None = "",
-        CustomApplication = "sys_app",
-        Application = "sys_scope",
-        SysPlugins = "sys_plugins",
-        StoreApplication = "sys_store_app"
-    }
-
-    enum sys_package_sys_class_labels {
-        None = "",
-        CustomApplication = "Custom Application",
-        Application = "Global",
-        SysPlugins = "System Plugin",
-        StoreApplication = "Store Application"
-    }
-
 
 }

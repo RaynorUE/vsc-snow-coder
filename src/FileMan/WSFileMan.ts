@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import { BackFileMan } from './BackFileMan';
 import { SNICHLogger } from '../SNICH/SNICHLogger/SNICHLogger';
+import { currentSNRelease } from '../extension';
 
 
 /**
@@ -102,22 +103,22 @@ export class WSFileMan {
     async configureClientTypeFiles(wsRoot: vscode.Uri) {
 
         let sourceTypeFile = await new BackFileMan().getClientTSDef();
-        let existingTypeFilePath = vscode.Uri.joinPath(wsRoot, '.snich', '@types', 'GlideSoft', 'client.d.ts');
-        let existingTypeFile = undefined;
+        let existingTSFilePath = vscode.Uri.joinPath(wsRoot, '.snich', '@types', 'GlideSoft', 'client.d.ts');
+        let existingTSFile = undefined;
         let writeFile = true;
 
         let fileResult = undefined;
 
         try {
-            existingTypeFile = await fs.readFile(existingTypeFilePath);
+            existingTSFile = await fs.readFile(existingTSFilePath);
         } catch (e) {
-            existingTypeFile = undefined;
+            existingTSFile = undefined;
         }
 
-        if (existingTypeFile) {
+        if (existingTSFile) {
             //compare and set write file flag
             let sourceContentHash = crypto.createHash('md5').update(sourceTypeFile).digest("hex");
-            let existingContentHash = crypto.createHash('md5').update(existingTypeFile).digest("hex");
+            let existingContentHash = crypto.createHash('md5').update(existingTSFile).digest("hex");
 
             if (sourceContentHash == existingContentHash) {
                 writeFile = false;
@@ -125,42 +126,77 @@ export class WSFileMan {
         }
 
         if (writeFile) {
-            fileResult = await fs.writeFile(existingTypeFilePath, sourceTypeFile);
+            fileResult = await fs.writeFile(existingTSFilePath, sourceTypeFile);
         }
 
         return fileResult;
     }
 
     async configureServerTypeFiles(wsRoot: vscode.Uri) {
+        const func = 'configureServerTypeFiles';
+        this.logger.info(this.type, func, `ENTERING`);
 
-        let sourceTypeFile = await new BackFileMan().getServerTSDef();
-        let existingTypeFilePath = vscode.Uri.joinPath(wsRoot, '.snich', '@types', 'GlideSoft', 'server_scoped.d.ts');
-        let existingTypeFile = undefined;
-        let writeFile = true;
+        let res = true;
 
-        let fileResult = undefined;
+        const myTypesWin = vscode.workspace.getConfiguration().get('snich.myTypesWin');
+        this.logger.debug(this.type, func, `myTypesWin: `,myTypesWin === false ? 'is false' : 'is not false');
+        const backFM = new BackFileMan();
+        const sourceTypeFolder = await backFM.getServerTSDefFolder(currentSNRelease);
 
-        try {
-            existingTypeFile = await fs.readFile(existingTypeFilePath);
-        } catch (e) {
-            existingTypeFile = undefined;
-        }
 
-        if (existingTypeFile) {
-            //compare and set write file flag
-            let sourceContentHash = crypto.createHash('md5').update(sourceTypeFile).digest("hex");
-            let existingContentHash = crypto.createHash('md5').update(existingTypeFile).digest("hex");
+        if(sourceTypeFolder){
 
-            if (sourceContentHash == existingContentHash) {
-                writeFile = false;
+            for(let i = 0; i < sourceTypeFolder.length; i++){
+                const item = sourceTypeFolder[i];
+                
+                let fileName = item[0];
+                this.logger.debug(this.type, func, `fileName: `,fileName);
+
+                let sourceTSFile = await backFM.getServerTSDef(currentSNRelease, fileName);
+                if(sourceTSFile){
+                    this.logger.debug(this.type, func, `Got a SourceTS File`);
+                    let existingTSFilePath = vscode.Uri.joinPath(wsRoot, `@types`, `GlideSoft`, `ServerScoped`, currentSNRelease, fileName);
+
+                    let existingTSFile = undefined;
+                    let writeFile = true;
+
+                    try {
+                        existingTSFile = await fs.readFile(existingTSFilePath)
+                    } catch(e){
+                        existingTSFile = undefined;
+                        res = false;
+                    }
+
+                    if(existingTSFile){
+                        this.logger.debug(this.type, func, `Got existing TS File!`);
+                        let sourceContentHash = crypto.createHash('md5').update(sourceTSFile).digest('hex');
+                        let existingContentHash = crypto.createHash('md5').update(existingTSFile).digest('hex');
+
+                        if(sourceContentHash == existingContentHash || (myTypesWin && existingTSFile)){
+                            writeFile = false;
+                        }
+
+
+                    }
+
+                    if(writeFile){
+                        try {
+                            await fs.writeFile(existingTSFilePath, sourceTSFile);
+                        } catch(e){
+                            res = false;
+                        }
+                    }
+                } else {
+                    res = false;
+                }
             }
+        } else {
+            res = false;
         }
 
-        if (writeFile) {
-            fileResult = await fs.writeFile(existingTypeFilePath, sourceTypeFile);
-        }
+        this.logger.info(this.type, func, `LEAVING`);
 
-        return fileResult;
+        return res;
 
     }
 
@@ -178,12 +214,14 @@ export class WSFileMan {
             filesExclude['**/.snich'] = filesExclude['**/.snich'] == undefined ? true : filesExclude['**/.snich'];
             filesExclude['**/.vscode'] = filesExclude['**/.vscode'] == undefined ? true : filesExclude['**/.vscode'];
             filesExclude['**/jsconfig.json'] = filesExclude['**/jsconfig.json'] == undefined ? true : filesExclude['**/jsconfig.json'];
+            filesExclude['@types'] = filesExclude['@types'] == undefined ? true : filesExclude['@types'];
 
             let searchExclude: WSDotVscodeSettings.SearchExclude = settings.get('search.exclude') || {};
 
             searchExclude['**/.snich'] = searchExclude['**/.snich'] == undefined ? true : searchExclude['**/.snich'];
             searchExclude['**/.vscode'] = searchExclude['**/.vscode'] == undefined ? true : searchExclude['**/.vscode'];
             searchExclude['**/jsconfig.json'] = searchExclude['**/jsconfig.json'] == undefined ? true : searchExclude['**/jsconfig.json'];
+            searchExclude['@types'] = searchExclude['@types'] == undefined ? true : searchExclude['@types'];
 
             //update workspace .vscode settings
             await settings.update('files.exclude', filesExclude, false);

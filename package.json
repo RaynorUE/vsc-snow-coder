@@ -4,9 +4,9 @@
     "displayName": "S.N.I.C.H. Canary",
     "description": "ServiceNow Integrated Code Helper - Canary. Get the latest as I build stuff ready to be tested! Provide feedback to integratenate@gmail.com",
     "icon": "images/icon-canary.png",
-    "version": "1.40.186",
+    "version": "1.40.196",
     "liveVersion": "1.1.0",
-    "canaryVersion": "1.40.186",
+    "canaryVersion": "1.40.196",
     "betaVersion": "1.0.6",
     "keywords": [
         "SNICH",
@@ -196,6 +196,12 @@
                         "title": "Sync Record: Select Multiple",
                         "description": "When using the Sync Record command, allow multiple files to be selected. Disable this if you are annoyed by having to checkbox a single record during selection.",
                         "default": false
+                    },
+                    "snich.myTypesWin": {
+                        "type": "boolean",
+                        "title": "Keep my GlideSoft Type Definition Edits",
+                        "description": "When FALSE (default) and the extension activates (Detect an instance or you execute a SNICH command) we check to see if the typescript definition files in the workspace for @types/GlideSoft have been modified from base and will update to latest if so. When TRUE we will not do this and will only create if we do not see the file.",
+                        "default": false
                     }
                 }
             }
@@ -233,6 +239,7 @@
         "webpack-cli": "^3.3.12"
     },
     "dependencies": {
+        "@types/nedb": "^1.8.12",
         "express": "^4.17.1",
         "nedb": "^1.8.0",
         "nedb-async": "^0.1.6",

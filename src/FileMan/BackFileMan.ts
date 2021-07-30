@@ -24,8 +24,16 @@ export class BackFileMan {
         return await fs.writeFile(vscode.Uri.joinPath(this.rootUri, ...parameters), data);
     }
 
-    async getServerTSDef() {
-        return await fs.readFile(vscode.Uri.joinPath(this.rootUri, 'sn_ts_def', 'server_scoped.d.ts'))
+    async readDirectory(...parameters: string[]){
+        return await fs.readDirectory(vscode.Uri.joinPath(this.rootUri, ...parameters));
+    }
+
+    async getServerTSDefFolder(snReleaseName:string) {
+        return await fs.readDirectory(vscode.Uri.joinPath(this.rootUri, 'sn_ts_def', 'ServerScoped', snReleaseName.toLowerCase()));
+    }
+
+    async getServerTSDef(snReleaseName: string, fileName:string) {
+        return await fs.readFile(vscode.Uri.joinPath(this.rootUri, 'sn_ts_def', 'ServerScoped', snReleaseName.toLowerCase(), fileName))
     }
 
     async getClientTSDef() {
