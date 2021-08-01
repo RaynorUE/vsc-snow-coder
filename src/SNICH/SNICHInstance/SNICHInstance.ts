@@ -16,7 +16,8 @@ export class SNICHInstance {
             path: "",
             fspath: ""
         },
-        last_selected: 0
+        last_selected: 0,
+        config_status: "pending"
     };
 
     logger: SNICHLogger;
@@ -39,9 +40,9 @@ export class SNICHInstance {
         let result: boolean | undefined = false;
         const iService = new SNICHInstancesService(this.logger);
         //how many total?
-        const count = await iService.count();
+        const count = await iService.count({config_status: "completed"});
         if (count == 1) {
-            let snInstances = await iService.getMultiple();
+            let snInstances = await iService.getMultiple({config_status: "completed"});
             this.setData(snInstances[0]);
             result = true;
 
@@ -158,7 +159,7 @@ export class SNICHInstance {
         try {
 
             let iService = new SNICHInstancesService(this.logger);
-            let instances = await iService.getMultiple({}, [['sort', { last_selected: -1 }]]);
+            let instances = await iService.getMultiple({config_status: "completed"}, [['sort', { last_selected: -1 }]]);
 
             let selectedInstance = await new SNICHInstanceAsker(this.logger).askSelectInstance(instances);
             if (selectedInstance) {
@@ -185,6 +186,8 @@ export class SNICHInstance {
         this.logger.info(this.type, func, "ENTERING");
 
         let result = false;
+
+        this.setConfigStatus("in_progress");
 
         const asker = new SNICHInstanceAsker(this.logger);
 
@@ -271,6 +274,7 @@ export class SNICHInstance {
         let authResult = await connection.setupAuth();
         if (!authResult) {
             this.logger.info(this.type, func, "LEAVING");
+            this.setConfigStatus("errored");
             return this.abortSetup('Auth setup failed miserably. Please try setting up instance again.');
         }
 
@@ -303,10 +307,16 @@ export class SNICHInstance {
         let iFileMan = new InstanceFileMan(this.logger);
         await iFileMan.createInstanceRoot(this.getRootPath());
 
+        this.setConfigStatus("completed");
+        this.save(); //save completed status.
+
         this.logger.info(this.type, func, "LEAVING");
         vscode.window.showInformationMessage('Instance setup success! Time to start syncing files!');
         return result;
     }
+
+    setConfigStatus(status: SNICHConfig.InstanceConfigurationStatus){ this.data.config_status = status }
+    getConfigStatus(){return this.data.config_status}
 
     setName(name: string) { this.data.name = name }
     getName() { return this.data.name }

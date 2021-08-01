@@ -29,8 +29,13 @@ export class SNICHWebServer {
         //lets start with just and http server? Since it'll be localhost..?
         let result = await new Promise<string | undefined>((resolve, reject) => {
             this.server = https.createServer(oauthServOptions, (req, res) => {
-
+                console.log('WEB SERVER REQUEST: ', req);
                 const oauthRedirectPath = /snich_oauth_redirect?.*/;
+
+                if(req.url == '/favicon.ico'){
+                    //do nothing
+                    return;
+                }
 
                 if (req.url?.match(oauthRedirectPath)) {
                     console.log('Inside oauthRedirect with code!');
@@ -42,10 +47,13 @@ export class SNICHWebServer {
                         resolve(oauthCode);
                     } else {
                         res.write('Some error occured. Please retry instance setup again.');
-                        vscode.window.showErrorMessage('Failed oauth configuration. Please retry instance setup again.');
+                        vscode.window.showErrorMessage('Failed OAuth configuration. Please retry instance setup again.');
                         resolve(undefined);
                     }
 
+                } else if(req.url == '/favicon.ico'){
+                    //do nothing
+                    
                 } else {
                     //no query parameters supplied... throw error
                     let errObj = {
@@ -56,6 +64,7 @@ export class SNICHWebServer {
                         'Content-Length': JSON.stringify(errObj, null, 4).length,
                         'Content-Type': 'application/json'
                     });
+                    
 
                     res.write(JSON.stringify(errObj, null, 4))
                     this.server.close();

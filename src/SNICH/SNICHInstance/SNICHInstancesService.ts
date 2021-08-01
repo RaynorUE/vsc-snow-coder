@@ -31,12 +31,13 @@ export class SNICHInstancesService {
         return dbPath;
     }
 
-    async count(): Promise<number> {
+    async count(query?: any): Promise<number> {
 
         let result: number = 0;
+        query = query || {};
 
         try {
-            let dbCount = await this.DB.asyncCount({});
+            let dbCount = await this.DB.asyncCount(query);
             if (dbCount) {
                 result = dbCount;
             }

@@ -5,6 +5,7 @@ declare namespace SNICHConfig {
         rootPath: vscodeUriRaw;
         _id: string | undefined;
         last_selected: number;
+        config_status: InstanceConfigurationStatus
 
     }
 
@@ -108,5 +109,7 @@ declare namespace SNICHConfig {
         OAuth = "oauth-authorization_code",
         None = ""
     }
+
+    type InstanceConfigurationStatus = "pending" | "in_progress" | "completed" | "errored";
 
 }
