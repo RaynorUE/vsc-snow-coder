@@ -68,7 +68,7 @@ export class SNICHInstancesService {
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, e);
+            this.logger.reportException(this.type, func, e);
             res = undefined;
         } finally {
             this.logger.info(this.type, func, "LEAVING");
@@ -96,7 +96,7 @@ export class SNICHInstancesService {
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, e);
+            this.logger.reportException(this.type, func, e);
             res = false;
         } finally {
             this.logger.info(this.type, func, "LEAVING");

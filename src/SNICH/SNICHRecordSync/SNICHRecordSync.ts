@@ -83,14 +83,26 @@ export class SNICHRecordSync {
                             this.logger.debug(this.type, func, `sConn: `, sConn);
                             const tableName = currentConfig.name;
                             const query = "sys_package=" + selectedPack?.sys_id;
-                            const fields: string[] = currentConfig.synced_fields.map((field) => {
-                                return field.name;
-                            });
+
+                            const fields: string[] = [];
                             fields.push(currentConfig.display_field);
 
-                            let recordsResult = await sConn.getRecords<any>(tableName, query, fields, false);
+                            if (currentConfig.group_by?.name) fields.push(currentConfig.group_by.name);
+
+                            //nened to get the synced fields
+                            currentConfig.synced_fields.forEach((field) => {
+                                fields.push(field.name);
+                            });
+
+                            //and also any fields that are part of our display value.
+                            currentConfig.additional_display_fields.forEach((field) => {
+                                fields.push(field);
+                            });
+
+
+                            let recordsResult = await sConn.getRecords<any>(tableName, query, fields, true);
                             asyncResponseObj.recordsResult = recordsResult;
-                            this.logger.debug(this.type, func, `reordsResult`);
+                            this.logger.debug(this.type, func, `reordsResult`, recordsResult);
                             if (recordsResult && recordsResult.length > 0) {
                                 this.logger.debug(this.type, func, `Records recieved!`);
                             } else {
@@ -105,59 +117,64 @@ export class SNICHRecordSync {
 
                     });
 
-                    let promResult = await Promise.all(fileRequests);
-                    this.logger.debug(this.type, func, `promResult:`, promResult);
+                    let appFilesResult = await Promise.all(fileRequests);
+                    this.logger.debug(this.type, func, `appFilesResult:`, appFilesResult);
 
-                    if (promResult) {
+                    if (appFilesResult) {
                         //const wsFMan = new WSFileMan(this.logger);
                         const instanceRoot = sInstance.getRootPath();
-                        const writeFiles: Promise<any>[] = [];
-
+                        const multiFieldSep = new VSCODEPrefs().getMultiFieldSep();
+                        const badCharReplaceWith = new VSCODEPrefs().fileInvalCharSub();
+                        //TODO: Need to lookup how to find what OS i'm running on... so i can only do the bad char replace on windows.
                         const packRoot = vscode.Uri.joinPath(instanceRoot, `${selectedPack.name} (${selectedPack.source})`);
-                        let multiFieldSep = new VSCODEPrefs().getMultiFieldSep();
+                        const writeFilesData: any[] = [];
 
-                        //lets start with block one in case things go absolutely whacky..
-                        const firstResult = promResult[0];
+                        appFilesResult.forEach((result) => {
+                            const tConfig = result.tableConfig;
+                            const groupByColumnName = tConfig.group_by?.name;
+                            this.logger.info(this.type, func, 'tConfig:', tConfig);
+                            const recs: any[] = result.recordsResult;
+                            
 
-                        const tConfig = firstResult.tableConfig;
-                        const recs = firstResult.recordsResult;
-                        const tableRoot = vscode.Uri.joinPath(packRoot, `${tConfig.label} [${tConfig.name}]`);
 
-                        //process first rec
-                        const rec = recs[0];
+                            recs.forEach((rec) => {
+                                let tableRoot = vscode.Uri.joinPath(packRoot, `${tConfig.name} (${tConfig.label})`);
+                                if (groupByColumnName && rec[groupByColumnName]) tableRoot = vscode.Uri.joinPath(tableRoot, rec[groupByColumnName]);
 
-                        let fileNameParts = [`${rec[tConfig.display_field]}`];
-                        if (tConfig.additional_display_fields.length > 0) {
-                            this.logger.debug(this.type, func, `Had additional display fields.`);
+                                //just the one field..
+                                if (tConfig.synced_fields.length == 1) {
+                                    let fileNameParts = [`${rec[tConfig.display_field]}`];
+                                    if (tConfig.additional_display_fields.length > 0) {
+                                        this.logger.debug(this.type, func, `Had additional display fields.`);
 
-                            tConfig.additional_display_fields.forEach((field) => {
-                                fileNameParts.push(`${rec[field]}`);
+                                        tConfig.additional_display_fields.forEach((field) => {
+                                            fileNameParts.push(`${rec[field]}`);
+                                        });
+                                    }
+
+                                    let syncedField = tConfig.synced_fields[0];
+                                    let fileName = `${fileNameParts.join(multiFieldSep)}.${syncedField.extension}`;
+                                    let fullFilePath = vscode.Uri.joinPath(tableRoot, fileName);
+                                    this.logger.debug(this.type, func, `fullFilePath: `, fullFilePath);
+
+
+                                    let content = Buffer.from(rec[syncedField.name]);
+
+                                    writeFilesData.push( {fullFilePath: fullFilePath, content:content});
+
+                                } else if (tConfig.synced_fields.length > 1) {
+                                    //gotta add the display name/s to the folder name, then the file names by label of field after..
+
+                                }
                             });
+                        });
 
+                        if(writeFilesData.length > 0){
+                            this.logger.debug(this.type, func, `writeFilesData`, writeFilesData);
+                            await Promise.all(writeFilesData.map(async (data) => vscode.workspace.fs.writeFile(data.fullFilePath, data.content)));
                         }
-
-                        //just the one field..
-                        if (tConfig.synced_fields.length == 1) {
-                            let fileName = `${fileNameParts.join(multiFieldSep)}`;
-                            let fullFilePath = vscode.Uri.joinPath(tableRoot, fileName);
-                            this.logger.debug(this.type, func, `fullFilePath: `, fullFilePath);
-
-                            let syncedField = tConfig.synced_fields[0];
-                            let content = Buffer.from(rec[syncedField.name]);
-
-                            writeFiles.push(new Promise((resolve, reject) => resolve(vscode.workspace.fs.writeFile(fullFilePath, content))));
-
-                        } else if (tConfig.synced_fields.length > 1) {
-                            //gotta add the display name/s to the folder name, then the file names by label of field after..
-
-                        }
-
-
-
-
+                       
                     }
-
-
                 }
             }
 

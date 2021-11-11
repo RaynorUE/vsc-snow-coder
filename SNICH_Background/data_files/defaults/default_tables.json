@@ -1,4 +1,5 @@
-[{
+[
+    {
         "name": "sys_script",
         "label": "Business Rule",
         "display_field": "name",
@@ -8,7 +9,11 @@
             "extension": "js"
         }],
         "additional_display_fields": ["when"],
-        "group_by": "collection"
+        "group_by": {
+            "name": "collection",
+            "table": "Table",
+            "extension":""
+        }
     },
     {
         "name": "sp_widget",
@@ -50,10 +55,8 @@
                 "extension": "json"
             }
         ],
-        "additional_display_fields": [],
-        "group_by": ""
+        "additional_display_fields": []
     },
-
     {
         "name": "sp_angular_provider",
         "label": "Widget Angular Provider",
@@ -64,7 +67,11 @@
             "extension": "js"
         }],
         "additional_display_fields": [],
-        "group_by": "type"
+        "group_by": {
+            "name":"type",
+            "label":"Type",
+            "extension":""
+        }
     },
     {
         "name": "sp_ng_template",
@@ -76,12 +83,15 @@
             "extension": "html"
         }],
         "additional_display_fields": [],
-        "group_by": "widget"
+        "group_by": {
+            "name":"widget",
+            "label":"Widget",
+            "extension":""
+        }
     },
-
     {
         "name": "sys_ui_action",
-        "label": "UI Policy",
+        "label": "UI Action",
         "display_field": "name",
         "synced_fields": [{
             "name": "script",
@@ -89,7 +99,11 @@
             "extension": "js"
         }],
         "additional_display_fields": ["sys_id"],
-        "group_by": "table"
+        "group_by": {
+            "name":"table",
+            "label":"Table",
+            "extension":""
+        }
     },
     {
         "name": "sys_script_include",
@@ -100,8 +114,7 @@
             "label": "Script",
             "extension": "js"
         }],
-        "additional_display_fields": [],
-        "group_by": ""
+        "additional_display_fields": []
     },
     {
         "name": "sys_ui_page",
@@ -123,8 +136,7 @@
                 "extension": "js"
             }
         ],
-        "additional_display_fields": [],
-        "group_by": ""
+        "additional_display_fields": []
     },
     {
         "name": "sys_ui_script",
@@ -135,8 +147,7 @@
             "label": "Script",
             "extension": "js"
         }],
-        "additional_display_fields": [],
-        "group_by": "ui_type"
+        "additional_display_fields": []
     },
     {
         "name": "sys_script_client",
@@ -148,7 +159,11 @@
             "extension": "js"
         }],
         "additional_display_fields": ["type"],
-        "group_by": "table"
+        "group_by": {
+            "name":"table",
+            "label":"Table",
+            "extension":""
+        }
     },
     {
         "name": "sys_ws_operation",
@@ -160,7 +175,11 @@
             "extension": "js"
         }],
         "additional_display_fields": ["http_method"],
-        "group_by": "web_service_definition"
+        "group_by": {
+            "name":"web_service_definition",
+            "label":"API Definition",
+            "extension":""
+        }
     },
     {
         "name": "sys_script_fix",
@@ -171,8 +190,7 @@
             "label": "Script",
             "extension": "js"
         }],
-        "additional_display_fields": [],
-        "group_by": "web_service_definition"
+        "additional_display_fields": []
     },
     {
         "name": "sysauto_script",
@@ -183,8 +201,7 @@
             "label": "Script",
             "extension": "js"
         }],
-        "additional_display_fields": [],
-        "group_by": ""
+        "additional_display_fields": []
     },
     {
         "name": "sys_ui_macro",
@@ -208,6 +225,4 @@
         }],
         "additional_display_fields": []
     }
-
-
 ]

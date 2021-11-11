@@ -25,6 +25,7 @@ export class SNICHLogger {
 
     setLogLevel() {
         let settings = workspace.getConfiguration();
+        
         var level = settings.get('snich.logLevel') || 0;
         if (level === 'Debug') {
             this.logLevel = this._DEBUG;
