@@ -56,7 +56,7 @@ export class SNICHPackageFileService {
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, e);
+            this.logger.reportException(this.type, func, e);
             res = undefined;
         } finally {
             this.logger.info(this.type, func, "LEAVING");
@@ -83,7 +83,7 @@ export class SNICHPackageFileService {
             }
 
         } catch (e) {
-            this.logger.error(this.type, func, e);
+            this.logger.reportException(this.type, func, e);
             res = false;
         } finally {
             this.logger.info(this.type, func, "LEAVING");
@@ -113,7 +113,7 @@ export class SNICHPackageFileService {
         return record;
     }
 
-    async get(query: any) {
+    async get(query: SNICHConfig.FileQuery) {
         let record: SNICHConfig.File | undefined = undefined;
         let foundRecord = await this.DB.asyncFindOne<SNICHConfig.File>(query)
         if (foundRecord) {
@@ -158,7 +158,7 @@ export class SNICHPackageFileService {
 
 
         } catch (e) {
-            this.logger.error(this.type, func, `Onos an error has occured!`, e);
+            this.logger.reportException(this.type, func, e);
             result = false;
         } finally {
             this.logger.info(this.type, func, `LEAVING`);

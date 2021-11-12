@@ -9,6 +9,8 @@ import { VSCODEPrefs } from "../SNICHUtils/VSCODEPrefs";
 
 export class SNICHRecordSync {
 
+    alwaysPullFields = ["sys_scope", "sys_scope.source", "sys_scope.sys_class_name", "sys_id"]; //always add these fields to API Calls so we have them.
+
     logger: SNICHLogger;
     type = "SNICHRecordSync";
 
@@ -66,8 +68,6 @@ export class SNICHRecordSync {
                         throw new Error('Unable to load snich connection for instance!');
                     }
 
-                    //for some reason it's executing the code in the funciton
-
                     const fileRequests = tables.map(async (tableConfig) => {
                         const currentConfig = { ...tableConfig };
                         const func = 'fileRequest';
@@ -84,7 +84,7 @@ export class SNICHRecordSync {
                             const tableName = currentConfig.name;
                             const query = "sys_package=" + selectedPack?.sys_id;
 
-                            const fields: string[] = [];
+                            const fields: string[] = this.alwaysPullFields;
                             fields.push(currentConfig.display_field);
 
                             if (currentConfig.group_by?.name) fields.push(currentConfig.group_by.name);
@@ -124,8 +124,11 @@ export class SNICHRecordSync {
                         //const wsFMan = new WSFileMan(this.logger);
                         const instanceRoot = sInstance.getRootPath();
                         const multiFieldSep = new VSCODEPrefs().getMultiFieldSep();
-                        const badCharReplaceWith = new VSCODEPrefs().fileInvalCharSub();
+                        
                         //TODO: Need to lookup how to find what OS i'm running on... so i can only do the bad char replace on windows.
+                        //TODO: Need to complete bad char replace as well ocne we figure out the OS..
+                        const badCharReplaceWith = new VSCODEPrefs().fileInvalCharSub();
+                        
                         const packRoot = vscode.Uri.joinPath(instanceRoot, `${selectedPack.name} (${selectedPack.source})`);
                         const writeFilesData: any[] = [];
 

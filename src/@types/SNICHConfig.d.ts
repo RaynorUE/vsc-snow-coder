@@ -67,14 +67,23 @@ declare namespace SNICHConfig {
     }
 
     interface File {
-        _id: string | undefined;
+        _id?: string;
         instance_id: string;
         package_id: string;
-        name: string; //name of the file, handy for re-naming?
-        fsPath: string;
-        table: string;
+        fsPath: string; //do we nneed this? Idea was to store the whole thing... but if we always make
+        table: string; //for posting back to instance
         sys_id: string;
-        content_field: string;
+        column_name: string;//SN Element/column name for posting back to instance and not having to lookup table config
+    }
+
+    interface FileQuery {
+        _id?: string;
+        instance_id?: string;
+        package_id?: string;
+        fsPath?: string; //do we nneed this? Idea was to store the whole thing... but if we always make
+        table?: string; //for posting back to instance
+        sys_id?: string;
+        column_name?: string;//SN Element/column name for posting back to instance and not having to lookup table config
     }
 
     interface TableConfig {

@@ -1,4 +1,3 @@
-import { SNICHInstance } from "../SNICHInstance/SNICHInstance";
 import { SNICHLogger } from "../SNICHLogger/SNICHLogger";
 import * as vscode from 'vscode';
 import { SNICHPackageFileService } from "./SNICHPackageFileService";
@@ -6,13 +5,11 @@ import { WSFileMan } from "../../FileMan/WSFileMan";
 
 export class SNICHPackageFile {
 
-    data: SNICHConfig.File | undefined;
-
-    fields = ["sys_scope", "sys_scope.source", "sys_scope.sys_class_name", "sys_id"];
+    service?: SNICHPackageFileService;
 
     logger: SNICHLogger;
     type = "SNICHPackageFile";
-    snInstance: undefined | SNICHInstance;
+
 
 
     constructor(logger: SNICHLogger) {
@@ -20,11 +17,54 @@ export class SNICHPackageFile {
         this.logger = logger;
         this.logger.info(this.type, func, `ENTERING`);
 
+        this.setService();
+
         this.logger.info(this.type, func, `LEAVING`);
     }
 
+    setService(service?: SNICHPackageFileService) {
+        this.service = service;
+    }
+
+    getService(setup?: boolean) {
+        if (setup) {
+            if (!this.service) {
+                this.service = new SNICHPackageFileService(this.logger);
+            }
+        }
+        return this.service;
+    }
+
     /** will call WSFileman?  */
-    async saveFile(file: SNICHConfig.File) {
+    //saves the file, writes to the DB
+    async saveFile(instanceId: string, packageId: string, table: string, sys_id: string, columnName: string, name: string, uri: vscode.Uri, content: string): Promise<SNICHConfig.File | undefined> {
+        const func = 'saveFile';
+        this.logger.info(this.type, func, `ENTERING`);
+
+        let result;
+
+        try {
+
+            const service = this.getService(true);
+
+
+            await vscode.workspace.fs.writeFile(uri, Buffer.from(content));
+
+            const existingFile = service?.get({ instance_id: instanceId, sys_id: sys_id, package_id: packageId, column_name:columnName });
+            if (!existingFile) {
+                //file doesn't exist... insert it into our DB!
+                const fileData: SNICHConfig.File = { instance_id: instanceId, package_id: packageId, table: table, sys_id: sys_id, column_name: columnName, fsPath:uri.fsPath }
+                result = service?.insert(fileData);
+            }
+
+        } catch (e) {
+            this.logger.reportException(this.type, func, e);
+            result = undefined;
+        } finally {
+            this.logger.info(this.type, func, `LEAVING`);
+        }
+
+        return result;
 
     }
 
@@ -55,8 +95,6 @@ export class SNICHPackageFile {
                 fileService.getMultiple();
 
             }
-
-
 
         } catch (e) {
             this.logger.error(this.type, func, `Onos an error has occured!`, e);
