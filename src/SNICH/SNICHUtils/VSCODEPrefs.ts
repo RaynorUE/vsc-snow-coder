@@ -10,11 +10,13 @@ export class VSCODEPrefs {
         return multiFieldNameSep;
     }
 
-    fileInvalCharSub() {
+    fileInvalCharSub(): string {
         //get the substitution character for bad "file name characters" in windows. 
-
         let settings = vscode.workspace.getConfiguration();
-        return settings.get('snich.fileInvalCharSub') || ""; //just strip it if not specified.
-        
+        let char = settings.get<string>('snich.fileInvalCharSub.win32');
+        if(!char){
+            char = ""; //just strip it if not specified.
+        }
+        return char;
     }
 }

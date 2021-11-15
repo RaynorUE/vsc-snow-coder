@@ -30,9 +30,6 @@ export class SNICHPackage {
 
         try {
 
-
-
-
             let packages = await this.getSysPackages();
             if (packages.length > 0) {
                 const asker = new SNICHPackageAsker(this.logger);

@@ -3,7 +3,7 @@ import { SNICHInstance } from '../SNICH/SNICHInstance/SNICHInstance';
 import * as vscode from 'vscode';
 import { SNICHTableConfig } from '../SNICH/SNICHTableConfig/SNICHTableConfig';
 import { SNICHConnection } from '../SNICH/SNICHConnection/SNICHConnection';
-import { SNICHRecordSync } from '../SNICH/SNICHRecordSync/SNICHRecordSync';
+import { SNICHSync } from '../SNICH/SNICHRecordSync/SNICHSync';
 
 export class ActivateCommandsInstance {
 
@@ -64,7 +64,7 @@ export class ActivateCommandsInstance {
 
         try {
 
-            const syncer = new SNICHRecordSync(this.logger);
+            const syncer = new SNICHSync(this.logger);
             let pullAppFilesReuslt = await syncer.pullApplicationFiles();
             this.logger.debug(this.type, func, `Pull app files result: `, pullAppFilesReuslt);
 

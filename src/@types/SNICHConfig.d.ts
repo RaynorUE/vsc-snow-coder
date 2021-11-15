@@ -69,8 +69,8 @@ declare namespace SNICHConfig {
     interface File {
         _id?: string;
         instance_id: string;
-        package_id: string;
-        fsPath: string; //do we nneed this? Idea was to store the whole thing... but if we always make
+        package_id?: string;
+        filePath: vscodeUriRaw; //do we nneed this? Idea was to store the whole thing... but if we always make
         table: string; //for posting back to instance
         sys_id: string;
         column_name: string;//SN Element/column name for posting back to instance and not having to lookup table config
@@ -80,7 +80,7 @@ declare namespace SNICHConfig {
         _id?: string;
         instance_id?: string;
         package_id?: string;
-        fsPath?: string; //do we nneed this? Idea was to store the whole thing... but if we always make
+        filePath?: vscodeUriRaw; //do we nneed this? Idea was to store the whole thing... but if we always make
         table?: string; //for posting back to instance
         sys_id?: string;
         column_name?: string;//SN Element/column name for posting back to instance and not having to lookup table config

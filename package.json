@@ -117,7 +117,7 @@
             {
                 "title": "SNICH",
                 "properties": {
-                    "snich.fileInvalCharSub": {
+                    "snich.fileInvalCharSub.win32": {
                         "type":"string",
                         "title":"Windows File Name Invalid Character Substitution",
                         "description":"Enter the text you wish to replace invalid windows file name characters with. Default is to strip the characters out. (empty)",
