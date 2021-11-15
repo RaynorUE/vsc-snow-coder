@@ -1,0 +1,9 @@
+# saveApplicationFile
+- Inputs
+    - SNICHInstance
+    - SNICHPackage
+    - TableName
+    - SysId
+    - ColumnName
+    - FileName
+    - Content
