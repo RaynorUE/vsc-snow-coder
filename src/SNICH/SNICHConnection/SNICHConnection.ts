@@ -478,7 +478,7 @@ export class SNICHConnection {
             }
 
         }
-
+        this.logger.debug(this.type, func, `Result`, result);
         this.logger.info(this.type, func, "LEAVING");
         return result;
 

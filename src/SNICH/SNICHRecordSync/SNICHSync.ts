@@ -6,6 +6,7 @@ import { SNICHPackage } from "../SNICHPackage/SNICHPackage";
 import { SNICHTableConfig } from "../SNICHTableConfig/SNICHTableConfig";
 import * as vscode from 'vscode';
 import { VSCODEPrefs } from "../SNICHUtils/VSCODEPrefs";
+import { SNICHPackageFile } from "../SNICHFile/SNICHFile";
 
 export class SNICHSync {
 
@@ -134,8 +135,6 @@ export class SNICHSync {
                             this.logger.info(this.type, func, 'tConfig:', tConfig);
                             const recs: any[] = result.recordsResult;
                             
-
-
                             recs.forEach((rec) => {
                                 let tableRoot = vscode.Uri.joinPath(packRoot, `${tConfig.name} (${tConfig.label})`);
                                 if (groupByColumnName && rec[groupByColumnName]) tableRoot = vscode.Uri.joinPath(tableRoot, rec[groupByColumnName]);
@@ -159,7 +158,7 @@ export class SNICHSync {
 
                                     let content = Buffer.from(rec[syncedField.name]);
 
-                                    writeFilesData.push( {fullFilePath: fullFilePath, content:content});
+                                    writeFilesData.push( {tConfig:{... tConfig}, sInstance: sInstance, rec: {... rec}, selectedPack: selectedPack});
 
                                 } else if (tConfig.synced_fields.length > 1) {
                                     //gotta add the display name/s to the folder name, then the file names by label of field after..
@@ -170,7 +169,11 @@ export class SNICHSync {
 
                         if(writeFilesData.length > 0){
                             this.logger.debug(this.type, func, `writeFilesData`, writeFilesData);
-                            await Promise.all(writeFilesData.map(async (data) => vscode.workspace.fs.writeFile(data.fullFilePath, data.content)));
+                            const snichFile = new SNICHPackageFile(this.logger);
+                            await Promise.all(writeFilesData.map(async (data) => {
+                                snichFile.savePackageFile(sInstance, data.selectedPack, data.tConfig, data.rec);
+                                //vscode.workspace.fs.writeFile(data.fullFilePath, data.content);
+                            }));
                         }
                        
                     }

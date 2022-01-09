@@ -39,7 +39,7 @@ export class SNICHPackageFile {
 
     /** will call WSFileman?  */
     //saves the file, writes to the DB
-    async savePackageFile(snichInstance: SNICHInstance, snichPackage: SNICHConfig.Package, table: string, sys_id: string, columnName: string, name: string, uri: vscode.Uri, content: Uint8Array): Promise<SNICHConfig.File | undefined> {
+    async savePackageFile(snichInstance: SNICHInstance, snichPackage: SNICHConfig.Package, tConfig: SNICHConfig.TableConfig, rec: any): Promise<SNICHConfig.File | undefined> {
         const func = 'savePackageFile';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -50,9 +50,6 @@ export class SNICHPackageFile {
             const service = this.getService(true);
             const instanceId = snichInstance.getId();
             
-
-
-
             if (!instanceId) {
                 throw new Error('Got here without an instance ID... odd!');
             }
