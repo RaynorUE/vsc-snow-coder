@@ -36,26 +36,33 @@ export class WSFileMan {
      * 
      * @return True: All good, False: Have a workspace folder but not configured, Undefined: No workspace folder open.
      */
-    async validateWorkspace(): Promise<Boolean | undefined> {
+    async validateWorkspace(): Promise<WorkspaceValidity> {
         var func = "validateWorkspace"
         this.logger.info(this.type, func, "ENTERING");
         const wsRoot = this.getWSRootUri();
-        let wsValidity = undefined;
+        let wsValidity:WorkspaceValidity = undefined;
 
         if (wsRoot) {
-            wsValidity = false; //we are in a root folder for our workspace... 
-
-            let dotSnichFolder = undefined;
-
+            
             try {
-                dotSnichFolder = await fs.readDirectory(vscode.Uri.joinPath(wsRoot, '.snich'));
+                let rootContents = await fs.readDirectory(wsRoot);
+
+                if(rootContents.length === 0){
+                    wsValidity = 'empty';
+                } else if(rootContents.length > 0){
+                    wsValidity = "not_empty";
+                    if(rootContents.find((item) => item[0] == '.snich')){
+                        wsValidity  = "has_dot_snich";
+                    }
+                }
+
             } catch (e) {
-                dotSnichFolder = undefined;
+                wsValidity = undefined;
             }
 
-            if (dotSnichFolder) {
-                wsValidity = true;
-            }
+
+        } else {
+            wsValidity = 'multiple_workspace_root_folders';
         }
         this.logger.info(this.type, func, "LEAVING");
 
@@ -67,7 +74,7 @@ export class WSFileMan {
      * Will also handle validation checks, etc. 
      * Will be called on first instance creation or on activation and an instance is already configured (To ensure workspace config stays current)
      */
-    async setupWorkspace() {
+    async setupNewWorkspace() {
         let func = "setupWorkspace";
         this.logger.info(this.type, func, "ENTERIN");
         const wsRoot = this.getWSRootUri();
@@ -75,16 +82,15 @@ export class WSFileMan {
             throw new Error('Workspace is not loaded! Cannot proceed with setup. This was likely called in error!');
         }
 
-        await this.configureDotSnichFolder(wsRoot);
-
-
-
-        this.logger.info(this.type, func, "LEAVING");
-        return await Promise.all([
+        await Promise.all([
+            this.configureDotSnichFolder(wsRoot),
             this.configureDotVScodeSettings(),
             this.configureTypeFiles(wsRoot),
             this.configureJSConfigJSON(wsRoot)
         ]);
+
+        this.logger.info(this.type, func, "LEAVING");
+        return 
     }
 
     async configureDotSnichFolder(wsRoot: vscode.Uri) {
@@ -288,3 +294,5 @@ export class WSFileMan {
         return result;
     }
 }
+
+declare type WorkspaceValidity = undefined | "has_dot_snich" | "empty" | "not_empty" | "multiple_workspace_root_folders";
