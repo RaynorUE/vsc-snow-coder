@@ -227,7 +227,7 @@ export class SNICHInstance {
         connection.setURL(instanceUrl);
 
         // Validate folder name. Giving an opportunity to change.
-        let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace(':', '_');
+        let fixedInstanceName = this.getName() || instanceUrl.replace('https://', '').replace('http://', '').replace(':', '_');
 
         let instanceName = await asker.askFolderName(fixedInstanceName);
         if (!instanceName) {
