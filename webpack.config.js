@@ -3,9 +3,11 @@
 'use strict';
 
 const path = require('path');
+//@ts-check
+/** @typedef {import('webpack').Configuration} WebpackConfig **/
 
-/**@type {import('webpack').Configuration}*/
-const config = {
+/** @type WebpackConfig */
+const extensionConfig = {
   target: 'node', // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
   mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
   
@@ -14,10 +16,8 @@ const config = {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2',
-    devtoolModuleFilenameTemplate: '../[resource-path]'
+    libraryTarget: 'commonjs2'
   },
-  devtool: 'source-map',
   externals: {
     vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
   },
@@ -39,4 +39,4 @@ const config = {
     ]
   }
 };
-module.exports = config;
+module.exports = [ extensionConfig ];

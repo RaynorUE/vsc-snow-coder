@@ -39,7 +39,7 @@ export class SNICHPackageFile {
 
     /** will call WSFileman?  */
     //saves the file, writes to the DB
-    async savePackageFile(snichInstance: SNICHInstance, snichPackage: SNICHConfig.Package, tConfig: SNICHConfig.TableConfig, rec: any): Promise<SNICHConfig.File | undefined> {
+    async savePackageFile(snichInstance: SNICHInstance, snichPackage: SNICHConfig.Package, table: SNICHConfig.Table, sys_id:string, column_name: string, ): Promise<SNICHConfig.File | undefined> {
         const func = 'savePackageFile';
         this.logger.info(this.type, func, `ENTERING`);
 
@@ -58,12 +58,13 @@ export class SNICHPackageFile {
             const multiFieldSep = new VSCODEPrefs().getMultiFieldSep();
             const packRoot = vscode.Uri.joinPath(instanceRoot, this.fixupPath(`${snichPackage.name} (${snichPackage.source})`));
 
+
             await vscode.workspace.fs.writeFile(uri, content);
 
-            const existingFile = service?.get({ instance_id: instanceId, sys_id: sys_id, package_id: packageId, column_name: columnName });
+            const existingFile = service?.get({ instance_id: instanceId, sys_id: sys_id, package_id: packageId, column_name: column_name });
             if (!existingFile) {
                 //file doesn't exist... insert it into our DB!
-                const fileData: SNICHConfig.File = { instance_id: instanceId, package_id: packageId, table: table, sys_id: sys_id, column_name: columnName, filePath: { fspath: uri.fsPath, path: uri.path } }
+                const fileData: SNICHConfig.File = { instance_id: instanceId, package_id: packageId, table: table, sys_id: sys_id, column_name: column_name, filePath: { fspath: uri.fsPath, path: uri.path } }
                 result = service?.insert(fileData);
             }
 

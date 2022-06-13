@@ -35,7 +35,7 @@
         }
     ],
     "engines": {
-        "vscode": "^1.45.1"
+        "vscode": "^1.67.0"
     },
     "repository": {
         "type": "git",
@@ -118,10 +118,10 @@
                 "title": "SNICH",
                 "properties": {
                     "snich.fileInvalCharSub.win32": {
-                        "type":"string",
-                        "title":"Windows File Name Invalid Character Substitution",
-                        "description":"Enter the text you wish to replace invalid windows file name characters with. Default is to strip the characters out. (empty)",
-                        "default":""
+                        "type": "string",
+                        "title": "Windows File Name Invalid Character Substitution",
+                        "description": "Enter the text you wish to replace invalid windows file name characters with. Default is to strip the characters out. (empty)",
+                        "default": ""
                     },
                     "snich.alwaysAskPrimaryDisplayField": {
                         "type": "boolean",
@@ -214,14 +214,17 @@
         ]
     },
     "scripts": {
-        "package": "webpack --mode production --devtool hidden-source-map",
-        "vscode:package": "vsce package",
-        "vscode:prepublish": "npm run package",
-        "compile": "webpack && node ./prepublish-canary.js patch",
+        "publish": "node ./prepublish-live.js && vsce publish",
+        "publish:pre-release": "node ./prepublish-beta.js && vsce publish --pre-release",
+        "publish:canary":"npm run compile && node ./prepublish-canary.js patch && vsce publish",
+        "package": "npm run compile && vsce package",
+        "package:pre-release": "npm run compile && node ./prepublish-beta.js && vsce package",
+        "package:canary": "npm run compile && node ./prepublish-canary.js patch && vsce package",
+        "compile": "webpack --mode production --devtool hidden-source-map",
         "watch": "webpack --watch",
-        "test-compile": "tsc -p ./ && node ./prepublish-canary.js patch",
-        "test-watch": "tsc -watch -p ./",
-        "pretest": "npm run test-compile && npm run lint",
+        "compile-tests": "tsc -p . --outDir out && node ./prepublish-canary.js patch",
+        "watch-tests": "tsc -p . -w --outDir out",
+        "pretest": "npm run compile-tests && npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
         "test": "node ./out/test/runTest.js"
     },
@@ -244,6 +247,7 @@
         "semver": "^7.3.5",
         "ts-loader": "^9.2.2",
         "typescript": "^4.3.2",
+        "vsce": "^2.9.1",
         "vscode-test": "^1.6.1",
         "webpack": "^5.63.0",
         "webpack-cli": "^4.7.0"

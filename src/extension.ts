@@ -10,8 +10,6 @@ export let extensionContext: vscode.ExtensionContext; //for imports into other c
 export const currentSNRelease = 'rome';
 let registeredCommands: vscode.Disposable[] = [];
 
-
-
 export async function activate(context: vscode.ExtensionContext) {
 
     extensionContext = context;
